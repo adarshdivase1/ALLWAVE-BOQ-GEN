@@ -2,15 +2,18 @@
 
 name: Build and Commit Product Database
 
-# This workflow runs automatically on every push to your 'main' branch
 on:
   push:
     branches:
       - main
 
+# This gives the workflow permission to push code back to your repository.
+permissions:
+  contents: write
+
 jobs:
   build-db:
-    runs-on: ubuntu-latest  # Use a standard virtual machine
+    runs-on: ubuntu-latest
 
     steps:
       # 1. Check out your repository's code
@@ -43,7 +46,7 @@ jobs:
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
           git add products.db
-          # Check if there are any changes to commit
+          # Check if there are any changes to commit before committing
           if ! git diff --staged --quiet; then
             git commit -m "Automated: Update product database"
             git push
