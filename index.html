@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional BOQ Generator - Enhanced</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .toast.show {
+            transform: translateX(0);
+        }
+        .virtual-scroll {
+            height: 300px;
+            overflow-y: auto;
+        }
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress-bar {
+            transition: width 0.3s ease-in-out;
+        }
+        .file-drop-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .file-drop-zone:hover,
+        .file-drop-zone.dragover {
+            border-color: rgba(16, 185, 129, 0.6);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        .product-item {
+            transition: all 0.2s ease;
+        }
+        .product-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body class="p-4 min-h-screen flex items-center justify-center">
+    <div id="toastContainer"></div>
+
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glassmorphism rounded-lg p-6 flex items-center space-x-3">
+            <div class="loading-spinner"></div>
+            <span class="text-white" id="loadingText">Processing...</span>
+        </div>
+    </div>
+
+    <div class="glassmorphism rounded-3xl shadow-xl max-w-7xl w-full p-8 space-y-8">
+        <div class="text-center text-white">
+            <h1 class="text-4xl font-extrabold mb-2">Professional BOQ Generator</h1>
+            <p class="text-white/80">Enhanced system for generating Bills of Quantities</p>
+            <div class="mt-2">
+                <span id="appStatus" class="inline-block px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full">
+                    System Ready
+                </span>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <div class="glassmorphism rounded-2xl p-6 border border-white/20">
+                    <h2 class="text-2xl font-semibold text-white mb-4">Data Import</h2>
+                    
+                    <div id="fileDropZone" class="file-drop-zone rounded-xl p-8 text-center mb-4">
+                        <div class="text-white/80">
+                            <svg class="mx-auto h-12 w-12 mb-4 text-white/60" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <p class="text-lg font-medium mb-2">Drop files here or click to upload</p>
+                            <p class="text-sm text-white/60">Max 50MB • CSV, Excel, PDF, Word, JSON</p>
+                            <p class="text-xs text-white/50 mt-2">Files are processed securely and validated</p>
+                        </div>
+                        <input type="file" id="fileInput" class="hidden" multiple accept=".csv,.xlsx,.xls,.pdf,.docx,.json">
+                    </div>
+
+                    <div id="uploadProgress" class="hidden mb-4">
+                        <div class="w-full bg-white/20 rounded-full h-2 mb-2">
+                            <div id="progressBar" class="progress-bar bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p id="progressText" class="text-white/80 text-sm text-center">Processing files...</p>
+                    </div>
+
+                    <div id="fileList" class="space-y-2 mb-4 max-h-40 overflow-y-auto"></div>
+
+                    <div class="border-t border-white/20 pt-4">
+                        <h3 class="text-lg font-semibold text-white mb-3">Quick Add Product</h3>
+                        <form id="quickAddForm" class="space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="text" id="quickProductName" placeholder="Product Name" class="rounded-lg border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" required maxlength="255">
+                                <input type="number" id="quickProductPrice" placeholder="Price" min="0" step="0.01" class="rounded-lg border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" required>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <input type="text" id="quickProductBrand" placeholder="Brand" class="rounded-lg border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" maxlength="100">
+                                <input type="text" id="quickProductCategory" placeholder="Category" class="rounded-lg border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" maxlength="100">
+                                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50">Add</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="glassmorphism rounded-2xl p-6 border border-white/20">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-white">Product Database</h3>
+                        <div class="flex space-x-2 items-center">
+                            <span id="productCount" class="text-white/70 text-sm">0 products</span>
+                            <button id="exportDataBtn" class="px-3 py-1 bg-blue-500/70 text-white text-sm rounded hover:bg-blue-600/70 transition-colors">Export</button>
+                            <button id="clearDataBtn" class="px-3 py-1 bg-red-500/70 text-white text-sm rounded hover:bg-red-600/70 transition-colors">Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <input type="text" id="productSearch" placeholder="Search products..." class="col-span-2 rounded-lg border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3">
+                        <select id="categoryFilter" class="rounded-lg border-white/30 bg-white/10 text-white focus:border-white/50 focus:ring-white/50 text-sm p-3">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+
+                    <div id="productsList" class="virtual-scroll space-y-2">
+                        <div id="emptyProductsMessage" class="text-white/60 text-center py-8">
+                            <svg class="mx-auto h-12 w-12 mb-2 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4m0 0l-4-4m4 4V3" />
+                            </svg>
+                            <p>No products loaded. Upload files or add products manually.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glassmorphism rounded-2xl p-6 border border-white/20">
+                    <h3 class="text-lg font-semibold text-white mb-4">System Status</h3>
+                    <div id="systemStatus" class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Memory Usage:</span>
+                            <span id="memoryUsage" class="text-green-400">Normal</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Data Integrity:</span>
+                            <span id="dataIntegrity" class="text-green-400">Valid</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-white/70">Last Backup:</span>
+                            <span id="lastBackup" class="text-white/60">Auto-saved</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-white/20">
+                        <h4 class="text-sm font-medium text-white mb-2">Recent Activity</h4>
+                        <div id="activityLog" class="bg-black/20 rounded-lg p-3 max-h-24 overflow-y-auto text-xs font-mono">
+                            <div class="text-green-400">[INIT] System initialized successfully</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="glassmorphism rounded-2xl p-6 border border-white/20">
+                    <h2 class="text-2xl font-semibold text-white mb-4">Project Configuration</h2>
+                    
+                    <form id="boqForm" class="space-y-4" novalidate>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Project Name *</label>
+                                <input type="text" id="projectName" class="w-full rounded-lg border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" placeholder="Conference Room Setup" required maxlength="255">
+                                <div class="text-red-400 text-xs mt-1 hidden" id="projectNameError"></div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Client Name *</label>
+                                <input type="text" id="clientName" class="w-full rounded-lg border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" placeholder="ABC Corporation" required maxlength="255">
+                                <div class="text-red-400 text-xs mt-1 hidden" id="clientNameError"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-white/90 mb-1">Project Requirements</label>
+                            <textarea id="projectRequirements" rows="3" class="w-full rounded-lg border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" placeholder="Describe room size, expected attendees, specific equipment needs..." maxlength="2000"></textarea>
+                            <div class="text-white/50 text-xs mt-1" id="requirementsCounter">0/2000</div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Budget Range</label>
+                                <select id="budgetRange" class="w-full rounded-lg border-white/30 bg-white/10 text-white focus:border-white/50 focus:ring-white/50 text-sm p-3">
+                                    <option value="5000-15000">$5,000 - $15,000</option>
+                                    <option value="15000-30000">$15,000 - $30,000</option>
+                                    <option value="30000-50000">$30,000 - $50,000</option>
+                                    <option value="50000-100000">$50,000 - $100,000</option>
+                                    <option value="100000+">$100,000+</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Priority</label>
+                                <select id="priority" class="w-full rounded-lg border-white/30 bg-white/10 text-white focus:border-white/50 focus:ring-white/50 text-sm p-3">
+                                    <option value="balanced">Balanced</option>
+                                    <option value="cost">Cost Optimized</option>
+                                    <option value="quality">Quality Focus</option>
+                                    <option value="premium">Premium Only</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Contingency %</label>
+                                <input type="number" id="contingency" value="10" min="0" max="50" class="w-full rounded-lg border-white/30 bg-white/10 text-white focus:border-white/50 focus:ring-white/50 text-sm p-3">
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit" id="generateBtn" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none">
+                                <span id="generateText">Generate BOQ</span>
+                                <div id="generateSpinner" class="hidden inline-block ml-2 loading-spinner w-4 h-4"></div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="glassmorphism rounded-2xl p-6 border border-white/20">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-semibold text-white">Generated BOQ</h2>
+                        <div id="boqActions" class="hidden flex space-x-2">
+                            <button id="validateBoqBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-lg transition-colors" title="Validate BOQ">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button id="downloadCsv" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors" title="Download CSV">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button id="copyBoq" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors" title="Copy to Clipboard">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                                </svg>
+                            </button>
+                            <button id="saveProjectBtn" class="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-lg transition-colors" title="Save Project">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="boqOutput" class="text-white/70">
+                        <div class="text-center py-8">
+                            <svg class="mx-auto h-16 w-16 text-white/40 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p>Configure your project and click Generate BOQ to create a detailed quote</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application Configuration
+        const CONFIG = {
+            API_BASE_URL: '/', // Adjust this for production (e.g., 'https://your-backend-url.com')
+            AUTO_SAVE_INTERVAL: 30000,
+            MAX_PRODUCTS: 10000,
+            DEBOUNCE_DELAY: 300
+        };
+
+        // Custom Error Classes
+        class ValidationError extends Error {
+            constructor(message, field = null) {
+                super(message);
+                this.name = 'ValidationError';
+                this.field = field;
+            }
+        }
+
+        class ServiceError extends Error {
+            constructor(message, endpoint = null) {
+                super(message);
+                this.name = 'ServiceError';
+                this.endpoint = endpoint;
+            }
+        }
+
+        // Utility Functions
+        const utils = {
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            },
+
+            sanitizeHTML(str) {
+                if (!str) return '';
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            },
+
+            formatCurrency(amount) {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(amount);
+            },
+
+            generateUUID() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+        };
+
+        // Toast Notification System
+        class ToastManager {
+            constructor() {
+                this.container = document.getElementById('toastContainer');
+            }
+
+            show(message, type = 'info', duration = 5000) {
+                const toast = this.createToast(message, type);
+                this.container.appendChild(toast);
+                
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => this.remove(toast), duration);
+            }
+
+            createToast(message, type) {
+                const colors = {
+                    success: 'bg-green-500',
+                    error: 'bg-red-500',
+                    warning: 'bg-yellow-500',
+                    info: 'bg-blue-500'
+                };
+
+                const icons = {
+                    success: '✓',
+                    error: '✗',
+                    warning: '⚠',
+                    info: 'ⓘ'
+                };
+
+                const toast = document.createElement('div');
+                toast.className = `toast ${colors[type] || colors.info} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 mb-2`;
+                toast.innerHTML = `
+                    <span class="font-bold">${icons[type] || icons.info}</span>
+                    <span>${utils.sanitizeHTML(message)}</span>
+                    <button onclick="this.parentElement.remove()" class="ml-4 text-white/80 hover:text-white">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                `;
+                return toast;
+            }
+
+            remove(toast) {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.parentElement.removeChild(toast);
+                    }
+                }, 300);
+            }
+        }
+
+        // Product Database Manager (now syncs with backend)
+        class ProductDatabase {
+            constructor() {
+                this.products = new Map();
+                this.categories = new Set();
+                this.brands = new Set();
+                this.lastModified = new Date();
+                this.isDirty = false;
+            }
+            
+            async fetchAllProducts() {
+                try {
+                    const response = await fetch(`${CONFIG.API_BASE_URL}api/product_database`);
+                    if (!response.ok) throw new ServiceError('Failed to fetch product database from backend.');
+                    const data = await response.json();
+                    this.clear();
+                    data.products.forEach(p => this.products.set(p.id, p));
+                    this.rebuildCategories();
+                    this.updateUI();
+                } catch (error) {
+                    console.error('Error fetching products:', error);
+                    app.toast.show('Failed to sync with product database.', 'error');
+                }
+            }
+
+            addProduct(product) {
+                if (this.products.size >= CONFIG.MAX_PRODUCTS) {
+                    throw new Error(`Maximum product limit reached (${CONFIG.MAX_PRODUCTS})`);
+                }
+                if (!product.id) {
+                    product.id = utils.generateUUID();
+                }
+                this.products.set(product.id, { ...product, addedAt: new Date() });
+                if (product.category) this.categories.add(product.category);
+                if (product.brand) this.brands.add(product.brand);
+                this.lastModified = new Date();
+                this.updateUI();
+            }
+
+            removeProduct(id) {
+                const removed = this.products.delete(id);
+                if (removed) {
+                    this.rebuildCategories();
+                    this.lastModified = new Date();
+                    this.updateUI();
+                }
+                return removed;
+            }
+
+            getProduct(id) {
+                return this.products.get(id);
+            }
+
+            getAllProducts() {
+                return Array.from(this.products.values());
+            }
+
+            searchProducts(query) {
+                if (!query) return this.getAllProducts();
+                const searchTerm = query.toLowerCase();
+                return this.getAllProducts().filter(product =>
+                    (product.name && product.name.toLowerCase().includes(searchTerm)) ||
+                    (product.brand && product.brand.toLowerCase().includes(searchTerm)) ||
+                    (product.category && product.category.toLowerCase().includes(searchTerm))
+                );
+            }
+
+            filterByCategory(category) {
+                if (!category) return this.getAllProducts();
+                return this.getAllProducts().filter(product => product.category === category);
+            }
+
+            clear() {
+                this.products.clear();
+                this.categories.clear();
+                this.brands.clear();
+                this.lastModified = new Date();
+                this.updateUI();
+            }
+
+            rebuildCategories() {
+                this.categories.clear();
+                this.brands.clear();
+                this.getAllProducts().forEach(product => {
+                    if (product.category) this.categories.add(product.category);
+                    if (product.brand) this.brands.add(product.brand);
+                });
+            }
+
+            updateUI() {
+                this.updateProductsList();
+                this.updateCategoryFilter();
+                this.updateProductCount();
+            }
+
+            updateProductsList(products = this.getAllProducts()) {
+                const container = document.getElementById('productsList');
+                const emptyMessage = document.getElementById('emptyProductsMessage');
+                
+                if (products.length === 0) {
+                    emptyMessage.style.display = 'block';
+                    container.innerHTML = '';
+                    container.appendChild(emptyMessage);
+                    return;
+                }
+                
+                emptyMessage.style.display = 'none';
+                container.innerHTML = products.map(product => `
+                    <div class="product-item bg-white/5 rounded-lg p-3 border border-white/10" data-id="${product.id}">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="font-medium text-white">${utils.sanitizeHTML(product.name)}</h4>
+                                <p class="text-sm text-white/70">${utils.formatCurrency(product.price)}</p>
+                                ${product.brand ? `<p class="text-xs text-white/60">${utils.sanitizeHTML(product.brand)}</p>` : ''}
+                                ${product.category ? `<span class="inline-block bg-blue-500/20 text-blue-300 text-xs px-2 py-1 rounded mt-1">${utils.sanitizeHTML(product.category)}</span>` : ''}
+                            </div>
+                            <button onclick="app.database.removeProduct('${product.id}')" class="text-red-400 hover:text-red-300 p-1">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateCategoryFilter() {
+                const select = document.getElementById('categoryFilter');
+                const currentValue = select.value;
+                
+                select.innerHTML = '<option value="">All Categories</option>';
+                Array.from(this.categories).sort().forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    select.appendChild(option);
+                });
+                
+                select.value = currentValue;
+            }
+
+            updateProductCount() {
+                document.getElementById('productCount').textContent = `${this.products.size} products`;
+            }
+
+            exportData() {
+                const data = this.getAllProducts();
+                const csv = Papa.unparse(data.map(product => ({
+                    name: product.name,
+                    price: product.price,
+                    brand: product.brand || '',
+                    category: product.category || ''
+                })));
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `products_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Activity Logger
+        class ActivityLogger {
+            constructor() {
+                this.logs = [];
+                this.maxLogs = 100;
+                this.container = document.getElementById('activityLog');
+            }
+
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = {
+                    timestamp,
+                    message,
+                    type,
+                    id: utils.generateUUID()
+                };
+
+                this.logs.unshift(logEntry);
+                if (this.logs.length > this.maxLogs) {
+                    this.logs.pop();
+                }
+
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                if (!this.container) return;
+
+                const colors = {
+                    info: 'text-blue-400',
+                    success: 'text-green-400',
+                    warning: 'text-yellow-400',
+                    error: 'text-red-400'
+                };
+
+                this.container.innerHTML = this.logs.slice(0, 10).map(log => 
+                    `<div class="${colors[log.type] || colors.info}">[${log.timestamp}] ${utils.sanitizeHTML(log.message)}</div>`
+                ).join('');
+            }
+        }
+
+        // Main Application Class
+        class BOQApp {
+            constructor() {
+                this.database = new ProductDatabase();
+                this.toast = new ToastManager();
+                this.logger = new ActivityLogger();
+                
+                this.currentBOQ = null;
+                this.isProcessing = false;
+                
+                this.initializeApp();
+            }
+
+            async initializeApp() {
+                try {
+                    this.setupEventListeners();
+                    this.setupFileHandling();
+                    this.setupFormValidation();
+                    // Load data from backend on startup
+                    await this.database.fetchAllProducts(); 
+                    
+                    this.logger.log('Application initialized successfully', 'success');
+                    this.toast.show('BOQ Generator ready!', 'success');
+                } catch (error) {
+                    console.error('Initialization error:', error);
+                    this.toast.show('Failed to initialize application', 'error');
+                }
+            }
+
+            setupEventListeners() {
+                document.getElementById('quickAddForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleQuickAdd();
+                });
+
+                document.getElementById('boqForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleBOQGeneration();
+                });
+
+                const searchInput = document.getElementById('productSearch');
+                searchInput.addEventListener('input', utils.debounce(() => {
+                    this.database.updateProductsList(this.database.searchProducts(searchInput.value));
+                }, CONFIG.DEBOUNCE_DELAY));
+
+                document.getElementById('categoryFilter').addEventListener('change', (e) => {
+                    this.database.updateProductsList(this.database.filterByCategory(e.target.value));
+                });
+
+                document.getElementById('exportDataBtn').addEventListener('click', () => {
+                    this.database.exportData();
+                });
+
+                document.getElementById('clearDataBtn').addEventListener('click', () => {
+                    if (confirm('Are you sure you want to clear all data?')) {
+                        // In a production app, this would also call a backend API
+                        this.database.clear();
+                        this.toast.show('Local data cleared', 'warning');
+                    }
+                });
+
+                document.getElementById('downloadCsv').addEventListener('click', () => {
+                    this.downloadBOQAsCSV();
+                });
+
+                document.getElementById('copyBoq').addEventListener('click', () => {
+                    this.copyBOQToClipboard();
+                });
+
+                document.getElementById('validateBoqBtn').addEventListener('click', () => {
+                    this.validateBOQ();
+                });
+            }
+
+            setupFileHandling() {
+                const dropZone = document.getElementById('fileDropZone');
+                const fileInput = document.getElementById('fileInput');
+
+                dropZone.addEventListener('click', () => fileInput.click());
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('dragover');
+                });
+                dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('dragover');
+                    this.handleFileUpload(e.dataTransfer.files);
+                });
+                fileInput.addEventListener('change', (e) => this.handleFileUpload(e.target.files));
+            }
+
+            setupFormValidation() {
+                const requiredFields = ['projectName', 'clientName'];
+                requiredFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    const errorElement = document.getElementById(fieldId + 'Error');
+                    field.addEventListener('blur', () => this.validateField(field, errorElement));
+                    field.addEventListener('input', () => {
+                        if (errorElement && !errorElement.classList.contains('hidden')) {
+                            this.validateField(field, errorElement);
+                        }
+                    });
+                });
+            }
+
+            validateField(field, errorElement) {
+                const value = field.value.trim();
+                const isValid = !(field.hasAttribute('required') && !value);
+                const errorMessage = isValid ? '' : 'This field is required';
+
+                if (errorElement) {
+                    if (isValid) {
+                        errorElement.classList.add('hidden');
+                        field.classList.remove('border-red-500');
+                    } else {
+                        errorElement.textContent = errorMessage;
+                        errorElement.classList.remove('hidden');
+                        field.classList.add('border-red-500');
+                    }
+                }
+                return isValid;
+            }
+
+            async handleFileUpload(files) {
+                if (this.isProcessing) {
+                    this.toast.show('Already processing files. Please wait.', 'warning');
+                    return;
+                }
+                const fileArray = Array.from(files);
+                if (fileArray.length === 0) return;
+
+                this.isProcessing = true;
+                this.showUploadProgress(true);
+
+                try {
+                    let processedCount = 0;
+                    for (const file of fileArray) {
+                        this.updateProgress((processedCount / fileArray.length) * 100, `Uploading ${file.name}...`);
+                        this.logger.log(`Uploading ${file.name} to backend...`, 'info');
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        const response = await fetch(`${CONFIG.API_BASE_URL}api/upload_file`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const responseData = await response.json();
+                        if (!response.ok) {
+                            throw new Error(responseData.detail || 'File upload failed');
+                        }
+
+                        responseData.products.forEach(product => this.database.addProduct(product));
+                        this.addFileToList(file, responseData.products.length);
+                        this.logger.log(`Processed ${file.name}: ${responseData.products.length} products`, 'success');
+                        processedCount++;
+                    }
+                    this.updateProgress(100, 'Processing complete!');
+                    this.toast.show(`Successfully imported ${this.database.getAllProducts().length} products`, 'success');
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    this.toast.show(`Upload failed: ${error.message}`, 'error');
+                } finally {
+                    this.isProcessing = false;
+                    setTimeout(() => this.showUploadProgress(false), 1000);
+                }
+            }
+
+            showUploadProgress(show) {
+                document.getElementById('uploadProgress').classList.toggle('hidden', !show);
+            }
+
+            updateProgress(percent, text) {
+                document.getElementById('progressBar').style.width = `${percent}%`;
+                document.getElementById('progressText').textContent = text;
+            }
+
+            addFileToList(file, productCount) {
+                const fileList = document.getElementById('fileList');
+                const fileItem = document.createElement('div');
+                fileItem.className = 'flex justify-between items-center bg-white/10 p-2 rounded-lg';
+                fileItem.innerHTML = `
+                    <div class="flex-1 text-white/80 text-sm truncate">
+                        ${utils.sanitizeHTML(file.name)}
+                        <span class="text-xs text-white/50 ml-2">(${productCount} products)</span>
+                    </div>
+                `;
+                fileList.appendChild(fileItem);
+            }
+
+            async handleQuickAdd() {
+                const name = document.getElementById('quickProductName').value;
+                const price = document.getElementById('quickProductPrice').value;
+                const brand = document.getElementById('quickProductBrand').value;
+                const category = document.getElementById('quickProductCategory').value;
+                
+                try {
+                    const newProduct = { name, price: parseFloat(price), brand, category };
+                    const response = await fetch(`${CONFIG.API_BASE_URL}api/add_product`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newProduct)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Failed to add product');
+                    }
+                    
+                    const addedProduct = await response.json();
+                    this.database.addProduct(addedProduct);
+                    this.toast.show(`Added "${name}" to database`, 'success');
+                    document.getElementById('quickAddForm').reset();
+                    this.logger.log(`Manually added product: ${name}`, 'info');
+                } catch (error) {
+                    this.toast.show(`Failed to add product: ${error.message}`, 'error');
+                    this.logger.log(`Failed to add product: ${error.message}`, 'error');
+                }
+            }
+
+            async handleBOQGeneration() {
+                const form = document.getElementById('boqForm');
+                if (!form.checkValidity()) {
+                    this.toast.show('Please fill in all required fields.', 'warning');
+                    return;
+                }
+                
+                this.setGeneratingState(true);
+                this.logger.log('Generating BOQ...', 'info');
+
+                try {
+                    const config = {
+                        projectName: document.getElementById('projectName').value,
+                        clientName: document.getElementById('clientName').value,
+                        requirements: document.getElementById('projectRequirements').value,
+                        budgetRange: document.getElementById('budgetRange').value,
+                        priority: document.getElementById('priority').value,
+                        contingency: parseFloat(document.getElementById('contingency').value)
+                    };
+                    
+                    const response = await fetch(`${CONFIG.API_BASE_URL}api/generate_boq`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(config)
+                    });
+
+                    const boq = await response.json();
+                    if (!response.ok) {
+                        throw new Error(boq.detail || 'Failed to generate BOQ');
+                    }
+                    
+                    this.currentBOQ = boq;
+                    this.renderBOQ(boq);
+                    this.toast.show('BOQ generated successfully!', 'success');
+                    this.logger.log('BOQ generated', 'success');
+                } catch (error) {
+                    console.error('BOQ generation error:', error);
+                    this.toast.show(`BOQ generation failed: ${error.message}`, 'error');
+                    this.logger.log(`BOQ generation failed: ${error.message}`, 'error');
+                } finally {
+                    this.setGeneratingState(false);
+                }
+            }
+
+            setGeneratingState(isGenerating) {
+                const generateBtn = document.getElementById('generateBtn');
+                const generateText = document.getElementById('generateText');
+                const generateSpinner = document.getElementById('generateSpinner');
+                
+                generateBtn.disabled = isGenerating;
+                generateText.textContent = isGenerating ? 'Generating...' : 'Generate BOQ';
+                generateSpinner.classList.toggle('hidden', !isGenerating);
+                document.getElementById('boqActions').classList.toggle('hidden', !this.currentBOQ && !isGenerating);
+            }
+
+            renderBOQ(boq) {
+                const outputDiv = document.getElementById('boqOutput');
+                let html = `
+                    <div class="text-white/90 mb-6">
+                        <h3 class="text-xl font-bold">${utils.sanitizeHTML(boq.projectName)}</h3>
+                        <p class="text-white/70">Client: ${utils.sanitizeHTML(boq.clientName)}</p>
+                        <p class="text-white/70 text-sm">Generated on: ${new Date().toLocaleString()}</p>
+                    </div>
+                    
+                    <div class="bg-white/10 p-4 rounded-lg mb-4">
+                        <h4 class="font-semibold text-white mb-2">Summary</h4>
+                        <div class="grid grid-cols-2 gap-2 text-sm text-white/80">
+                            <span>Total Items:</span>
+                            <span class="text-right">${boq.summary.itemCount}</span>
+                            <span>Total Quantity:</span>
+                            <span class="text-right">${boq.summary.totalQuantity}</span>
+                            <span>Projected Cost:</span>
+                            <span class="text-right text-lg font-bold text-green-400">${utils.formatCurrency(boq.summary.totalCost)}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/20 p-4 rounded-lg max-h-96 overflow-y-auto">
+                        <h4 class="font-semibold text-white mb-3">Bill of Quantities</h4>
+                        <table class="w-full text-white/90 text-left">
+                            <thead class="sticky top-0 bg-black/30">
+                                <tr>
+                                    <th class="py-2 px-3 text-sm font-medium">Item</th>
+                                    <th class="py-2 px-3 text-sm font-medium text-center">Qty</th>
+                                    <th class="py-2 px-3 text-sm font-medium text-right">Unit Price</th>
+                                    <th class="py-2 px-3 text-sm font-medium text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                let currentCategory = '';
+                boq.items.sort((a, b) => a.category.localeCompare(b.category)).forEach(item => {
+                    if (item.category !== currentCategory) {
+                        html += `
+                            <tr>
+                                <td colspan="4" class="py-3 px-3 text-white/60 font-medium uppercase text-xs tracking-wider border-t border-white/20 mt-4">${utils.sanitizeHTML(item.category)}</td>
+                            </tr>
+                        `;
+                        currentCategory = item.category;
+                    }
+
+                    html += `
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="py-2 px-3 text-sm">${utils.sanitizeHTML(item.name)}<span class="block text-xs text-white/50">${utils.sanitizeHTML(item.brand)}</span></td>
+                            <td class="py-2 px-3 text-sm text-center">${item.quantity}</td>
+                            <td class="py-2 px-3 text-sm text-right">${utils.formatCurrency(item.unitPrice)}</td>
+                            <td class="py-2 px-3 text-sm text-right">${utils.formatCurrency(item.totalPrice)}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                outputDiv.innerHTML = html;
+            }
+
+            downloadBOQAsCSV() {
+                if (!this.currentBOQ) {
+                    this.toast.show('No BOQ to download.', 'warning');
+                    return;
+                }
+                const data = this.currentBOQ.items;
+                const csv = Papa.unparse(data.map(item => ({
+                    Category: item.category,
+                    Name: item.name,
+                    Brand: item.brand,
+                    Quantity: item.quantity,
+                    UnitPrice: item.unitPrice,
+                    TotalPrice: item.totalPrice
+                })));
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${this.currentBOQ.projectName.replace(/\s/g, '_')}_BOQ.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.toast.show('BOQ downloaded successfully!', 'success');
+                this.logger.log('Downloaded BOQ as CSV', 'info');
+            }
+
+            copyBOQToClipboard() {
+                if (!this.currentBOQ) {
+                    this.toast.show('No BOQ to copy.', 'warning');
+                    return;
+                }
+                const itemsText = this.currentBOQ.items.map(item => 
+                    `${item.name} (${item.quantity} pcs) - ${utils.formatCurrency(item.totalPrice)}`
+                ).join('\n');
+
+                const textToCopy = `Project: ${this.currentBOQ.projectName}\nClient: ${this.currentBOQ.clientName}\n\nBOQ Items:\n${itemsText}\n\nTotal Projected Cost: ${utils.formatCurrency(this.currentBOQ.summary.totalCost)}`;
+
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => {
+                        this.toast.show('BOQ copied to clipboard!', 'success');
+                        this.logger.log('Copied BOQ to clipboard', 'info');
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy text:', err);
+                        this.toast.show('Failed to copy to clipboard.', 'error');
+                    });
+            }
+
+            validateBOQ() {
+                if (!this.currentBOQ) {
+                    this.toast.show('No BOQ to validate.', 'warning');
+                    return;
+                }
+                
+                const errors = [];
+                const warnings = [];
+                this.currentBOQ.items.forEach(item => {
+                    if (item.quantity <= 0) {
+                        errors.push(`Item "${item.name}" has a quantity of 0.`);
+                    }
+                    if (item.unitPrice <= 0) {
+                        errors.push(`Item "${item.name}" has a unit price of 0.`);
+                    }
+                });
+
+                if (errors.length > 0) {
+                    const message = `Validation Failed: ${errors.join(', ')}`;
+                    this.toast.show(message, 'error', 10000);
+                    this.logger.log(`BOQ validation failed: ${errors.length} errors found`, 'error');
+                } else if (warnings.length > 0) {
+                    const message = `Validation Warning: ${warnings.join(', ')}`;
+                    this.toast.show(message, 'warning', 10000);
+                    this.logger.log(`BOQ validation passed with warnings: ${warnings.length} warnings found`, 'warning');
+                } else {
+                    this.toast.show('BOQ validated successfully! No issues found.', 'success');
+                    this.logger.log('BOQ validation passed', 'success');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.app = new BOQApp();
+        });
+    </script>
+</body>
+</html>
