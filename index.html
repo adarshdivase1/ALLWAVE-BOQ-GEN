@@ -23,7 +23,7 @@
             top: 20px;
             right: 20px;
             z-index: 1000;
-            transform: translateX(100%);
+            transform: translateX(120%);
             transition: transform 0.3s ease-in-out;
         }
         .toast.show {
@@ -87,10 +87,10 @@
     <div class="glassmorphism rounded-3xl shadow-xl max-w-7xl w-full p-8 space-y-8">
         <div class="text-center text-white">
             <h1 class="text-4xl font-extrabold mb-2">Professional BOQ Generator</h1>
-            <p class="text-white/80">Enhanced system for generating Bills of Quantities</p>
+            <p class="text-white/80">Intelligent Bill of Quantities Generation System</p>
             <div class="mt-2">
-                <span id="appStatus" class="inline-block px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full">
-                    System Ready
+                <span id="appStatus" class="inline-block px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full">
+                    Connecting...
                 </span>
             </div>
         </div>
@@ -106,20 +106,10 @@
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                             <p class="text-lg font-medium mb-2">Drop files here or click to upload</p>
-                            <p class="text-sm text-white/60">Max 50MB • CSV, Excel, PDF, JSON</p>
-                            <p class="text-xs text-white/50 mt-2">Files are processed securely and validated</p>
+                            <p class="text-sm text-white/60">CSV, Excel, PDF, JSON</p>
                         </div>
                         <input type="file" id="fileInput" class="hidden" multiple accept=".csv,.xlsx,.xls,.pdf,.json">
                     </div>
-
-                    <div id="uploadProgress" class="hidden mb-4">
-                        <div class="w-full bg-white/20 rounded-full h-2 mb-2">
-                            <div id="progressBar" class="progress-bar bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full" style="width: 0%"></div>
-                        </div>
-                        <p id="progressText" class="text-white/80 text-sm text-center">Processing files...</p>
-                    </div>
-
-                    <div id="fileList" class="space-y-2 mb-4 max-h-40 overflow-y-auto"></div>
 
                     <div class="border-t border-white/20 pt-4">
                         <h3 class="text-lg font-semibold text-white mb-3">Quick Add Product</h3>
@@ -137,9 +127,9 @@
                             <div class="grid grid-cols-3 gap-3">
                                 <input type="text" id="quickProductBrand" placeholder="Brand" class="rounded-lg border border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" maxlength="100">
                                 <input type="text" id="quickProductCategory" placeholder="Category" class="rounded-lg border border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" maxlength="100">
-                                <button type="submit" id="quickAddBtn" class="bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <button type="submit" id="quickAddBtn" class="bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                                     <span id="quickAddText">Add</span>
-                                    <div id="quickAddSpinner" class="hidden inline-block ml-1 w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    <div id="quickAddSpinner" class="hidden loading-spinner w-4 h-4"></div>
                                 </button>
                             </div>
                         </form>
@@ -156,7 +146,6 @@
                                     <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
                                 </svg>
                             </button>
-                            <button id="exportDataBtn" class="px-3 py-1 bg-purple-500/70 text-white text-sm rounded hover:bg-purple-600/70 transition-colors">Export</button>
                             <button id="clearDataBtn" class="px-3 py-1 bg-red-500/70 text-white text-sm rounded hover:bg-red-600/70 transition-colors">Clear</button>
                         </div>
                     </div>
@@ -174,31 +163,6 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8l-4 4m0 0l-4-4m4 4V3" />
                             </svg>
                             <p>No products loaded. Upload files or add products manually.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glassmorphism rounded-2xl p-6 border border-white/20">
-                    <h3 class="text-lg font-semibold text-white mb-4">System Status</h3>
-                    <div id="systemStatus" class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-white/70">Backend Status:</span>
-                            <span id="backendStatus" class="text-yellow-400">Checking...</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-white/70">Products Loaded:</span>
-                            <span id="productsLoaded" class="text-green-400">0</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-white/70">Last Sync:</span>
-                            <span id="lastSync" class="text-white/60">Never</span>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4 pt-4 border-t border-white/20">
-                        <h4 class="text-sm font-medium text-white mb-2">Recent Activity</h4>
-                        <div id="activityLog" class="bg-black/20 rounded-lg p-3 max-h-24 overflow-y-auto text-xs font-mono">
-                            <div class="text-green-400">[INIT] System initialized successfully</div>
                         </div>
                     </div>
                 </div>
@@ -224,7 +188,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-white/90 mb-1">Project Requirements</label>
-                            <textarea id="projectRequirements" rows="3" class="w-full rounded-lg border border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" placeholder="Describe room size, expected attendees, specific equipment needs..." maxlength="2000"></textarea>
+                            <textarea id="projectRequirements" rows="3" class="w-full rounded-lg border border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" placeholder="Keywords like: audio, video, speakers, 4k display..." maxlength="2000"></textarea>
                             <div class="text-white/50 text-xs mt-1" id="requirementsCounter">0/2000</div>
                         </div>
 
@@ -245,7 +209,6 @@
                                     <option value="balanced">Balanced</option>
                                     <option value="cost">Cost Optimized</option>
                                     <option value="quality">Quality Focus</option>
-                                    <option value="premium">Premium Only</option>
                                 </select>
                             </div>
                             <div>
@@ -255,9 +218,9 @@
                         </div>
 
                         <div class="pt-2">
-                            <button type="submit" id="generateBtn" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed">
+                            <button type="submit" id="generateBtn" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center">
                                 <span id="generateText">Generate BOQ</span>
-                                <div id="generateSpinner" class="hidden inline-block ml-2 loading-spinner w-4 h-4"></div>
+                                <div id="generateSpinner" class="hidden loading-spinner w-5 h-5 ml-2"></div>
                             </button>
                         </div>
                     </form>
@@ -267,11 +230,6 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-2xl font-semibold text-white">Generated BOQ</h2>
                         <div id="boqActions" class="hidden flex space-x-2">
-                            <button id="validateBoqBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-lg transition-colors" title="Validate BOQ">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
                             <button id="downloadCsv" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors" title="Download CSV">
                                 <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -283,11 +241,6 @@
                                     <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
                                 </svg>
                             </button>
-                            <button id="saveProjectBtn" class="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-lg transition-colors" title="Save Project">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
-                                </svg>
-                            </button>
                         </div>
                     </div>
                     <div id="boqOutput" class="text-white/70">
@@ -295,7 +248,7 @@
                             <svg class="mx-auto h-16 w-16 text-white/40 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <p>Configure your project and click Generate BOQ to create a detailed quote</p>
+                            <p>Configure your project and click "Generate BOQ" to create a quote.</p>
                         </div>
                     </div>
                 </div>
@@ -304,17 +257,14 @@
     </div>
 
     <script>
-        // Application Configuration
+        // --- Application Configuration ---
         const CONFIG = {
-            API_BASE_URL: 'https://adarshav-boq-backend.hf.space/',
-            AUTO_SAVE_INTERVAL: 30000,
-            MAX_PRODUCTS: 10000,
+            API_BASE_URL: 'http://127.0.0.1:7860', // <-- IMPORTANT: For local dev. Change to your deployed URL for production.
             DEBOUNCE_DELAY: 300,
             MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB
-            ALLOWED_FILE_TYPES: ['text/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'application/pdf', 'application/json']
         };
 
-        // Custom Error Classes
+        // --- Custom Error Classes ---
         class ValidationError extends Error {
             constructor(message, field = null) {
                 super(message);
@@ -322,17 +272,8 @@
                 this.field = field;
             }
         }
-
-        class ServiceError extends Error {
-            constructor(message, endpoint = null, status = null) {
-                super(message);
-                this.name = 'ServiceError';
-                this.endpoint = endpoint;
-                this.status = status;
-            }
-        }
-
-        // Utility Functions
+        
+        // --- Utility Functions ---
         const utils = {
             debounce(func, wait) {
                 let timeout;
@@ -345,95 +286,38 @@
                     timeout = setTimeout(later, wait);
                 };
             },
-
             sanitizeHTML(str) {
                 if (!str && str !== 0) return '';
                 const div = document.createElement('div');
                 div.textContent = String(str);
                 return div.innerHTML;
             },
-
             formatCurrency(amount) {
                 if (amount === null || amount === undefined || isNaN(amount)) return '$0.00';
-                return new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                }).format(Number(amount));
+                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
             },
-
-            generateUUID() {
-                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                    const r = Math.random() * 16 | 0;
-                    const v = c == 'x' ? r : (r & 0x3 | 0x8);
-                    return v.toString(16);
-                });
-            },
-
-            validateFileType(file) {
-                return CONFIG.ALLOWED_FILE_TYPES.includes(file.type) || 
-                       file.name.toLowerCase().endsWith('.csv') || 
-                       file.name.toLowerCase().endsWith('.xlsx') ||
-                       file.name.toLowerCase().endsWith('.xls') ||
-                       file.name.toLowerCase().endsWith('.pdf') ||
-                       file.name.toLowerCase().endsWith('.json');
-            },
-
             validateFileSize(file) {
                 return file.size <= CONFIG.MAX_FILE_SIZE;
             },
-
-            formatFileSize(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-            }
         };
 
-        // Toast Notification System
+        // --- Toast Notification System ---
         class ToastManager {
-            constructor() {
-                this.container = document.getElementById('toastContainer');
-            }
-
+            constructor() { this.container = document.getElementById('toastContainer'); }
             show(message, type = 'info', duration = 5000) {
                 const toast = this.createToast(message, type);
                 this.container.appendChild(toast);
-                
                 setTimeout(() => toast.classList.add('show'), 100);
                 setTimeout(() => this.remove(toast), duration);
             }
-
             createToast(message, type) {
-                const colors = {
-                    success: 'bg-green-500',
-                    error: 'bg-red-500',
-                    warning: 'bg-yellow-500',
-                    info: 'bg-blue-500'
-                };
-
-                const icons = {
-                    success: '✓',
-                    error: '✗',
-                    warning: '⚠',
-                    info: 'ⓘ'
-                };
-
+                const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500', info: 'bg-blue-500' };
+                const icons = { success: '✓', error: '✗', warning: '⚠', info: 'ⓘ' };
                 const toast = document.createElement('div');
                 toast.className = `toast ${colors[type] || colors.info} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 mb-2`;
-                toast.innerHTML = `
-                    <span class="font-bold">${icons[type] || icons.info}</span>
-                    <span>${utils.sanitizeHTML(message)}</span>
-                    <button onclick="this.parentElement.remove()" class="ml-4 text-white/80 hover:text-white">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                        </svg>
-                    </button>
-                `;
+                toast.innerHTML = `<span class="font-bold text-lg">${icons[type] || icons.info}</span><span>${utils.sanitizeHTML(message)}</span>`;
                 return toast;
             }
-
             remove(toast) {
                 if (toast && toast.parentElement) {
                     toast.classList.remove('show');
@@ -442,565 +326,200 @@
             }
         }
 
-        // Activity Logger
-        class ActivityLogger {
-            constructor() {
-                this.logContainer = document.getElementById('activityLog');
-                this.maxEntries = 50;
-            }
-
-            log(message, type = 'INFO') {
-                const timestamp = new Date().toLocaleTimeString();
-                const logEntry = document.createElement('div');
-                const colors = {
-                    'INFO': 'text-blue-400',
-                    'SUCCESS': 'text-green-400',
-                    'WARNING': 'text-yellow-400',
-                    'ERROR': 'text-red-400'
-                };
-                
-                logEntry.className = colors[type] || colors.INFO;
-                logEntry.textContent = `[${timestamp}] [${type}] ${message}`;
-                
-                this.logContainer.insertBefore(logEntry, this.logContainer.firstChild);
-                
-                // Keep only the latest entries
-                while (this.logContainer.children.length > this.maxEntries) {
-                    this.logContainer.removeChild(this.logContainer.lastChild);
-                }
-                
-                this.logContainer.scrollTop = 0;
-            }
-        }
-
-        // Data Storage and Management
-        class DataManager {
-            constructor() {
-                this.products = [];
-                this.categories = new Set();
-                this.lastSync = null;
-                this.isDirty = false;
-            }
-
-            addProduct(product) {
-                if (this.products.length >= CONFIG.MAX_PRODUCTS) {
-                    throw new ValidationError(`Maximum ${CONFIG.MAX_PRODUCTS} products allowed`);
-                }
-
-                const validatedProduct = this.validateProduct(product);
-                validatedProduct.id = validatedProduct.id || utils.generateUUID();
-                validatedProduct.created_at = new Date().toISOString();
-                
-                this.products.push(validatedProduct);
-                if (validatedProduct.category) {
-                    this.categories.add(validatedProduct.category);
-                }
-                this.isDirty = true;
-                return validatedProduct;
-            }
-
-            validateProduct(product) {
-                const errors = [];
-                
-                if (!product.name || product.name.trim().length === 0) {
-                    errors.push('Product name is required');
-                }
-                
-                if (product.name && product.name.length > 255) {
-                    errors.push('Product name must be less than 255 characters');
-                }
-                
-                const price = parseFloat(product.price);
-                if (isNaN(price) || price <= 0) {
-                    errors.push('Price must be a positive number');
-                }
-                
-                if (errors.length > 0) {
-                    throw new ValidationError(errors.join(', '));
-                }
-                
-                return {
-                    id: product.id,
-                    name: product.name.trim(),
-                    price: price,
-                    brand: product.brand ? product.brand.trim() : '',
-                    category: product.category ? product.category.trim() : 'General',
-                    description: product.description ? product.description.trim() : '',
-                    unit: product.unit ? product.unit.trim() : 'unit'
-                };
-            }
-
-            searchProducts(query, categoryFilter) {
-                const normalizedQuery = query.toLowerCase();
-                return this.products.filter(product => {
-                    const matchesQuery = !query || 
-                        product.name.toLowerCase().includes(normalizedQuery) ||
-                        (product.brand && product.brand.toLowerCase().includes(normalizedQuery)) ||
-                        (product.category && product.category.toLowerCase().includes(normalizedQuery));
-                    
-                    const matchesCategory = !categoryFilter || product.category === categoryFilter;
-                    
-                    return matchesQuery && matchesCategory;
-                });
-            }
-
-            clear() {
-                this.products = [];
-                this.categories.clear();
-                this.isDirty = true;
-            }
-
-            exportData() {
-                return {
-                    products: this.products,
-                    exportTime: new Date().toISOString(),
-                    version: '1.0'
-                };
-            }
-        }
-
-        // File Processing Service
-        class FileProcessor {
-            constructor() {
-                this.supportedTypes = {
-                    'text/csv': this.processCSV.bind(this),
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': this.processExcel.bind(this),
-                    'application/vnd.ms-excel': this.processExcel.bind(this),
-                    'application/json': this.processJSON.bind(this)
-                };
-            }
-
-            async processFiles(files) {
-                const results = [];
-                const errors = [];
-                
-                for (const file of files) {
-                    try {
-                        if (!utils.validateFileType(file)) {
-                            throw new ValidationError(`Unsupported file type: ${file.type || 'unknown'}`);
-                        }
-                        
-                        if (!utils.validateFileSize(file)) {
-                            throw new ValidationError(`File too large: ${utils.formatFileSize(file.size)}. Maximum allowed: ${utils.formatFileSize(CONFIG.MAX_FILE_SIZE)}`);
-                        }
-                        
-                        const products = await this.processFile(file);
-                        results.push({ file: file.name, products, count: products.length });
-                    } catch (error) {
-                        errors.push({ file: file.name, error: error.message });
-                    }
-                }
-                
-                return { results, errors };
-            }
-
-            async processFile(file) {
-                const processor = this.supportedTypes[file.type] || this.processCSV.bind(this);
-                return await processor(file);
-            }
-
-            async processCSV(file) {
-                return new Promise((resolve, reject) => {
-                    Papa.parse(file, {
-                        header: true,
-                        skipEmptyLines: true,
-                        dynamicTyping: true,
-                        complete: (results) => {
-                            try {
-                                const products = this.normalizeCSVData(results.data);
-                                resolve(products);
-                            } catch (error) {
-                                reject(error);
-                            }
-                        },
-                        error: (error) => reject(new Error(`CSV parsing error: ${error.message}`))
-                    });
-                });
-            }
-
-            async processJSON(file) {
-                const text = await this.readFileAsText(file);
-                try {
-                    const data = JSON.parse(text);
-                    return Array.isArray(data) ? data : [data];
-                } catch (error) {
-                    throw new Error(`JSON parsing error: ${error.message}`);
-                }
-            }
-
-            async processExcel(file) {
-                // For now, treat as CSV since we don't have a full Excel parser
-                throw new Error('Excel processing requires additional libraries. Please convert to CSV format.');
-            }
-
-            normalizeCSVData(data) {
-                return data.map(row => {
-                    // Handle common CSV column name variations
-                    const normalized = {};
-                    
-                    for (const [key, value] of Object.entries(row)) {
-                        const lowerKey = key.toLowerCase().trim();
-                        
-                        if (['name', 'product', 'item', 'title'].includes(lowerKey)) {
-                            normalized.name = value;
-                        } else if (['price', 'cost', 'amount', 'rate'].includes(lowerKey)) {
-                            normalized.price = value;
-                        } else if (['brand', 'manufacturer', 'make'].includes(lowerKey)) {
-                            normalized.brand = value;
-                        } else if (['category', 'type', 'group'].includes(lowerKey)) {
-                            normalized.category = value;
-                        } else if (['description', 'details', 'spec'].includes(lowerKey)) {
-                            normalized.description = value;
-                        } else if (['unit', 'uom'].includes(lowerKey)) {
-                            normalized.unit = value;
-                        }
-                    }
-                    
-                    return normalized;
-                }).filter(item => item.name && item.price);
-            }
-
-            readFileAsText(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = () => reject(new Error('Failed to read file'));
-                    reader.readAsText(file);
-                });
-            }
-        }
-
-        // BOQ Generator Service
-        class BOQGenerator {
-            constructor() {
-                this.isGenerating = false;
-            }
-
-            async generateBOQ(config, products) {
-                if (this.isGenerating) {
-                    throw new Error('BOQ generation already in progress');
-                }
-
-                this.isGenerating = true;
-                
-                try {
-                    // Simulate AI-powered BOQ generation
-                    await this.delay(2000);
-                    
-                    const selectedProducts = this.selectProducts(config, products);
-                    const boq = this.createBOQ(config, selectedProducts);
-                    
-                    return boq;
-                } finally {
-                    this.isGenerating = false;
-                }
-            }
-
-            selectProducts(config, products) {
-                if (products.length === 0) {
-                    throw new Error('No products available for BOQ generation');
-                }
-
-                // Simple product selection algorithm
-                const budgetRange = this.parseBudgetRange(config.budgetRange);
-                const targetBudget = (budgetRange.min + budgetRange.max) / 2;
-                
-                // Filter products based on priority
-                let filteredProducts = products;
-                if (config.priority === 'premium') {
-                    filteredProducts = products.filter(p => p.price > targetBudget * 0.02);
-                } else if (config.priority === 'cost') {
-                    filteredProducts = products.filter(p => p.price < targetBudget * 0.05);
-                }
-
-                // Select diverse products across categories
-                const selectedProducts = [];
-                const categories = [...new Set(filteredProducts.map(p => p.category))];
-                
-                categories.forEach(category => {
-                    const categoryProducts = filteredProducts.filter(p => p.category === category);
-                    const selected = categoryProducts.slice(0, Math.ceil(8 / categories.length));
-                    selectedProducts.push(...selected);
-                });
-
-                return selectedProducts.slice(0, 15); // Limit to 15 items
-            }
-
-            createBOQ(config, products) {
-                const contingency = parseFloat(config.contingency) || 10;
-                let subtotal = 0;
-                
-                const items = products.map((product, index) => {
-                    const quantity = this.generateQuantity(product);
-                    const total = product.price * quantity;
-                    subtotal += total;
-                    
-                    return {
-                        id: index + 1,
-                        description: product.name,
-                        brand: product.brand || 'TBD',
-                        unit: product.unit || 'unit',
-                        quantity: quantity,
-                        unitPrice: product.price,
-                        total: total
-                    };
-                });
-
-                const contingencyAmount = subtotal * (contingency / 100);
-                const grandTotal = subtotal + contingencyAmount;
-
-                return {
-                    project: {
-                        name: config.projectName,
-                        client: config.clientName,
-                        requirements: config.projectRequirements,
-                        budgetRange: config.budgetRange,
-                        priority: config.priority,
-                        generatedDate: new Date().toISOString()
-                    },
-                    items: items,
-                    summary: {
-                        itemCount: items.length,
-                        subtotal: subtotal,
-                        contingency: contingency,
-                        contingencyAmount: contingencyAmount,
-                        grandTotal: grandTotal
-                    }
-                };
-            }
-
-            generateQuantity(product) {
-                const categoryQuantities = {
-                    'Audio Equipment': Math.floor(Math.random() * 4) + 1,
-                    'Video Equipment': Math.floor(Math.random() * 3) + 1,
-                    'Furniture': Math.floor(Math.random() * 10) + 2,
-                    'Technology': Math.floor(Math.random() * 5) + 1,
-                    'General': Math.floor(Math.random() * 3) + 1
-                };
-                
-                return categoryQuantities[product.category] || Math.floor(Math.random() * 3) + 1;
-            }
-
-            parseBudgetRange(range) {
-                const ranges = {
-                    '5000-15000': { min: 5000, max: 15000 },
-                    '15000-30000': { min: 15000, max: 30000 },
-                    '30000-50000': { min: 30000, max: 50000 },
-                    '50000-100000': { min: 50000, max: 100000 },
-                    '100000+': { min: 100000, max: 200000 }
-                };
-                
-                return ranges[range] || { min: 5000, max: 15000 };
-            }
-
-            delay(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
-            }
-        }
-
-        // Main Application
+        // --- Main Application ---
         class BOQApp {
             constructor() {
                 this.toast = new ToastManager();
-                this.logger = new ActivityLogger();
-                this.dataManager = new DataManager();
-                this.fileProcessor = new FileProcessor();
-                this.boqGenerator = new BOQGenerator();
+                this.products = [];
+                this.categories = new Set();
                 this.currentBOQ = null;
                 
                 this.initializeEventListeners();
-                this.initializeUI();
-                this.startPeriodicTasks();
-                
-                this.logger.log('Application initialized successfully', 'SUCCESS');
+                this.checkBackendStatus();
+                this.refreshData(); // Initial data load
             }
 
             initializeEventListeners() {
                 // File handling
                 const fileInput = document.getElementById('fileInput');
                 const fileDropZone = document.getElementById('fileDropZone');
-                
                 fileDropZone.addEventListener('click', () => fileInput.click());
                 fileInput.addEventListener('change', (e) => this.handleFileSelect(e.target.files));
-                
-                // Drag and drop
-                fileDropZone.addEventListener('dragover', this.handleDragOver.bind(this));
-                fileDropZone.addEventListener('dragleave', this.handleDragLeave.bind(this));
-                fileDropZone.addEventListener('drop', this.handleDrop.bind(this));
+                fileDropZone.addEventListener('dragover', (e) => { e.preventDefault(); fileDropZone.classList.add('dragover'); });
+                fileDropZone.addEventListener('dragleave', (e) => { e.preventDefault(); fileDropZone.classList.remove('dragover'); });
+                fileDropZone.addEventListener('drop', (e) => { e.preventDefault(); fileDropZone.classList.remove('dragover'); this.handleFileSelect(e.dataTransfer.files); });
 
-                // Quick add form
+                // Forms and inputs
                 document.getElementById('quickAddForm').addEventListener('submit', this.handleQuickAdd.bind(this));
-                
-                // Search and filters
-                document.getElementById('productSearch').addEventListener('input', 
-                    utils.debounce(this.handleSearch.bind(this), CONFIG.DEBOUNCE_DELAY));
-                document.getElementById('categoryFilter').addEventListener('change', this.handleSearch.bind(this));
-                
-                // Data management buttons
-                document.getElementById('refreshDataBtn').addEventListener('click', this.refreshData.bind(this));
-                document.getElementById('exportDataBtn').addEventListener('click', this.exportData.bind(this));
-                document.getElementById('clearDataBtn').addEventListener('click', this.clearData.bind(this));
-                
-                // BOQ form
                 document.getElementById('boqForm').addEventListener('submit', this.handleBOQGeneration.bind(this));
-                
-                // BOQ actions
-                document.getElementById('validateBoqBtn').addEventListener('click', this.validateBOQ.bind(this));
+                document.getElementById('productSearch').addEventListener('input', utils.debounce(this.renderProducts.bind(this), CONFIG.DEBOUNCE_DELAY));
+                document.getElementById('categoryFilter').addEventListener('change', this.renderProducts.bind(this));
+                document.getElementById('projectRequirements').addEventListener('input', this.updateCharacterCount.bind(this));
+
+                // Buttons
+                document.getElementById('refreshDataBtn').addEventListener('click', this.refreshData.bind(this));
+                document.getElementById('clearDataBtn').addEventListener('click', this.clearData.bind(this));
                 document.getElementById('downloadCsv').addEventListener('click', this.downloadBOQ.bind(this));
                 document.getElementById('copyBoq').addEventListener('click', this.copyBOQ.bind(this));
-                document.getElementById('saveProjectBtn').addEventListener('click', this.saveProject.bind(this));
-
-                // Text area counter
-                const requirements = document.getElementById('projectRequirements');
-                requirements.addEventListener('input', this.updateCharacterCount.bind(this));
             }
 
-            initializeUI() {
-                this.updateProductCount();
-                this.updateCategoryFilter();
-                this.renderProducts();
-                this.updateSystemStatus();
+            async checkBackendStatus() {
+                try {
+                    const response = await fetch(CONFIG.API_BASE_URL);
+                    if (!response.ok) throw new Error('Backend not reachable');
+                    const data = await response.json();
+                    this.updateAppStatus('System Ready', 'green');
+                    console.log('Backend status:', data.message);
+                } catch (error) {
+                    this.updateAppStatus('Backend Offline', 'red');
+                    this.toast.show('Could not connect to the backend server.', 'error');
+                }
             }
-
-            startPeriodicTasks() {
-                // Auto-save interval
-                setInterval(() => {
-                    if (this.dataManager.isDirty) {
-                        this.autoSave();
-                    }
-                }, CONFIG.AUTO_SAVE_INTERVAL);
-
-                // Status update interval
-                setInterval(() => {
-                    this.updateSystemStatus();
-                }, 10000);
-            }
-
-            // File handling methods
-            handleDragOver(e) {
-                e.preventDefault();
-                document.getElementById('fileDropZone').classList.add('dragover');
-            }
-
-            handleDragLeave(e) {
-                e.preventDefault();
-                document.getElementById('fileDropZone').classList.remove('dragover');
-            }
-
-            handleDrop(e) {
-                e.preventDefault();
-                document.getElementById('fileDropZone').classList.remove('dragover');
-                this.handleFileSelect(e.dataTransfer.files);
-            }
-
+            
+            // --- API Communication Methods ---
+            
             async handleFileSelect(files) {
-                if (files.length === 0) return;
+                if (!files || files.length === 0) return;
+                this.showLoadingOverlay('Uploading and processing files...');
+                
+                const formData = new FormData();
+                let validFiles = 0;
+                for (const file of files) {
+                    if (!utils.validateFileSize(file)) {
+                        this.toast.show(`File too large: ${file.name}`, 'error');
+                        continue;
+                    }
+                    formData.append('file', file);
+                    validFiles++;
+                }
 
-                this.showLoadingOverlay('Processing files...');
-                this.updateUploadProgress(0, 'Preparing files...');
+                if (validFiles === 0) {
+                    this.hideLoadingOverlay();
+                    return;
+                }
 
                 try {
-                    const { results, errors } = await this.fileProcessor.processFiles([...files]);
-                    
-                    let totalAdded = 0;
-                    results.forEach(result => {
-                        result.products.forEach(product => {
-                            try {
-                                this.dataManager.addProduct(product);
-                                totalAdded++;
-                            } catch (error) {
-                                this.logger.log(`Failed to add product: ${error.message}`, 'WARNING');
-                            }
-                        });
-                    });
-
-                    if (errors.length > 0) {
-                        errors.forEach(error => {
-                            this.toast.show(`${error.file}: ${error.error}`, 'error');
-                        });
-                    }
-
-                    if (totalAdded > 0) {
-                        this.toast.show(`Successfully imported ${totalAdded} products`, 'success');
-                        this.logger.log(`Imported ${totalAdded} products from ${results.length} files`, 'SUCCESS');
-                        this.updateUI();
-                    }
-
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/api/upload_file`, { method: 'POST', body: formData });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.detail || 'Upload failed');
+                    this.toast.show(result.message, 'success');
+                    await this.refreshData();
                 } catch (error) {
-                    this.toast.show(`File processing error: ${error.message}`, 'error');
-                    this.logger.log(`File processing failed: ${error.message}`, 'ERROR');
+                    this.toast.show(`Error: ${error.message}`, 'error');
                 } finally {
                     this.hideLoadingOverlay();
-                    this.hideUploadProgress();
+                    document.getElementById('fileInput').value = '';
                 }
             }
 
             async handleQuickAdd(e) {
                 e.preventDefault();
-                
-                const formData = new FormData(e.target);
                 const product = {
                     name: document.getElementById('quickProductName').value.trim(),
                     price: parseFloat(document.getElementById('quickProductPrice').value),
                     brand: document.getElementById('quickProductBrand').value.trim(),
-                    category: document.getElementById('quickProductCategory').value.trim() || 'General'
+                    category: document.getElementById('quickProductCategory').value.trim()
                 };
 
-                this.setQuickAddLoading(true);
-                this.clearValidationErrors(['quickProductName', 'quickProductPrice']);
+                if (!product.name || !product.price || product.price <= 0) {
+                    this.toast.show('Product Name and a valid Price are required.', 'error');
+                    return;
+                }
 
+                this.setButtonLoading('quickAddBtn', true);
                 try {
-                    this.dataManager.addProduct(product);
-                    this.toast.show('Product added successfully', 'success');
-                    this.logger.log(`Added product: ${product.name}`, 'SUCCESS');
-                    
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/api/add_product`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(product),
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.detail || 'Failed to add product');
+                    this.toast.show('Product added successfully!', 'success');
                     e.target.reset();
-                    this.updateUI();
+                    await this.refreshData();
                 } catch (error) {
-                    if (error instanceof ValidationError) {
-                        this.showValidationError('quickProductName', error.message);
-                    }
-                    this.toast.show(error.message, 'error');
+                    this.toast.show(`Error: ${error.message}`, 'error');
                 } finally {
-                    this.setQuickAddLoading(false);
+                    this.setButtonLoading('quickAddBtn', false);
                 }
             }
-
-            handleSearch() {
-                this.renderProducts();
-            }
-
+            
             async handleBOQGeneration(e) {
                 e.preventDefault();
-                
                 const config = this.getBOQConfig();
-                this.clearValidationErrors(['projectName', 'clientName']);
-
+                
                 try {
                     this.validateBOQConfig(config);
-                    this.setBOQGenerationLoading(true);
+                    this.setButtonLoading('generateBtn', true, 'Generating...');
                     
-                    this.logger.log('Starting BOQ generation...', 'INFO');
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/api/generate_boq`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(config),
+                    });
+                    const boq = await response.json();
+                    if (!response.ok) throw new Error(boq.detail || 'Failed to generate BOQ');
                     
-                    const boq = await this.boqGenerator.generateBOQ(config, this.dataManager.products);
-                    this.currentBOQ = boq;
-                    
-                    this.renderBOQ(boq);
-                    this.toast.show('BOQ generated successfully', 'success');
-                    this.logger.log(`Generated BOQ with ${boq.items.length} items`, 'SUCCESS');
-                    
+                    this.currentBOQ = this.adaptBackendBOQ(boq);
+                    this.renderBOQ(this.currentBOQ);
+                    this.toast.show('BOQ generated successfully!', 'success');
                 } catch (error) {
                     if (error instanceof ValidationError && error.field) {
                         this.showValidationError(error.field, error.message);
                     }
                     this.toast.show(error.message, 'error');
-                    this.logger.log(`BOQ generation failed: ${error.message}`, 'ERROR');
                 } finally {
-                    this.setBOQGenerationLoading(false);
+                    this.setButtonLoading('generateBtn', false, 'Generate BOQ');
+                }
+            }
+            
+            async refreshData() {
+                try {
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/api/product_database`);
+                    if (!response.ok) throw new Error('Failed to fetch data from server');
+                    const products = await response.json();
+                    this.products = products;
+                    this.categories = new Set(products.map(p => p.category).filter(Boolean));
+                    this.updateUI();
+                } catch (error) {
+                    this.toast.show(error.message, 'error');
+                }
+            }
+            
+            async removeProduct(productId, productName) {
+                if (!confirm(`Are you sure you want to delete "${productName}"?`)) return;
+                
+                try {
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/api/products/${productId}`, { method: 'DELETE' });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.detail || 'Failed to delete');
+                    this.toast.show(result.message, 'success');
+                    await this.refreshData();
+                } catch (error) {
+                    this.toast.show(`Error: ${error.message}`, 'error');
+                }
+            }
+            
+            async clearData() {
+                if (confirm('Are you sure you want to clear the ENTIRE product database? This action cannot be undone.')) {
+                    this.showLoadingOverlay('Clearing database...');
+                    try {
+                        const response = await fetch(`${CONFIG.API_BASE_URL}/api/clear_database`, { method: 'POST' });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.detail || 'Failed to clear');
+                        this.toast.show(result.message, 'warning');
+                        await this.refreshData();
+                    } catch (error) {
+                        this.toast.show(`Error: ${error.message}`, 'error');
+                    } finally {
+                        this.hideLoadingOverlay();
+                    }
                 }
             }
 
-            // UI Update Methods
+            // --- UI Update & Management ---
+
             updateUI() {
                 this.updateProductCount();
                 this.updateCategoryFilter();
@@ -1008,36 +527,33 @@
             }
 
             updateProductCount() {
-                const count = this.dataManager.products.length;
-                document.getElementById('productCount').textContent = `${count} products`;
-                document.getElementById('productsLoaded').textContent = count.toString();
+                document.getElementById('productCount').textContent = `${this.products.length} products`;
             }
 
             updateCategoryFilter() {
                 const filter = document.getElementById('categoryFilter');
                 const currentValue = filter.value;
-                
                 filter.innerHTML = '<option value="">All Categories</option>';
-                
-                [...this.dataManager.categories].sort().forEach(category => {
+                [...this.categories].sort().forEach(category => {
                     const option = document.createElement('option');
                     option.value = category;
                     option.textContent = category;
                     filter.appendChild(option);
                 });
-                
-                if (currentValue && this.dataManager.categories.has(currentValue)) {
-                    filter.value = currentValue;
-                }
+                filter.value = currentValue;
             }
 
             renderProducts() {
                 const container = document.getElementById('productsList');
                 const emptyMessage = document.getElementById('emptyProductsMessage');
-                const searchQuery = document.getElementById('productSearch').value;
+                const searchQuery = document.getElementById('productSearch').value.toLowerCase();
                 const categoryFilter = document.getElementById('categoryFilter').value;
-                
-                const filteredProducts = this.dataManager.searchProducts(searchQuery, categoryFilter);
+
+                const filteredProducts = this.products.filter(p => {
+                    const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery) || p.brand.toLowerCase().includes(searchQuery);
+                    const matchesCategory = !categoryFilter || p.category === categoryFilter;
+                    return matchesSearch && matchesCategory;
+                });
                 
                 if (filteredProducts.length === 0) {
                     container.innerHTML = '';
@@ -1046,28 +562,23 @@
                 }
                 
                 emptyMessage.style.display = 'none';
-                container.innerHTML = filteredProducts.map(product => this.createProductHTML(product)).join('');
+                container.innerHTML = filteredProducts.map(p => this.createProductHTML(p)).join('');
             }
-
+            
             createProductHTML(product) {
                 return `
-                    <div class="product-item glassmorphism rounded-lg p-3 border border-white/20">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <h4 class="text-white font-medium text-sm">${utils.sanitizeHTML(product.name)}</h4>
-                                <div class="text-white/60 text-xs mt-1">
-                                    <span class="inline-block mr-3">${utils.formatCurrency(product.price)}</span>
-                                    ${product.brand ? `<span class="inline-block mr-3">${utils.sanitizeHTML(product.brand)}</span>` : ''}
-                                    <span class="inline-block px-2 py-0.5 bg-white/10 rounded text-xs">${utils.sanitizeHTML(product.category)}</span>
-                                </div>
-                                ${product.description ? `<p class="text-white/50 text-xs mt-1">${utils.sanitizeHTML(product.description)}</p>` : ''}
+                    <div class="product-item glassmorphism rounded-lg p-3 border border-white/20 flex justify-between items-center">
+                        <div class="flex-1">
+                            <h4 class="text-white font-medium text-sm">${utils.sanitizeHTML(product.name)}</h4>
+                            <div class="text-white/60 text-xs mt-1">
+                                <span class="inline-block mr-3">${utils.formatCurrency(product.price)}</span>
+                                <span class="inline-block mr-3">${utils.sanitizeHTML(product.brand)}</span>
+                                <span class="inline-block px-2 py-0.5 bg-white/10 rounded text-xs">${utils.sanitizeHTML(product.category)}</span>
                             </div>
-                            <button class="text-white/60 hover:text-red-400 ml-2" onclick="app.removeProduct('${product.id}')" title="Remove product">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                </svg>
-                            </button>
                         </div>
+                        <button class="text-white/60 hover:text-red-400 ml-2 p-1" onclick="app.removeProduct('${product.id}', '${utils.sanitizeHTML(product.name)}')" title="Remove product">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                        </button>
                     </div>
                 `;
             }
@@ -1076,76 +587,69 @@
                 const output = document.getElementById('boqOutput');
                 const actions = document.getElementById('boqActions');
                 
+                const tableRows = boq.items.map(item => `
+                    <tr class="border-b border-white/10 hover:bg-white/5">
+                        <td class="text-white/70 p-2">${item.id}</td>
+                        <td class="text-white p-2">${utils.sanitizeHTML(item.description)}</td>
+                        <td class="text-white/70 p-2">${utils.sanitizeHTML(item.brand)}</td>
+                        <td class="text-white/70 text-center p-2">${item.quantity} ${item.unit}</td>
+                        <td class="text-white/70 text-right p-2">${utils.formatCurrency(item.unitPrice)}</td>
+                        <td class="text-white text-right p-2">${utils.formatCurrency(item.total)}</td>
+                    </tr>
+                `).join('');
+
                 const html = `
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4 mb-4">
                             <div>
                                 <h3 class="text-lg font-semibold text-white mb-2">Project Details</h3>
-                                <div class="bg-black/20 rounded-lg p-3 text-sm">
-                                    <p class="text-white"><strong>Project:</strong> ${utils.sanitizeHTML(boq.project.name)}</p>
-                                    <p class="text-white"><strong>Client:</strong> ${utils.sanitizeHTML(boq.project.client)}</p>
-                                    <p class="text-white/70"><strong>Generated:</strong> ${new Date(boq.project.generatedDate).toLocaleDateString()}</p>
+                                <div class="bg-black/20 rounded-lg p-3 text-sm space-y-1">
+                                    <p><strong>Project:</strong> ${utils.sanitizeHTML(boq.project.name)}</p>
+                                    <p><strong>Client:</strong> ${utils.sanitizeHTML(boq.project.client)}</p>
+                                    <p><strong>Generated:</strong> ${new Date(boq.project.generatedDate).toLocaleString()}</p>
                                 </div>
                             </div>
                             <div>
                                 <h3 class="text-lg font-semibold text-white mb-2">Summary</h3>
-                                <div class="bg-black/20 rounded-lg p-3 text-sm">
-                                    <p class="text-white"><strong>Items:</strong> ${boq.summary.itemCount}</p>
-                                    <p class="text-white"><strong>Subtotal:</strong> ${utils.formatCurrency(boq.summary.subtotal)}</p>
-                                    <p class="text-white"><strong>Contingency (${boq.summary.contingency}%):</strong> ${utils.formatCurrency(boq.summary.contingencyAmount)}</p>
-                                    <p class="text-green-400 font-semibold"><strong>Grand Total:</strong> ${utils.formatCurrency(boq.summary.grandTotal)}</p>
+                                <div class="bg-black/20 rounded-lg p-3 text-sm space-y-1">
+                                    <p><strong>Subtotal:</strong> ${utils.formatCurrency(boq.summary.subtotal)}</p>
+                                    <p><strong>Contingency (${boq.summary.contingency}%):</strong> ${utils.formatCurrency(boq.summary.contingencyAmount)}</p>
+                                    <p class="text-green-400 font-semibold text-base"><strong>Grand Total:</strong> ${utils.formatCurrency(boq.summary.grandTotal)}</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr class="bg-black/20 border-b border-white/20">
-                                        <th class="text-white text-left p-2">#</th>
-                                        <th class="text-white text-left p-2">Description</th>
-                                        <th class="text-white text-left p-2">Brand</th>
-                                        <th class="text-white text-center p-2">Qty</th>
-                                        <th class="text-white text-right p-2">Unit Price</th>
-                                        <th class="text-white text-right p-2">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${boq.items.map(item => `
-                                        <tr class="border-b border-white/10 hover:bg-white/5">
-                                            <td class="text-white/70 p-2">${item.id}</td>
-                                            <td class="text-white p-2">${utils.sanitizeHTML(item.description)}</td>
-                                            <td class="text-white/70 p-2">${utils.sanitizeHTML(item.brand)}</td>
-                                            <td class="text-white/70 text-center p-2">${item.quantity} ${item.unit}</td>
-                                            <td class="text-white/70 text-right p-2">${utils.formatCurrency(item.unitPrice)}</td>
-                                            <td class="text-white text-right p-2">${utils.formatCurrency(item.total)}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                                <tfoot>
-                                    <tr class="bg-black/20 border-t border-white/20">
-                                        <td colspan="5" class="text-white font-semibold text-right p-2">Subtotal:</td>
-                                        <td class="text-white font-semibold text-right p-2">${utils.formatCurrency(boq.summary.subtotal)}</td>
-                                    </tr>
-                                    <tr class="bg-black/20">
-                                        <td colspan="5" class="text-white font-semibold text-right p-2">Contingency (${boq.summary.contingency}%):</td>
-                                        <td class="text-white font-semibold text-right p-2">${utils.formatCurrency(boq.summary.contingencyAmount)}</td>
-                                    </tr>
-                                    <tr class="bg-black/30 border-t border-white/20">
-                                        <td colspan="5" class="text-green-400 font-bold text-right p-2">Grand Total:</td>
-                                        <td class="text-green-400 font-bold text-right p-2">${utils.formatCurrency(boq.summary.grandTotal)}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
+                        <div class="overflow-x-auto"><table class="w-full text-sm">
+                            <thead><tr class="bg-black/20 border-b border-white/20">
+                                <th class="text-left p-2">#</th>
+                                <th class="text-left p-2">Description</th>
+                                <th class="text-left p-2">Brand</th>
+                                <th class="text-center p-2">Qty</th>
+                                <th class="text-right p-2">Unit Price</th>
+                                <th class="text-right p-2">Total</th>
+                            </tr></thead>
+                            <tbody>${tableRows}</tbody>
+                        </table></div>
                     </div>
                 `;
                 
                 output.innerHTML = html;
                 actions.classList.remove('hidden');
             }
+            
+            // --- Helper & Utility Methods ---
 
-            // Utility methods for UI state management
+            updateAppStatus(text, color) {
+                const statusEl = document.getElementById('appStatus');
+                const colors = {
+                    green: 'bg-green-500/20 text-green-400',
+                    yellow: 'bg-yellow-500/20 text-yellow-400',
+                    red: 'bg-red-500/20 text-red-400',
+                };
+                statusEl.textContent = text;
+                statusEl.className = `inline-block px-3 py-1 text-sm rounded-full ${colors[color] || colors.yellow}`;
+            }
+            
             showLoadingOverlay(message) {
                 document.getElementById('loadingText').textContent = message;
                 document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -1155,360 +659,116 @@
                 document.getElementById('loadingOverlay').classList.add('hidden');
             }
 
-            updateUploadProgress(percent, message) {
-                const progressContainer = document.getElementById('uploadProgress');
-                const progressBar = document.getElementById('progressBar');
-                const progressText = document.getElementById('progressText');
+            setButtonLoading(btnId, isLoading, loadingText = '') {
+                const btn = document.getElementById(btnId);
+                const textEl = btn.querySelector('span');
+                const spinnerEl = btn.querySelector('div');
+                const originalText = textEl.dataset.originalText || textEl.textContent;
+                if (!textEl.dataset.originalText) textEl.dataset.originalText = originalText;
                 
-                progressContainer.classList.remove('hidden');
-                progressBar.style.width = `${percent}%`;
-                progressText.textContent = message;
+                btn.disabled = isLoading;
+                if (isLoading) {
+                    textEl.textContent = loadingText || originalText;
+                    spinnerEl.classList.remove('hidden');
+                } else {
+                    textEl.textContent = originalText;
+                    spinnerEl.classList.add('hidden');
+                }
             }
 
-            hideUploadProgress() {
-                document.getElementById('uploadProgress').classList.add('hidden');
+            getBOQConfig() {
+                return {
+                    projectName: document.getElementById('projectName').value.trim(),
+                    clientName: document.getElementById('clientName').value.trim(),
+                    requirements: document.getElementById('projectRequirements').value.trim(),
+                    budgetRange: document.getElementById('budgetRange').value,
+                    priority: document.getElementById('priority').value,
+                    contingency: parseFloat(document.getElementById('contingency').value) || 0
+                };
             }
 
-            setQuickAddLoading(loading) {
-                const btn = document.getElementById('quickAddBtn');
-                const text = document.getElementById('quickAddText');
-                const spinner = document.getElementById('quickAddSpinner');
-                
-                btn.disabled = loading;
-                text.style.display = loading ? 'none' : 'inline';
-                spinner.classList.toggle('hidden', !loading);
-            }
-
-            setBOQGenerationLoading(loading) {
-                const btn = document.getElementById('generateBtn');
-                const text = document.getElementById('generateText');
-                const spinner = document.getElementById('generateSpinner');
-                
-                btn.disabled = loading;
-                text.textContent = loading ? 'Generating...' : 'GenerateBOQ';
-                spinner.classList.toggle('hidden', !loading);
+            validateBOQConfig(config) {
+                if (!config.projectName) throw new ValidationError('Project name is required', 'projectName');
+                if (!config.clientName) throw new ValidationError('Client name is required', 'clientName');
+                if (this.products.length === 0) throw new ValidationError('No products in database to generate a BOQ.');
+                this.clearValidationErrors(['projectName', 'clientName']);
             }
 
             showValidationError(fieldId, message) {
                 const field = document.getElementById(fieldId);
                 const errorElement = document.getElementById(fieldId + 'Error');
-                
                 if (field) field.classList.add('error-border');
                 if (errorElement) {
                     errorElement.textContent = message;
                     errorElement.classList.remove('hidden');
                 }
             }
-
             clearValidationErrors(fieldIds) {
-                fieldIds.forEach(fieldId => {
-                    const field = document.getElementById(fieldId);
-                    const errorElement = document.getElementById(fieldId + 'Error');
-                    
+                fieldIds.forEach(id => {
+                    const field = document.getElementById(id);
+                    const errorElement = document.getElementById(id + 'Error');
                     if (field) field.classList.remove('error-border');
-                    if (errorElement) {
-                        errorElement.textContent = '';
-                        errorElement.classList.add('hidden');
-                    }
+                    if (errorElement) errorElement.classList.add('hidden');
                 });
             }
 
             updateCharacterCount() {
                 const textarea = document.getElementById('projectRequirements');
                 const counter = document.getElementById('requirementsCounter');
-                const length = textarea.value.length;
-                
-                counter.textContent = `${length}/2000`;
-                counter.classList.toggle('text-red-400', length > 1900);
+                counter.textContent = `${textarea.value.length}/2000`;
             }
 
-            updateSystemStatus() {
-                document.getElementById('backendStatus').textContent = 'Connected';
-                document.getElementById('backendStatus').className = 'text-green-400';
-                document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
-                
-                const appStatus = document.getElementById('appStatus');
-                appStatus.textContent = 'System Ready';
-                appStatus.className = 'inline-block px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full';
-            }
-
-            // Data management methods
-            removeProduct(productId) {
-                const index = this.dataManager.products.findIndex(p => p.id === productId);
-                if (index !== -1) {
-                    const product = this.dataManager.products[index];
-                    this.dataManager.products.splice(index, 1);
-                    this.dataManager.isDirty = true;
-                    
-                    this.toast.show(`Removed ${product.name}`, 'info');
-                    this.logger.log(`Removed product: ${product.name}`, 'INFO');
-                    this.updateUI();
-                }
-            }
-
-            refreshData() {
-                this.logger.log('Refreshing data...', 'INFO');
-                this.updateUI();
-                this.toast.show('Data refreshed', 'info');
-            }
-
-            exportData() {
-                try {
-                    const data = this.dataManager.exportData();
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `boq-products-${new Date().toISOString().split('T')[0]}.json`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    
-                    URL.revokeObjectURL(url);
-                    
-                    this.toast.show('Data exported successfully', 'success');
-                    this.logger.log('Data exported', 'SUCCESS');
-                } catch (error) {
-                    this.toast.show(`Export failed: ${error.message}`, 'error');
-                }
-            }
-
-            clearData() {
-                if (confirm('Are you sure you want to clear all products? This action cannot be undone.')) {
-                    this.dataManager.clear();
-                    this.updateUI();
-                    this.toast.show('All products cleared', 'warning');
-                    this.logger.log('Product database cleared', 'WARNING');
-                }
-            }
-
-            autoSave() {
-                this.logger.log('Auto-saving data...', 'INFO');
-                this.dataManager.isDirty = false;
-                this.dataManager.lastSync = new Date();
-            }
-
-            // BOQ-related methods
-            getBOQConfig() {
+            adaptBackendBOQ(boq) {
+                const subtotal = boq.summary.totalCost / (1 + (boq.metadata.contingency / 100));
                 return {
-                    projectName: document.getElementById('projectName').value.trim(),
-                    clientName: document.getElementById('clientName').value.trim(),
-                    projectRequirements: document.getElementById('projectRequirements').value.trim(),
-                    budgetRange: document.getElementById('budgetRange').value,
-                    priority: document.getElementById('priority').value,
-                    contingency: document.getElementById('contingency').value
+                    project: {
+                        name: boq.projectName,
+                        client: boq.clientName,
+                        generatedDate: boq.generatedAt
+                    },
+                    items: boq.items.map((item, index) => ({ ...item, id: index + 1 })),
+                    summary: {
+                        itemCount: boq.summary.itemCount,
+                        subtotal: subtotal,
+                        contingency: boq.metadata.contingency,
+                        contingencyAmount: boq.summary.totalCost - subtotal,
+                        grandTotal: boq.summary.totalCost
+                    }
                 };
             }
 
-            validateBOQConfig(config) {
-                const errors = [];
-                
-                if (!config.projectName) {
-                    errors.push({ field: 'projectName', message: 'Project name is required' });
-                }
-                
-                if (!config.clientName) {
-                    errors.push({ field: 'clientName', message: 'Client name is required' });
-                }
-                
-                if (this.dataManager.products.length === 0) {
-                    errors.push({ field: null, message: 'No products available. Please add products first.' });
-                }
-                
-                if (errors.length > 0) {
-                    const error = new ValidationError(errors[0].message);
-                    error.field = errors[0].field;
-                    throw error;
-                }
-            }
-
-            validateBOQ() {
-                if (!this.currentBOQ) {
-                    this.toast.show('No BOQ to validate', 'warning');
-                    return;
-                }
-                
-                this.showLoadingOverlay('Validating BOQ...');
-                
-                setTimeout(() => {
-                    const issues = [];
-                    
-                    // Check for missing information
-                    this.currentBOQ.items.forEach(item => {
-                        if (item.brand === 'TBD') {
-                            issues.push(`${item.description}: Brand not specified`);
-                        }
-                        if (item.unitPrice <= 0) {
-                            issues.push(`${item.description}: Invalid unit price`);
-                        }
-                    });
-                    
-                    // Check budget compliance
-                    const budgetRange = this.boqGenerator.parseBudgetRange(this.currentBOQ.project.budgetRange || '5000-15000');
-                    if (this.currentBOQ.summary.grandTotal > budgetRange.max) {
-                        issues.push(`Total exceeds maximum budget by ${utils.formatCurrency(this.currentBOQ.summary.grandTotal - budgetRange.max)}`);
-                    }
-                    
-                    this.hideLoadingOverlay();
-                    
-                    if (issues.length === 0) {
-                        this.toast.show('BOQ validation passed', 'success');
-                        this.logger.log('BOQ validation completed - no issues found', 'SUCCESS');
-                    } else {
-                        const message = `Validation found ${issues.length} issue(s):\n${issues.slice(0, 3).join('\n')}`;
-                        this.toast.show(message, 'warning');
-                        this.logger.log(`BOQ validation found ${issues.length} issues`, 'WARNING');
-                    }
-                }, 1500);
-            }
-
             downloadBOQ() {
-                if (!this.currentBOQ) {
-                    this.toast.show('No BOQ to download', 'warning');
-                    return;
-                }
-                
-                try {
-                    // Create CSV content
-                    const csvContent = this.generateCSVContent(this.currentBOQ);
-                    const blob = new Blob([csvContent], { type: 'text/csv' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `BOQ-${this.currentBOQ.project.name.replace(/[^a-z0-9]/gi, '_')}-${new Date().toISOString().split('T')[0]}.csv`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    
-                    URL.revokeObjectURL(url);
-                    
-                    this.toast.show('BOQ downloaded successfully', 'success');
-                    this.logger.log('BOQ exported as CSV', 'SUCCESS');
-                } catch (error) {
-                    this.toast.show(`Download failed: ${error.message}`, 'error');
-                }
+                if (!this.currentBOQ) return this.toast.show('No BOQ to download', 'warning');
+                const headers = ['#', 'Description', 'Brand', 'Unit', 'Qty', 'Unit Price', 'Total'];
+                const rows = this.currentBOQ.items.map(item => [item.id, `"${item.description}"`, `"${item.brand}"`, item.unit, item.quantity, item.unitPrice, item.total].join(','));
+                const summary = [
+                    `,,,,,Subtotal,${this.currentBOQ.summary.subtotal}`,
+                    `,,,,,Contingency (${this.currentBOQ.summary.contingency}%),${this.currentBOQ.summary.contingencyAmount}`,
+                    `,,,,,Grand Total,${this.currentBOQ.summary.grandTotal}`
+                ];
+                const csv = [headers.join(','), ...rows, ...summary].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `BOQ-${this.currentBOQ.project.name}.csv`;
+                link.click();
+                URL.revokeObjectURL(link.href);
             }
 
-            generateCSVContent(boq) {
-                const headers = ['Item#', 'Description', 'Brand', 'Unit', 'Quantity', 'Unit Price', 'Total'];
-                const rows = boq.items.map(item => [
-                    item.id,
-                    `"${item.description}"`,
-                    `"${item.brand}"`,
-                    item.unit,
-                    item.quantity,
-                    item.unitPrice,
-                    item.total
-                ]);
-                
-                // Add summary rows
-                rows.push(['', '', '', '', '', 'Subtotal:', boq.summary.subtotal]);
-                rows.push(['', '', '', '', '', `Contingency (${boq.summary.contingency}%):`, boq.summary.contingencyAmount]);
-                rows.push(['', '', '', '', '', 'Grand Total:', boq.summary.grandTotal]);
-                
-                return [headers, ...rows].map(row => row.join(',')).join('\n');
-            }
-
-            async copyBOQ() {
-                if (!this.currentBOQ) {
-                    this.toast.show('No BOQ to copy', 'warning');
-                    return;
-                }
-                
-                try {
-                    const text = this.generateTextContent(this.currentBOQ);
-                    await navigator.clipboard.writeText(text);
-                    this.toast.show('BOQ copied to clipboard', 'success');
-                    this.logger.log('BOQ copied to clipboard', 'SUCCESS');
-                } catch (error) {
-                    this.toast.show('Failed to copy BOQ', 'error');
-                }
-            }
-
-            generateTextContent(boq) {
-                let content = `BILL OF QUANTITIES\n\n`;
-                content += `Project: ${boq.project.name}\n`;
-                content += `Client: ${boq.project.client}\n`;
-                content += `Generated: ${new Date(boq.project.generatedDate).toLocaleDateString()}\n\n`;
-                
-                content += `ITEMS:\n`;
-                content += `${'#'.padEnd(3)} ${'Description'.padEnd(30)} ${'Brand'.padEnd(15)} ${'Qty'.padEnd(8)} ${'Unit Price'.padEnd(12)} ${'Total'.padEnd(12)}\n`;
-                content += `${'-'.repeat(85)}\n`;
-                
-                boq.items.forEach(item => {
-                    content += `${item.id.toString().padEnd(3)} `;
-                    content += `${item.description.padEnd(30).substring(0, 30)} `;
-                    content += `${item.brand.padEnd(15).substring(0, 15)} `;
-                    content += `${(item.quantity + ' ' + item.unit).padEnd(8)} `;
-                    content += `${utils.formatCurrency(item.unitPrice).padStart(12)} `;
-                    content += `${utils.formatCurrency(item.total).padStart(12)}\n`;
+            copyBOQ() {
+                if (!this.currentBOQ) return this.toast.show('No BOQ to copy', 'warning');
+                // Basic text format for copying
+                const text = `Project: ${this.currentBOQ.project.name}\nClient: ${this.currentBOQ.project.client}\n\nTotal: ${utils.formatCurrency(this.currentBOQ.summary.grandTotal)}`;
+                navigator.clipboard.writeText(text).then(() => {
+                    this.toast.show('BOQ summary copied to clipboard!', 'success');
                 });
-                
-                content += `${'-'.repeat(85)}\n`;
-                content += `${''.padEnd(60)}Subtotal: ${utils.formatCurrency(boq.summary.subtotal).padStart(12)}\n`;
-                content += `${''.padEnd(60)}Contingency: ${utils.formatCurrency(boq.summary.contingencyAmount).padStart(12)}\n`;
-                content += `${''.padEnd(60)}GRAND TOTAL: ${utils.formatCurrency(boq.summary.grandTotal).padStart(12)}\n`;
-                
-                return content;
-            }
-
-            saveProject() {
-                if (!this.currentBOQ) {
-                    this.toast.show('No BOQ to save', 'warning');
-                    return;
-                }
-                
-                try {
-                    const projectData = {
-                        ...this.currentBOQ,
-                        savedDate: new Date().toISOString(),
-                        version: '1.0'
-                    };
-                    
-                    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `Project-${projectData.project.name.replace(/[^a-z0-9]/gi, '_')}-${new Date().toISOString().split('T')[0]}.json`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    
-                    URL.revokeObjectURL(url);
-                    
-                    this.toast.show('Project saved successfully', 'success');
-                    this.logger.log('Project saved', 'SUCCESS');
-                } catch (error) {
-                    this.toast.show(`Save failed: ${error.message}`, 'error');
-                }
             }
         }
 
-        // Initialize application when DOM is loaded
         let app;
         document.addEventListener('DOMContentLoaded', () => {
             app = new BOQApp();
-            
-            // Make some methods globally accessible for onclick handlers
-            window.app = app;
-        });
-
-        // Handle page visibility changes
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && app) {
-                app.updateSystemStatus();
-            }
-        });
-
-        // Handle before unload
-        window.addEventListener('beforeunload', (e) => {
-            if (app && app.dataManager.isDirty) {
-                e.preventDefault();
-                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-            }
+            window.app = app; // Make it globally accessible for onclick handlers
         });
     </script>
 </body>
