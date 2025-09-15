@@ -14,17 +14,14 @@
         .virtual-scroll { height: 450px; overflow-y: auto; }
         .loading-spinner { border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 2px solid white; width: 20px; height: 20px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .product-item:hover { background: rgba(255, 255, 255, 0.05); }
-        .boq-section-header { font-size: 1.1rem; font-weight: 600; color: white; background: rgba(0,0,0,0.2); padding: 0.5rem 0.75rem; border-radius: 0.25rem; margin-top: 1rem; }
+        .boq-section-header { font-size: 1.1rem; font-weight: 600; color: white; background: rgba(0,0,0,0.2); padding: 0.5rem 0.75rem; border-radius: 0.25rem; margin-top: 1.5rem; }
         .boq-item-features { font-size: 0.8rem; color: rgba(255, 255, 255, 0.7); padding-left: 1.5rem; font-style: italic; }
     </style>
 </head>
 <body class="p-4 min-h-screen flex items-center justify-center">
     <div id="toastContainer"></div>
     <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="glassmorphism rounded-lg p-6 flex items-center space-x-3">
-            <div class="loading-spinner"></div><span class="text-white" id="loadingText">Processing...</span>
-        </div>
+        <div class="glassmorphism rounded-lg p-6 flex items-center space-x-3"><div class="loading-spinner"></div><span class="text-white" id="loadingText">Processing...</span></div>
     </div>
 
     <div class="glassmorphism rounded-3xl shadow-xl max-w-7xl w-full p-8 space-y-8">
@@ -40,50 +37,23 @@
                     <h2 class="text-2xl font-semibold text-white mb-4">Project Configuration</h2>
                     <form id="boqForm" class="space-y-4" novalidate>
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-white/90 mb-1">Project Name *</label>
-                                <input type="text" id="projectName" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., Main Boardroom" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-white/90 mb-1">Client Name *</label>
-                                <input type="text" id="clientName" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., ABC Corporation" required>
-                            </div>
+                            <div><label class="block text-sm font-medium text-white/90 mb-1">Project Name *</label><input type="text" id="projectName" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., Main Boardroom" required></div>
+                            <div><label class="block text-sm font-medium text-white/90 mb-1">Client Name *</label><input type="text" id="clientName" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., ABC Corporation" required></div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-white/90 mb-1">Room Size</label>
                                 <select id="roomSize" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
-                                    <option value="small">Small (4-8 people)</option>
-                                    <option value="medium" selected>Medium (8-16 people)</option>
-                                    <option value="large">Large (16-30 people)</option>
-                                    <option value="xlarge">Extra Large (30+)</option>
+                                    <option value="small">Small (4-8 people)</option><option value="medium" selected>Medium (8-16 people)</option><option value="large">Large (16-30 people)</option><option value="xlarge">Extra Large (30+)</option>
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-white/90 mb-1">Use Case</label>
-                                <select id="useCase" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
-                                    <option value="meeting_room">Meeting Room</option>
-                                    <option value="digital_signage">Digital Signage</option>
-                                </select>
-                            </div>
+                            <div><label class="block text-sm font-medium text-white/90 mb-1">Use Case</label><select id="useCase" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3"><option value="meeting_room">Meeting Room</option><option value="digital_signage">Digital Signage</option></select></div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-white/90 mb-1">Keywords / Brand Preference</label>
-                            <textarea id="projectRequirements" rows="2" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., logitech, poly, signage..."></textarea>
-                        </div>
+                        <div><label class="block text-sm font-medium text-white/90 mb-1">Brand Preference (Optional)</label><textarea id="projectRequirements" rows="2" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., logitech, poly, cisco..."></textarea></div>
                         <div class="grid grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-white/90 mb-1">Budget</label>
-                                <select id="budgetRange" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3"><option value="standard">Standard</option><option value="economy">Economy</option><option value="premium">Premium</option><option value="enterprise">Enterprise</option></select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-white/90 mb-1">Priority</label>
-                                <select id="priority" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3"><option value="balanced">Balanced</option><option value="cost">Cost</option><option value="quality">Quality</option></select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-white/90 mb-1">Contingency %</label>
-                                <input type="number" id="contingency" value="10" min="0" max="50" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
-                            </div>
+                            <div><label class="block text-sm font-medium text-white/90 mb-1">Budget</label><select id="budgetRange" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3"><option value="standard">Standard</option><option value="economy">Economy</option><option value="premium">Premium</option><option value="enterprise">Enterprise</option></select></div>
+                            <div><label class="block text-sm font-medium text-white/90 mb-1">Priority</label><select id="priority" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3"><option value="balanced">Balanced</option><option value="cost">Cost</option><option value="quality">Quality</option></select></div>
+                            <div><label class="block text-sm font-medium text-white/90 mb-1">Contingency %</label><input type="number" id="contingency" value="10" min="0" max="50" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3"></div>
                         </div>
                         <div class="pt-2">
                             <button type="submit" id="generateBtn" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center">
@@ -100,9 +70,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-2xl font-semibold text-white">Generated BOQ</h2>
                         <div id="boqActions" class="hidden">
-                            <button id="downloadCsvBtn" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg" title="Download CSV">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                            </button>
+                            <button id="downloadCsvBtn" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg" title="Download CSV"><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
                         </div>
                     </div>
                     <div id="boqOutput" class="text-white/70 virtual-scroll">
@@ -121,19 +89,8 @@
             formatCurrency(amount) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount || 0)); }
         };
 
-        class ToastManager {
-            constructor() { this.container = document.getElementById('toastContainer'); }
-            show(message, type = 'info', duration = 4000) {
-                const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
-                const toast = document.createElement('div');
-                toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg`;
-                toast.innerHTML = `<span>${utils.sanitizeHTML(message)}</span>`;
-                this.container.appendChild(toast);
-                setTimeout(() => toast.classList.add('show'), 100);
-                setTimeout(() => { if (toast.parentElement) { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); } }, duration);
-            }
-        }
-
+        class ToastManager { /* ... unchanged ... */ }
+        
         class BOQApp {
             constructor() {
                 this.toast = new ToastManager();
@@ -147,40 +104,12 @@
                 document.getElementById('downloadCsvBtn').addEventListener('click', () => this.downloadBOQ());
             }
 
-            async checkBackendStatus() { /* ... unchanged ... */ }
+            async handleBOQGeneration(e) { /* ... unchanged ... */ }
             
-            async handleBOQGeneration(e) {
-                e.preventDefault();
-                const config = this.getBOQConfig();
-                
-                try {
-                    if (!config.projectName || !config.clientName) { this.toast.show('Project and Client Name are required.', 'error'); return; }
-
-                    this.setButtonLoading('generateBtn', true, 'Generating...');
-                    
-                    const response = await fetch(`${CONFIG.API_BASE_URL}/api/generate_boq`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(config),
-                    });
-                    const boq = await response.json();
-                    if (!response.ok) throw new Error(boq.detail || 'Failed to generate BOQ from server.');
-                    
-                    this.currentBOQ = boq;
-                    this.renderBOQ(boq);
-                    this.toast.show('BOQ generated successfully!', 'success');
-                } catch (error) {
-                    this.toast.show(error.message, 'error');
-                } finally {
-                    this.setButtonLoading('generateBtn', false, 'Generate Smart BOQ');
-                }
-            }
-
             renderBOQ(boq) {
                 const output = document.getElementById('boqOutput');
                 const actions = document.getElementById('boqActions');
                 
-                // ✅ FIX: Renders the new "sections" structure
                 const sectionsHTML = boq.sections.map(section => {
                     const itemsHTML = section.items.map((item, index) => `
                         <tr class="border-b border-white/10">
@@ -194,29 +123,19 @@
                             <td class="text-right p-2 align-top">${utils.formatCurrency(item.totalPrice)}</td>
                         </tr>`).join('');
 
-                    return `
-                        <div class="boq-section-header">${utils.sanitizeHTML(section.name)}</div>
-                        <table class="w-full text-sm text-left">
-                            <tbody>${itemsHTML}</tbody>
-                        </table>`;
+                    return `<div class="boq-section-header">${utils.sanitizeHTML(section.name)}</div><table class="w-full text-sm text-left"><tbody>${itemsHTML}</tbody></table>`;
                 }).join('');
 
                 output.innerHTML = `
                     <div class="space-y-4">
-                        <div class="text-lg font-semibold">
-                            <p>Project: ${utils.sanitizeHTML(boq.projectName)}</p>
-                            <p>Client: ${utils.sanitizeHTML(boq.clientName)}</p>
-                        </div>
+                        <div class="text-lg font-semibold"><p>Project: ${utils.sanitizeHTML(boq.projectName)}</p><p>Client: ${utils.sanitizeHTML(boq.clientName)}</p></div>
                         ${sectionsHTML}
                         <div class="text-right font-semibold text-lg pt-4">
                             <p>Subtotal: ${utils.formatCurrency(boq.summary.subtotal)}</p>
-                            <p>Contingency (${boq.summary.contingency}%): ${utils.formatCurrency(boq.summary.contingencyAmount)}</p>
+                            <p>Contingency (${boq.metadata.contingency}%): ${utils.formatCurrency(boq.summary.contingencyAmount)}</p>
                             <p class="text-green-400 text-xl">Grand Total: ${utils.formatCurrency(boq.summary.totalCost)}</p>
                         </div>
-                        <div class="text-left text-sm text-white/70 pt-2">
-                            <h4 class="font-semibold text-white">Recommendations:</h4>
-                            <ul>${boq.recommendations.map(r => `<li>- ${utils.sanitizeHTML(r)}</li>`).join('')}</ul>
-                        </div>
+                        <div class="text-left text-sm text-white/70 pt-2"><h4 class="font-semibold text-white">Recommendations:</h4><ul>${boq.recommendations.map(r => `<li>- ${utils.sanitizeHTML(r)}</li>`).join('')}</ul></div>
                     </div>`;
                 actions.classList.remove('hidden');
             }
@@ -231,9 +150,11 @@
             getBOQConfig() { return { projectName: document.getElementById('projectName').value.trim(), clientName: document.getElementById('clientName').value.trim(), roomSize: document.getElementById('roomSize').value, useCase: document.getElementById('useCase').value, requirements: document.getElementById('projectRequirements').value.trim(), budgetRange: document.getElementById('budgetRange').value, priority: document.getElementById('priority').value, contingency: parseFloat(document.getElementById('contingency').value) || 0 }; }
         }
         
-        // --- Unchanged initializers ---
+        // --- Unchanged initializers and other helper methods (pasted for completeness) ---
+        ToastManager.prototype.show = function(message, type = 'info', duration = 4000) { const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' }; const toast = document.createElement('div'); toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg`; toast.innerHTML = `<span>${utils.sanitizeHTML(message)}</span>`; this.container.appendChild(toast); setTimeout(() => toast.classList.add('show'), 100); setTimeout(() => { if (toast.parentElement) { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); } }, duration); };
         BOQApp.prototype.checkBackendStatus = async function() { try { const response = await fetch(CONFIG.API_BASE_URL); if (!response.ok) throw new Error(); this.updateAppStatus('System Ready', 'green'); } catch { this.updateAppStatus('Backend Offline', 'red'); this.toast.show('Could not connect to the backend server.', 'error'); } };
-        BOQApp.prototype.downloadBOQ = function() { if (!this.currentBOQ) { this.toast.show('No BOQ to download', 'error'); return; } const boq = this.currentBOQ; const headers = ['Section', 'Category', 'Brand', 'Product Name', 'Features', 'Qty', 'Unit Price', 'Total Price']; const rows = []; boq.sections.forEach(section => { section.items.forEach(item => { rows.push([ section.name, item.category || '', item.brand || '', item.name || '', item.features || '', item.quantity, item.unitPrice, item.totalPrice ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')); }); }); const summary = [ ``, `,,,,,,Subtotal,${boq.summary.subtotal.toFixed(2)}`, `,,,,,,Contingency (${boq.summary.contingency}%),${boq.summary.contingencyAmount.toFixed(2)}`, `,,,,,,Grand Total,${boq.summary.totalCost.toFixed(2)}` ]; const csvContent = [headers.join(','), ...rows, ...summary].join('\n'); const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `BOQ-${boq.projectName.replace(/\s+/g, '_')}.csv`; document.body.appendChild(link); link.click(); document.body.removeChild(link); };
+        BOQApp.prototype.handleBOQGeneration = async function(e) { e.preventDefault(); const config = this.getBOQConfig(); try { if (!config.projectName || !config.clientName) { this.toast.show('Project and Client Name are required.', 'error'); return; } this.setButtonLoading('generateBtn', true, 'Generating...'); const response = await fetch(`${CONFIG.API_BASE_URL}/api/generate_boq`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(config), }); const boq = await response.json(); if (!response.ok) throw new Error(boq.detail || 'Failed to generate BOQ from server.'); this.currentBOQ = boq; this.renderBOQ(boq); this.toast.show('BOQ generated successfully!', 'success'); } catch (error) { this.toast.show(error.message, 'error'); } finally { this.setButtonLoading('generateBtn', false, 'Generate Smart BOQ'); } };
+        BOQApp.prototype.downloadBOQ = function() { if (!this.currentBOQ) { this.toast.show('No BOQ to download', 'error'); return; } const boq = this.currentBOQ; const headers = ['Section', 'Category', 'Brand', 'Product Name', 'Features', 'Qty', 'Unit Price', 'Total Price']; const rows = []; boq.sections.forEach(section => { section.items.forEach(item => { rows.push([ section.name, item.category || '', item.brand || '', item.name || '', item.features || '', item.quantity, item.unitPrice, item.totalPrice ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')); }); }); const summary = [ ``, `,,,,,,Subtotal,${boq.summary.subtotal.toFixed(2)}`, `,,,,,,Contingency (${boq.metadata.contingency}%),${boq.summary.contingencyAmount.toFixed(2)}`, `,,,,,,Grand Total,${boq.summary.totalCost.toFixed(2)}` ]; const csvContent = [headers.join(','), ...rows, ...summary].join('\n'); const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `BOQ-${boq.projectName.replace(/\s+/g, '_')}.csv`; document.body.appendChild(link); link.click(); document.body.removeChild(link); };
         
         document.addEventListener('DOMContentLoaded', () => { window.app = new BOQApp(); });
     </script>
