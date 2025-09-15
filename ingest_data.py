@@ -1,17 +1,29 @@
-# ingest_data.py
+# ingest_data.py (Updated to handle PDFs)
 
 import os
 import pandas as pd
 import sqlite3
 import uuid
 import re
+import io
 
-# --- IMPORTANT: Place all your data files (CSVs, Excels) in a folder named 'data' ---
+# --- NEW: Import libraries for PDF processing ---
+import pdfplumber
+import spacy
+
+# --- Load NLP model ---
+try:
+    nlp = spacy.load("en_core_web_sm")
+    print("SpaCy model 'en_core_web_sm' loaded successfully.")
+except (OSError, ImportError):
+    print("SpaCy model not found. Text extraction from PDFs will be disabled.")
+    nlp = None
+
 DATA_FOLDER = 'data'
 DATABASE_FILE = 'products.db'
 
 def normalize_product_data(data: dict) -> dict or None:
-    """This is a simplified version of the function from your main.py"""
+    # This function remains the same as before
     product = {}
     found_name = False
     found_price = False
@@ -61,12 +73,34 @@ def normalize_product_data(data: dict) -> dict or None:
     product['id'] = str(uuid.uuid4())
     return product
 
+def extract_products_from_text(text: str) -> list:
+    """Uses SpaCy to find products in raw text."""
+    if not nlp:
+        return []
+    
+    products = []
+    doc = nlp(text)
+    
+    for ent in doc.ents:
+        if ent.label_ in ["PRODUCT", "ORG"]:
+            surrounding_text = doc[max(0, ent.start - 10): min(len(doc), ent.end + 10)].text
+            price_match = re.search(r'\$?(\d+[\.,]\d{2})', surrounding_text)
+            if price_match:
+                price = float(price_match.group(1).replace(',', '.'))
+                if price > 0:
+                    products.append({
+                        "name": ent.text.strip(),
+                        "price": price,
+                        "brand": ent.text.split()[0],
+                        "category": "Extracted from Text"
+                    })
+    return products
+
+
 def main():
-    # Connect to SQLite database (this will create the file if it doesn't exist)
     conn = sqlite3.connect(DATABASE_FILE)
     cursor = conn.cursor()
 
-    # Create the products table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY,
@@ -77,22 +111,54 @@ def main():
     )
     ''')
     conn.commit()
-
     print(f"Database '{DATABASE_FILE}' initialized.")
     
     products_to_add = []
     
-    # Read files from the data folder
     for filename in os.listdir(DATA_FOLDER):
         filepath = os.path.join(DATA_FOLDER, filename)
         print(f"Processing {filename}...")
         
         df = None
-        if filename.endswith('.csv'):
+        # --- START OF UPDATED SECTION ---
+        if filename.endswith('.pdf'):
+            try:
+                all_pdf_text = ""
+                with pdfplumber.open(filepath) as pdf:
+                    for page in pdf.pages:
+                        # First, try to extract tables
+                        tables = page.extract_tables()
+                        for table in tables:
+                            if not table or not table[0]: continue
+                            header = [str(h).lower() for h in table[0]]
+                            table_df = pd.DataFrame(table[1:], columns=header)
+                            for record in table_df.to_dict('records'):
+                                normalized = normalize_product_data(record)
+                                if normalized:
+                                    products_to_add.append(
+                                        (normalized['id'], normalized['name'], normalized['price'], normalized['brand'], normalized['category'])
+                                    )
+                        # Accumulate text for fallback text extraction
+                        all_pdf_text += page.extract_text() or ""
+                
+                # If any text was extracted, run SpaCy on it as a fallback
+                if all_pdf_text:
+                    text_products = extract_products_from_text(all_pdf_text)
+                    for record in text_products:
+                        normalized = normalize_product_data(record)
+                        if normalized:
+                            products_to_add.append(
+                                (normalized['id'], normalized['name'], normalized['price'], normalized['brand'], normalized['category'])
+                            )
+            except Exception as e:
+                print(f"  -> Could not process PDF file {filename}. Reason: {e}")
+
+        elif filename.endswith('.csv'):
             df = pd.read_csv(filepath)
         elif filename.endswith(('.xlsx', '.xls')):
             df = pd.read_excel(filepath)
         
+        # This part remains the same for CSV/Excel
         if df is not None:
             for record in df.to_dict('records'):
                 normalized = normalize_product_data(record)
@@ -100,16 +166,17 @@ def main():
                     products_to_add.append(
                         (normalized['id'], normalized['name'], normalized['price'], normalized['brand'], normalized['category'])
                     )
+        # --- END OF UPDATED SECTION ---
 
-    # Insert all products into the database
     if products_to_add:
+        # Use INSERT OR IGNORE to avoid duplicate errors if script is run multiple times
         cursor.executemany('''
-        INSERT INTO products (id, name, price, brand, category) VALUES (?, ?, ?, ?, ?)
+        INSERT OR IGNORE INTO products (id, name, price, brand, category) VALUES (?, ?, ?, ?, ?)
         ''', products_to_add)
         conn.commit()
-        print(f"Successfully added {len(products_to_add)} products to the database.")
+        print(f"Successfully processed {cursor.rowcount} new products into the database.")
     else:
-        print("No valid products found to add.")
+        print("No valid new products found to add.")
         
     conn.close()
 
