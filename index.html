@@ -114,7 +114,7 @@
                     <div id="fileList" class="space-y-2 mb-4 max-h-40 overflow-y-auto"></div>
 
                     <div class="border-t border-white/20 pt-4">
-                        <h3 class="text-lg font-semibold text-white mb-3">Quick Add Product </h3>
+                        <h3 class="text-lg font-semibold text-white mb-3">Quick Add Product </h3>
                         <form id="quickAddForm" class="space-y-3">
                             <div class="grid grid-cols-2 gap-3">
                                 <input type="text" id="quickProductName" placeholder="Product Name" class="rounded-lg border-white/30 bg-white/10 text-white placeholder-white/50 focus:border-white/50 focus:ring-white/50 text-sm p-3" required maxlength="255">
@@ -501,8 +501,14 @@
                 }
                 
                 emptyMessage.style.display = 'none';
-                container.innerHTML = products.map(product => `
-                    <div class="product-item bg-white/5 rounded-lg p-3 border border-white/10" data-id="${product.id}">
+                
+                // Performance improvement: Use a DocumentFragment for faster DOM manipulation
+                const fragment = document.createDocumentFragment();
+                products.forEach(product => {
+                    const productItem = document.createElement('div');
+                    productItem.className = 'product-item bg-white/5 rounded-lg p-3 border border-white/10';
+                    productItem.dataset.id = product.id;
+                    productItem.innerHTML = `
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
                                 <h4 class="font-medium text-white">${utils.sanitizeHTML(product.name)}</h4>
@@ -516,8 +522,12 @@
                                 </svg>
                             </button>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                    fragment.appendChild(productItem);
+                });
+                
+                container.innerHTML = '';
+                container.appendChild(fragment);
             }
 
             updateCategoryFilter() {
@@ -595,7 +605,7 @@
                     error: 'text-red-400'
                 };
 
-                this.container.innerHTML = this.logs.slice(0, 10).map(log => 
+                this.container.innerHTML = this.logs.slice(0, 10).map(log =>
                     `<div class="${colors[log.type] || colors.info}">[${log.timestamp}] ${utils.sanitizeHTML(log.message)}</div>`
                 ).join('');
             }
@@ -607,10 +617,10 @@
                 this.database = new ProductDatabase();
                 this.toast = new ToastManager();
                 this.logger = new ActivityLogger();
-                
+
                 this.currentBOQ = null;
                 this.isProcessing = false;
-                
+
                 this.initializeApp();
             }
 
@@ -620,8 +630,8 @@
                     this.setupFileHandling();
                     this.setupFormValidation();
                     // Load data from backend on startup
-                    await this.database.fetchAllProducts(); 
-                    
+                    await this.database.fetchAllProducts();
+
                     this.logger.log('Application initialized successfully', 'success');
                     this.toast.show('BOQ Generator ready!', 'success');
                 } catch (error) {
@@ -655,7 +665,7 @@
                 });
 
                 document.getElementById('clearDataBtn').addEventListener('click', () => {
-                    if (confirm('Are you sure you want to clear all data?')) {
+                    if (confirm('Are you sure you want to clear all LOCAL data? This will not affect the backend database.')) {
                         // In a production app, this would also call a backend API
                         this.database.clear();
                         this.toast.show('Local data cleared', 'warning');
@@ -672,6 +682,11 @@
 
                 document.getElementById('validateBoqBtn').addEventListener('click', () => {
                     this.validateBOQ();
+                });
+
+                // FIX: Add event listener for the save project button
+                document.getElementById('saveProjectBtn').addEventListener('click', () => {
+                    this.saveProject();
                 });
             }
 
@@ -698,12 +713,8 @@
                 requiredFields.forEach(fieldId => {
                     const field = document.getElementById(fieldId);
                     const errorElement = document.getElementById(fieldId + 'Error');
-                    field.addEventListener('blur', () => this.validateField(field, errorElement));
-                    field.addEventListener('input', () => {
-                        if (errorElement && !errorElement.classList.contains('hidden')) {
-                            this.validateField(field, errorElement);
-                        }
-                    });
+                    // FIX: Use a single event listener for validation
+                    field.addEventListener('input', () => this.validateField(field, errorElement));
                 });
             }
 
@@ -735,6 +746,7 @@
 
                 this.isProcessing = true;
                 this.showUploadProgress(true);
+                this.showLoadingOverlay(true); // FIX: Show the loading overlay
 
                 try {
                     let processedCount = 0;
@@ -764,10 +776,18 @@
                 } catch (error) {
                     console.error('Upload error:', error);
                     this.toast.show(`Upload failed: ${error.message}`, 'error');
+                    this.logger.log(`Failed to upload: ${error.message}`, 'error');
                 } finally {
                     this.isProcessing = false;
-                    setTimeout(() => this.showUploadProgress(false), 1000);
+                    setTimeout(() => {
+                        this.showUploadProgress(false);
+                        this.showLoadingOverlay(false); // FIX: Hide the loading overlay
+                    }, 1000);
                 }
+            }
+
+            showLoadingOverlay(show) {
+                document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
             }
 
             showUploadProgress(show) {
@@ -823,6 +843,12 @@
             }
 
             async handleBOQGeneration() {
+                // FIX: Add check for empty database
+                if (this.database.products.size === 0) {
+                    this.toast.show('Please upload or add products to generate a BOQ.', 'warning');
+                    return;
+                }
+                
                 const form = document.getElementById('boqForm');
                 if (!form.checkValidity()) {
                     this.toast.show('Please fill in all required fields.', 'warning');
@@ -870,11 +896,13 @@
                 const generateBtn = document.getElementById('generateBtn');
                 const generateText = document.getElementById('generateText');
                 const generateSpinner = document.getElementById('generateSpinner');
-                
+                const boqActions = document.getElementById('boqActions');
+
                 generateBtn.disabled = isGenerating;
                 generateText.textContent = isGenerating ? 'Generating...' : 'Generate BOQ';
                 generateSpinner.classList.toggle('hidden', !isGenerating);
-                document.getElementById('boqActions').classList.toggle('hidden', !this.currentBOQ && !isGenerating);
+                // FIX: Show/hide actions based on BOQ existence
+                boqActions.classList.toggle('hidden', !this.currentBOQ && !isGenerating);
             }
 
             renderBOQ(boq) {
@@ -975,7 +1003,7 @@
                     this.toast.show('No BOQ to copy.', 'warning');
                     return;
                 }
-                const itemsText = this.currentBOQ.items.map(item => 
+                const itemsText = this.currentBOQ.items.map(item =>
                     `${item.name} (${item.quantity} pcs) - ${utils.formatCurrency(item.totalPrice)}`
                 ).join('\n');
 
@@ -997,9 +1025,10 @@
                     this.toast.show('No BOQ to validate.', 'warning');
                     return;
                 }
-                
+
                 const errors = [];
                 const warnings = [];
+                let totalCalculatedCost = 0;
                 this.currentBOQ.items.forEach(item => {
                     if (item.quantity <= 0) {
                         errors.push(`Item "${item.name}" has a quantity of 0.`);
@@ -1007,7 +1036,17 @@
                     if (item.unitPrice <= 0) {
                         errors.push(`Item "${item.name}" has a unit price of 0.`);
                     }
+                    const calculatedTotal = item.quantity * item.unitPrice;
+                    if (Math.abs(calculatedTotal - item.totalPrice) > 0.01) {
+                        warnings.push(`Total price for "${item.name}" seems incorrect (expected: ${utils.formatCurrency(calculatedTotal)}).`);
+                    }
+                    totalCalculatedCost += calculatedTotal;
                 });
+                
+                // FIX: Add a check for the overall total cost
+                if (Math.abs(totalCalculatedCost - this.currentBOQ.summary.totalCost) > 0.01) {
+                    warnings.push(`Summary total cost does not match the sum of item totals (calculated: ${utils.formatCurrency(totalCalculatedCost)}).`);
+                }
 
                 if (errors.length > 0) {
                     const message = `Validation Failed: ${errors.join(', ')}`;
@@ -1021,6 +1060,42 @@
                     this.toast.show('BOQ validated successfully! No issues found.', 'success');
                     this.logger.log('BOQ validation passed', 'success');
                 }
+            }
+            
+            // FIX: Add the save project functionality
+            saveProject() {
+                if (!this.currentBOQ) {
+                    this.toast.show('No project to save.', 'warning');
+                    return;
+                }
+                
+                const projectData = {
+                    project: {
+                        name: document.getElementById('projectName').value,
+                        client: document.getElementById('clientName').value,
+                        requirements: document.getElementById('projectRequirements').value,
+                        budgetRange: document.getElementById('budgetRange').value,
+                        priority: document.getElementById('priority').value,
+                        contingency: parseFloat(document.getElementById('contingency').value)
+                    },
+                    boq: this.currentBOQ,
+                    products: this.database.getAllProducts()
+                };
+                
+                const json = JSON.stringify(projectData, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${projectData.project.name.replace(/\s/g, '_')}_project.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.toast.show('Project saved successfully!', 'success');
+                this.logger.log('Project saved as JSON', 'info');
             }
         }
 
