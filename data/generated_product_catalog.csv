@@ -1,0 +1,65 @@
+category,brand,name,price
+Displays & Projectors,Samsung,Samsung XU9077 Displays,1395.49
+Displays & Projectors,Samsung,Samsung BI2405 Displays,12840.78
+Displays & Projectors,LG,LG JB4775 Displays,8534.33
+Displays & Projectors,LG,LG XG2248 Displays,5206.82
+Displays & Projectors,Sony,Sony JR8648 Displays,13123.72
+Displays & Projectors,Sony,Sony KE3192 Displays,8142.48
+Displays & Projectors,Panasonic,Panasonic UK4740 Displays,2892.4
+Displays & Projectors,Panasonic,Panasonic RS3255 Displays,4836.67
+Displays & Projectors,Panasonic,Panasonic OU3930 Displays,1344.88
+Displays & Projectors,Sharp/NEC,Sharp/NEC MO5304 Displays,2978.21
+Displays & Projectors,Sharp/NEC,Sharp/NEC ID3564 Displays,9683.49
+Displays & Projectors,Sharp/NEC,Sharp/NEC JL6902 Displays,12903.69
+Displays & Projectors,Sharp/NEC,Sharp/NEC ZA8887 Displays,9352.14
+UC & Collaboration Devices,Logitech,Logitech YV5527 UC,921.49
+UC & Collaboration Devices,Logitech,Logitech AL8076 UC,1461.25
+UC & Collaboration Devices,Poly (HP),Poly (HP) BA1800 UC,1804.83
+UC & Collaboration Devices,Poly (HP),Poly (HP) TE5799 UC,1227.11
+UC & Collaboration Devices,Poly (HP),Poly (HP) FE4153 UC,1248.64
+UC & Collaboration Devices,Poly (HP),Poly (HP) VZ7586 UC,1224.23
+UC & Collaboration Devices,Cisco,Cisco FQ8499 UC,1650.62
+UC & Collaboration Devices,Cisco,Cisco FZ3426 UC,1931.57
+UC & Collaboration Devices,Jabra,Jabra YZ347 UC,2477.53
+UC & Collaboration Devices,Jabra,Jabra BW5781 UC,1503.73
+UC & Collaboration Devices,Jabra,Jabra HO5800 UC,987.89
+UC & Collaboration Devices,Yealink,Yealink QL8491 UC,1980.24
+UC & Collaboration Devices,Yealink,Yealink MW5745 UC,2241.04
+PTZ & Pro Video Cameras,Sony (PTZ),Sony (PTZ) ZC2836 PTZ,4474.34
+PTZ & Pro Video Cameras,Sony (PTZ),Sony (PTZ) AO3868 PTZ,2204.09
+PTZ & Pro Video Cameras,Sony (PTZ),Sony (PTZ) GE8838 PTZ,4951.69
+PTZ & Pro Video Cameras,Panasonic (PTZ),Panasonic (PTZ) YC5921 PTZ,5881.18
+PTZ & Pro Video Cameras,Panasonic (PTZ),Panasonic (PTZ) XZ3667 PTZ,4111.45
+PTZ & Pro Video Cameras,Canon (PTZ),Canon (PTZ) MW9268 PTZ,5169.17
+PTZ & Pro Video Cameras,Canon (PTZ),Canon (PTZ) VU8869 PTZ,3391.86
+PTZ & Pro Video Cameras,BirdDog (NDI),BirdDog (NDI) CN3307 PTZ,5707.95
+PTZ & Pro Video Cameras,BirdDog (NDI),BirdDog (NDI) PO3725 PTZ,4557.53
+PTZ & Pro Video Cameras,Lumens,Lumens XG1997 PTZ,4628.71
+PTZ & Pro Video Cameras,Lumens,Lumens VB2192 PTZ,4355.26
+Audio: Microphones & Conferencing,Shure (MXA/Stem),Shure (MXA/Stem) PO7570 Audio: Microphones,2930.5
+Audio: Microphones & Conferencing,Shure (MXA/Stem),Shure (MXA/Stem) VQ7358 Audio: Microphones,2127.32
+Audio: Microphones & Conferencing,Biamp (Parlé/Tesira),Biamp (Parlé/Tesira) VX4954 Audio: Microphones,1663.0
+Audio: Microphones & Conferencing,Biamp (Parlé/Tesira),Biamp (Parlé/Tesira) WN4896 Audio: Microphones,2641.83
+Audio: Microphones & Conferencing,Sennheiser (TCC2),Sennheiser (TCC2) DY2384 Audio: Microphones,1095.1
+Audio: Microphones & Conferencing,Sennheiser (TCC2),Sennheiser (TCC2) UD632 Audio: Microphones,580.13
+Audio: Microphones & Conferencing,QSC (NM-T1),QSC (NM-T1) KP5152 Audio: Microphones,281.27
+Audio: Microphones & Conferencing,QSC (NM-T1),QSC (NM-T1) ND9386 Audio: Microphones,3069.7
+Audio: Microphones & Conferencing,QSC (NM-T1),QSC (NM-T1) SO819 Audio: Microphones,1641.84
+Audio: Microphones & Conferencing,Audio-Technica,Audio-Technica CD3401 Audio: Microphones,574.36
+Audio: Microphones & Conferencing,Audio-Technica,Audio-Technica CH2804 Audio: Microphones,3058.63
+Audio: Microphones & Conferencing,Audio-Technica,Audio-Technica TG7574 Audio: Microphones,2006.88
+Audio: Microphones & Conferencing,Audio-Technica,Audio-Technica ZQ2281 Audio: Microphones,3165.39
+Audio: Speakers,QSC,QSC RM6591 Audio: Speakers,1973.85
+Audio: Speakers,QSC,QSC YH4415 Audio: Speakers,2466.9
+Audio: Speakers,QSC,QSC XQ2982 Audio: Speakers,1065.98
+Audio: Speakers,QSC,QSC BW923 Audio: Speakers,840.75
+Audio: Speakers,Biamp (Desono),Biamp (Desono) HY6773 Audio: Speakers,2229.07
+Audio: Speakers,Biamp (Desono),Biamp (Desono) GO8838 Audio: Speakers,1812.55
+Audio: Speakers,Biamp (Desono),Biamp (Desono) UJ6959 Audio: Speakers,1873.34
+Audio: Speakers,JBL,JBL YQ8322 Audio: Speakers,1681.43
+Audio: Speakers,JBL,JBL BZ396 Audio: Speakers,801.44
+Audio: Speakers,Bose,Bose VJ1035 Audio: Speakers,918.49
+Audio: Speakers,Bose,Bose VU4529 Audio: Speakers,1051.48
+Audio: Speakers,Bose,Bose GJ3557 Audio: Speakers,2089.47
+Audio: Speakers,Extron,Extron YN4801 Audio: Speakers,2073.43
+Audio: Speakers,Extron,Extron QN614 Audio: Speakers,2077.58
