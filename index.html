@@ -259,7 +259,8 @@
     <script>
         // --- Application Configuration ---
         const CONFIG = {
-            API_BASE_URL: 'http://127.0.0.1:7860', // <-- IMPORTANT: For local dev. Change to your deployed URL for production.
+            // ✅ THIS IS THE CORRECTED LINE
+            API_BASE_URL: 'https://adarshav-boq-backend.hf.space',
             DEBOUNCE_DELAY: 300,
             MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB
         };
@@ -594,7 +595,7 @@
                         <td class="text-white/70 p-2">${utils.sanitizeHTML(item.brand)}</td>
                         <td class="text-white/70 text-center p-2">${item.quantity} ${item.unit}</td>
                         <td class="text-white/70 text-right p-2">${utils.formatCurrency(item.unitPrice)}</td>
-                        <td class="text-white text-right p-2">${utils.formatCurrency(item.total)}</td>
+                        <td class="text-white text-right p-2">${utils.formatCurrency(item.totalPrice)}</td>
                     </tr>
                 `).join('');
 
@@ -740,7 +741,7 @@
             downloadBOQ() {
                 if (!this.currentBOQ) return this.toast.show('No BOQ to download', 'warning');
                 const headers = ['#', 'Description', 'Brand', 'Unit', 'Qty', 'Unit Price', 'Total'];
-                const rows = this.currentBOQ.items.map(item => [item.id, `"${item.description}"`, `"${item.brand}"`, item.unit, item.quantity, item.unitPrice, item.total].join(','));
+                const rows = this.currentBOQ.items.map(item => [item.id, `"${item.description}"`, `"${item.brand}"`, item.unit, item.quantity, item.unitPrice, item.totalPrice].join(','));
                 const summary = [
                     `,,,,,Subtotal,${this.currentBOQ.summary.subtotal}`,
                     `,,,,,Contingency (${this.currentBOQ.summary.contingency}%),${this.currentBOQ.summary.contingencyAmount}`,
