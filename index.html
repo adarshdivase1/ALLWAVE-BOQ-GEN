@@ -5,13 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Professional BOQ Generator v3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2'
+                    }
+                }
+            }
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Base styles */
+        :root {
+            color-scheme: dark;
+        }
+        
         body { 
-            font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            min-height: 100vh; 
-            color: white;
+            font-family: 'Inter', sans-serif !important; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; 
+            min-height: 100vh !important; 
+            color: white !important;
+            margin: 0;
+            padding: 0;
         }
         .glassmorphism { 
             background: rgba(255, 255, 255, 0.15); 
