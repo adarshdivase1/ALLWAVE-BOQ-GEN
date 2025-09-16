@@ -131,6 +131,14 @@ def initialize_database():
     )
     ''')
     
+    # Add data_quality_score column if it doesn't exist (for existing databases)
+    try:
+        cursor.execute('ALTER TABLE products ADD COLUMN data_quality_score REAL DEFAULT 1.0')
+        logger.info("Added data_quality_score column to existing products table")
+    except sqlite3.OperationalError:
+        # Column already exists
+        pass
+    
     # Create indexes for better performance
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_brand ON products(brand)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_category ON products(category)')
@@ -387,14 +395,26 @@ def process_csv_file(file_path: str) -> List[Dict[str, Any]]:
         
         for encoding in encodings:
             try:
-                df = pd.read_csv(file_path, encoding=encoding)
+                # Add error handling for malformed CSV lines
+                df = pd.read_csv(
+                    file_path, 
+                    encoding=encoding,
+                    on_bad_lines='skip',  # Skip bad lines instead of failing
+                    engine='python'  # More robust parser
+                )
                 logger.info(f"Successfully read CSV with {encoding} encoding")
                 break
             except UnicodeDecodeError:
                 continue
+            except Exception as e:
+                logger.warning(f"Failed to read CSV with {encoding}: {str(e)}")
+                continue
         
         if df is None:
             raise Exception("Could not read CSV with any supported encoding")
+        
+        # Log if any rows were skipped
+        logger.info(f"CSV loaded with {len(df)} rows")
         
         # Normalize column names
         df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
@@ -435,6 +455,12 @@ def process_csv_file(file_path: str) -> List[Dict[str, Any]]:
                 specifications = clean_text(row.get('specifications', ''))
                 model_number = clean_text(row.get('model', ''))
                 
+                # Handle warranty_years safely
+                try:
+                    warranty_years = int(row.get('warranty_years', 1))
+                except (ValueError, TypeError):
+                    warranty_years = 1
+                
                 product_data = {
                     'id': str(uuid.uuid4()),
                     'name': name,
@@ -444,7 +470,7 @@ def process_csv_file(file_path: str) -> List[Dict[str, Any]]:
                     'features': features,
                     'specifications': specifications,
                     'model_number': model_number,
-                    'warranty_years': int(row.get('warranty_years', 1)),
+                    'warranty_years': warranty_years,
                     'availability': row.get('availability', 'In Stock'),
                     'source_file': os.path.basename(file_path)
                 }
