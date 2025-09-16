@@ -195,7 +195,7 @@ category,brand,name,price,features,tier,use_case_tags,compatibility_tags
 "Extracted from Project","Crown","Audio System",2030.73,"Crown DCi4|600N","Enterprise","audio","dante"
 "Extracted from Project","Poly","Video Conferencing",4133.56,"Poly G7500","Enterprise","collaboration","poly_lens"
 "Extracted from Project","Crestron","Control & Connectivity",4685.07,"Crestron NVX System","Enterprise","","crestron_control"
-Displays & Projectors,Sharp/NEC (Sharp NEC Display),Sharp/NEC (Sharp NEC Display) GE-5964 86" 4K Display,9977.89,"Generated Model for Catalog Expansion",Enterprise,"large_room,visuals",""
+"Displays & Projectors","Sharp/NEC (Sharp NEC Display)","Sharp/NEC (Sharp NEC Display) GE-5964 86"" 4K Display",9977.89,"Generated Model for Catalog Expansion","Enterprise","large_room,visuals",""
 Displays & Projectors,Sharp/NEC (Sharp NEC Display),Sharp/NEC (Sharp NEC Display) FZ-7233 65" 4K Display,4685.25,"Generated Model for Catalog Expansion",Premium,"medium_room,visuals",""
 Displays & Projectors,Sharp/NEC (Sharp NEC Display),Sharp/NEC (Sharp NEC Display) CI-3132 86" 4K Display,9643.34,"Generated Model for Catalog Expansion",Enterprise,"large_room,visuals",""
 Displays & Projectors,Sharp/NEC (Sharp NEC Display),Sharp/NEC (Sharp NEC Display) QL-6238 65" 4K Display,2068.32,"Generated Model for Catalog Expansion",Standard,"medium_room,visuals",""
