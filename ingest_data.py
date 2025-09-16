@@ -1,4 +1,4 @@
-# ingest_data.py (Production-Ready v3.0)
+# ingest_data.py (Production-Ready v3.0 - Matching Your Schema)
 
 import os
 import pandas as pd
@@ -90,6 +90,14 @@ BRAND_PATTERNS = {
     'kramer': ['kramer']
 }
 
+# Tier mapping based on price ranges
+TIER_MAPPING = {
+    'budget': (0, 500),
+    'mid-range': (500, 2000),
+    'premium': (2000, 10000),
+    'enterprise': (10000, float('inf'))
+}
+
 def create_backup():
     """Create a backup of the existing database"""
     if not os.path.exists(DATABASE_FILE):
@@ -106,57 +114,71 @@ def create_backup():
     except Exception as e:
         logger.warning(f"Failed to create backup: {str(e)}")
 
+def get_existing_columns(cursor):
+    """Get list of existing columns in the products table"""
+    cursor.execute("PRAGMA table_info(products)")
+    columns = cursor.fetchall()
+    return [column[1] for column in columns]  # column[1] is the column name
+
 def initialize_database():
-    """Initialize database with enhanced schema"""
+    """Initialize database matching your existing schema"""
     conn = sqlite3.connect(DATABASE_FILE)
     cursor = conn.cursor()
 
-    # Enhanced products table with additional fields
+    # Create table matching your schema: category, brand, name, price, features, tier, use_case_tags, compatibility_tags
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY,
+        category TEXT,
+        brand TEXT,
         name TEXT NOT NULL,
         price REAL NOT NULL,
-        brand TEXT,
-        category TEXT,
         features TEXT,
-        specifications TEXT,
-        model_number TEXT,
-        warranty_years INTEGER DEFAULT 1,
-        availability TEXT DEFAULT 'In Stock',
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        source_file TEXT,
-        data_quality_score REAL DEFAULT 1.0
+        tier TEXT,
+        use_case_tags TEXT,
+        compatibility_tags TEXT
     )
     ''')
     
-    # Add data_quality_score column if it doesn't exist (for existing databases)
-    try:
-        cursor.execute('ALTER TABLE products ADD COLUMN data_quality_score REAL DEFAULT 1.0')
-        logger.info("Added data_quality_score column to existing products table")
-    except sqlite3.OperationalError:
-        # Column already exists
-        pass
+    # Get existing columns
+    existing_columns = get_existing_columns(cursor)
+    
+    # Define required columns that might be missing
+    required_columns = {
+        'id': 'TEXT PRIMARY KEY',
+        'category': 'TEXT',
+        'brand': 'TEXT',
+        'name': 'TEXT NOT NULL',
+        'price': 'REAL NOT NULL',
+        'features': 'TEXT',
+        'tier': 'TEXT',
+        'use_case_tags': 'TEXT',
+        'compatibility_tags': 'TEXT'
+    }
+    
+    # Add missing columns (except PRIMARY KEY columns which can't be added after creation)
+    for column_name, column_definition in required_columns.items():
+        if column_name not in existing_columns and column_name != 'id':
+            try:
+                cursor.execute(f'ALTER TABLE products ADD COLUMN {column_name} {column_definition}')
+                logger.info(f"Added {column_name} column to existing products table")
+            except sqlite3.OperationalError as e:
+                logger.warning(f"Could not add column {column_name}: {e}")
     
     # Create indexes for better performance
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_brand ON products(brand)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_category ON products(category)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_price ON products(price)')
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_name ON products(name)')
+    indexes = [
+        'CREATE INDEX IF NOT EXISTS idx_brand ON products(brand)',
+        'CREATE INDEX IF NOT EXISTS idx_category ON products(category)',
+        'CREATE INDEX IF NOT EXISTS idx_price ON products(price)',
+        'CREATE INDEX IF NOT EXISTS idx_name ON products(name)',
+        'CREATE INDEX IF NOT EXISTS idx_tier ON products(tier)'
+    ]
     
-    # Data quality tracking table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS data_quality_log (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        product_id TEXT,
-        issue_type TEXT,
-        issue_description TEXT,
-        severity TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (product_id) REFERENCES products (id)
-    )
-    ''')
+    for index_sql in indexes:
+        try:
+            cursor.execute(index_sql)
+        except sqlite3.OperationalError as e:
+            logger.warning(f"Could not create index: {e}")
     
     conn.commit()
     conn.close()
@@ -246,6 +268,62 @@ def categorize_product(product_name: str, features: str = "") -> str:
     
     return "Other"
 
+def determine_tier(price: float) -> str:
+    """Determine product tier based on price"""
+    for tier_name, (min_price, max_price) in TIER_MAPPING.items():
+        if min_price <= price < max_price:
+            return tier_name
+    return "budget"
+
+def extract_use_case_tags(product_name: str, features: str = "") -> str:
+    """Extract use case tags based on product information"""
+    combined_text = f"{product_name} {features}".lower()
+    use_cases = []
+    
+    use_case_keywords = {
+        'conference-room': ['conference', 'meeting', 'boardroom', 'huddle'],
+        'classroom': ['education', 'classroom', 'school', 'university'],
+        'auditorium': ['auditorium', 'theater', 'large venue', 'stadium'],
+        'home-office': ['home', 'personal', 'small office'],
+        'corporate': ['corporate', 'enterprise', 'business'],
+        'broadcast': ['broadcast', 'streaming', 'production'],
+        'retail': ['retail', 'store', 'kiosk', 'digital signage']
+    }
+    
+    for use_case, keywords in use_case_keywords.items():
+        for keyword in keywords:
+            if keyword in combined_text:
+                use_cases.append(use_case)
+                break
+    
+    return ', '.join(use_cases) if use_cases else 'general-purpose'
+
+def extract_compatibility_tags(product_name: str, features: str = "") -> str:
+    """Extract compatibility tags based on product information"""
+    combined_text = f"{product_name} {features}".lower()
+    compatibility = []
+    
+    compatibility_keywords = {
+        'teams': ['teams', 'microsoft teams'],
+        'zoom': ['zoom', 'zoom rooms'],
+        'webex': ['webex', 'cisco webex'],
+        'skype': ['skype', 'skype for business'],
+        'google-meet': ['google meet', 'hangouts'],
+        'usb': ['usb', 'plug and play'],
+        'hdmi': ['hdmi'],
+        'wireless': ['wireless', 'wifi', 'bluetooth'],
+        'poe': ['poe', 'power over ethernet'],
+        'sip': ['sip', 'voip']
+    }
+    
+    for compat, keywords in compatibility_keywords.items():
+        for keyword in keywords:
+            if keyword in combined_text:
+                compatibility.append(compat)
+                break
+    
+    return ', '.join(compatibility) if compatibility else 'standard'
+
 def validate_price(price_str: str) -> Tuple[float, List[str]]:
     """Enhanced price validation with error tracking"""
     issues = []
@@ -271,46 +349,6 @@ def validate_price(price_str: str) -> Tuple[float, List[str]]:
     except ValueError:
         issues.append("Invalid price format")
         return 0.0, issues
-
-def calculate_data_quality_score(product_data: Dict) -> float:
-    """Calculate data quality score based on completeness and validity"""
-    score = 1.0
-    
-    # Required fields penalty
-    if not product_data.get('name') or product_data['name'].strip() == "":
-        score -= 0.3
-    if not product_data.get('price') or product_data['price'] <= 0:
-        score -= 0.2
-    
-    # Brand and category quality
-    if product_data.get('brand') == "Unknown":
-        score -= 0.1
-    if product_data.get('category') == "Other":
-        score -= 0.1
-    
-    # Feature completeness
-    features = product_data.get('features', "")
-    if not features or len(features.strip()) < 10:
-        score -= 0.1
-    
-    # Model number presence
-    if not product_data.get('model_number'):
-        score -= 0.05
-    
-    return max(0.0, min(1.0, score))
-
-def log_data_quality_issue(product_id: str, issue_type: str, description: str, severity: str = "medium"):
-    """Log data quality issues for monitoring"""
-    conn = sqlite3.connect(DATABASE_FILE)
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-    INSERT INTO data_quality_log (product_id, issue_type, issue_description, severity)
-    VALUES (?, ?, ?, ?)
-    ''', (product_id, issue_type, description, severity))
-    
-    conn.commit()
-    conn.close()
 
 def extract_text_from_pdf(file_path: str) -> str:
     """Enhanced PDF text extraction with better error handling"""
@@ -360,32 +398,29 @@ def parse_pdf_catalog(file_path: str) -> List[Dict[str, Any]]:
                 
                 brand = extract_brand(name)
                 category = categorize_product(name)
+                tier = determine_tier(price)
+                use_case_tags = extract_use_case_tags(name)
+                compatibility_tags = extract_compatibility_tags(name)
                 
                 product_data = {
                     'id': str(uuid.uuid4()),
+                    'category': category,
+                    'brand': brand,
                     'name': name,
                     'price': price,
-                    'brand': brand,
-                    'category': category,
                     'features': "",  # Could be enhanced with more sophisticated extraction
-                    'specifications': "",
-                    'model_number': "",
-                    'source_file': os.path.basename(file_path)
+                    'tier': tier,
+                    'use_case_tags': use_case_tags,
+                    'compatibility_tags': compatibility_tags
                 }
                 
-                product_data['data_quality_score'] = calculate_data_quality_score(product_data)
                 products.append(product_data)
-                
-                # Log quality issues
-                if price_issues:
-                    for issue in price_issues:
-                        log_data_quality_issue(product_data['id'], "price", issue)
     
     logger.info(f"Extracted {len(products)} products from PDF")
     return products
 
 def process_csv_file(file_path: str) -> List[Dict[str, Any]]:
-    """Enhanced CSV processing with better error handling and validation"""
+    """Enhanced CSV processing matching your database schema"""
     logger.info(f"Processing CSV file: {file_path}")
     
     try:
@@ -419,69 +454,39 @@ def process_csv_file(file_path: str) -> List[Dict[str, Any]]:
         # Normalize column names
         df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
         
-        # Map common column variations
-        column_mapping = {
-            'product_name': ['name', 'product', 'title', 'item_name'],
-            'price': ['cost', 'amount', 'value', 'msrp'],
-            'brand': ['manufacturer', 'vendor', 'make'],
-            'category': ['type', 'class', 'group'],
-            'features': ['description', 'details', 'specs'],
-            'model': ['model_number', 'sku', 'part_number']
-        }
-        
-        # Rename columns based on mapping
-        for target_col, variations in column_mapping.items():
-            for variation in variations:
-                if variation in df.columns and target_col not in df.columns:
-                    df.rename(columns={variation: target_col}, inplace=True)
-                    break
-        
         products = []
         
         for index, row in df.iterrows():
             try:
-                # Extract basic information
-                name = clean_text(row.get('product_name', row.get('name', '')))
+                # Extract basic information - map to your schema
+                name = clean_text(row.get('name', ''))
                 if not name:
                     logger.warning(f"Row {index + 1}: Missing product name, skipping")
                     continue
                 
                 price, price_issues = validate_price(row.get('price', ''))
                 
-                # Extract or infer other fields
-                brand = row.get('brand', '') or extract_brand(name)
-                category = row.get('category', '') or categorize_product(name)
+                # Extract or infer other fields matching your schema
+                brand = clean_text(row.get('brand', '')) or extract_brand(name)
+                category = clean_text(row.get('category', '')) or categorize_product(name)
                 features = clean_text(row.get('features', ''))
-                specifications = clean_text(row.get('specifications', ''))
-                model_number = clean_text(row.get('model', ''))
-                
-                # Handle warranty_years safely
-                try:
-                    warranty_years = int(row.get('warranty_years', 1))
-                except (ValueError, TypeError):
-                    warranty_years = 1
+                tier = clean_text(row.get('tier', '')) or determine_tier(price)
+                use_case_tags = clean_text(row.get('use_case_tags', '')) or extract_use_case_tags(name, features)
+                compatibility_tags = clean_text(row.get('compatibility_tags', '')) or extract_compatibility_tags(name, features)
                 
                 product_data = {
                     'id': str(uuid.uuid4()),
+                    'category': category,
+                    'brand': brand,
                     'name': name,
                     'price': price,
-                    'brand': brand,
-                    'category': category,
                     'features': features,
-                    'specifications': specifications,
-                    'model_number': model_number,
-                    'warranty_years': warranty_years,
-                    'availability': row.get('availability', 'In Stock'),
-                    'source_file': os.path.basename(file_path)
+                    'tier': tier,
+                    'use_case_tags': use_case_tags,
+                    'compatibility_tags': compatibility_tags
                 }
                 
-                product_data['data_quality_score'] = calculate_data_quality_score(product_data)
                 products.append(product_data)
-                
-                # Log quality issues
-                if price_issues:
-                    for issue in price_issues:
-                        log_data_quality_issue(product_data['id'], "price", issue)
                 
             except Exception as e:
                 logger.error(f"Error processing row {index + 1}: {str(e)}")
@@ -495,7 +500,7 @@ def process_csv_file(file_path: str) -> List[Dict[str, Any]]:
         return []
 
 def insert_products_to_db(products: List[Dict[str, Any]]) -> int:
-    """Enhanced database insertion with conflict resolution"""
+    """Insert products matching your database schema"""
     if not products:
         return 0
     
@@ -505,47 +510,62 @@ def insert_products_to_db(products: List[Dict[str, Any]]) -> int:
     inserted_count = 0
     updated_count = 0
     
+    # Verify all required columns exist
+    existing_columns = get_existing_columns(cursor)
+    required_columns = ['category', 'brand', 'name', 'price', 'features', 'tier', 'use_case_tags', 'compatibility_tags']
+    
+    missing_columns = [col for col in required_columns if col not in existing_columns]
+    if missing_columns:
+        logger.error(f"Missing required columns: {missing_columns}")
+        logger.info("Re-initializing database to add missing columns...")
+        conn.close()
+        initialize_database()
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+    
     for product in products:
         try:
+            # Ensure all required fields have default values
+            product.setdefault('category', 'Other')
+            product.setdefault('brand', 'Unknown')
+            product.setdefault('features', '')
+            product.setdefault('tier', 'budget')
+            product.setdefault('use_case_tags', 'general-purpose')
+            product.setdefault('compatibility_tags', 'standard')
+            
             # Check for existing product with same name and brand
             cursor.execute('''
-            SELECT id, data_quality_score FROM products 
+            SELECT id FROM products 
             WHERE name = ? AND brand = ?
             ''', (product['name'], product['brand']))
             
             existing = cursor.fetchone()
             
             if existing:
-                existing_id, existing_score = existing
-                # Update if new data has better quality score
-                if product['data_quality_score'] > existing_score:
-                    cursor.execute('''
-                    UPDATE products SET 
-                        price = ?, category = ?, features = ?, specifications = ?,
-                        model_number = ?, warranty_years = ?, availability = ?,
-                        updated_at = CURRENT_TIMESTAMP, source_file = ?,
-                        data_quality_score = ?
-                    WHERE id = ?
-                    ''', (
-                        product['price'], product['category'], product['features'],
-                        product['specifications'], product['model_number'],
-                        product['warranty_years'], product['availability'],
-                        product['source_file'], product['data_quality_score'], existing_id
-                    ))
-                    updated_count += 1
-                    logger.debug(f"Updated existing product: {product['name']}")
+                existing_id = existing[0]
+                # Update existing product
+                cursor.execute('''
+                UPDATE products SET 
+                    category = ?, price = ?, features = ?, tier = ?,
+                    use_case_tags = ?, compatibility_tags = ?
+                WHERE id = ?
+                ''', (
+                    product['category'], product['price'], product['features'],
+                    product['tier'], product['use_case_tags'], 
+                    product['compatibility_tags'], existing_id
+                ))
+                updated_count += 1
+                logger.debug(f"Updated existing product: {product['name']}")
             else:
                 # Insert new product
                 cursor.execute('''
                 INSERT INTO products (
-                    id, name, price, brand, category, features, specifications,
-                    model_number, warranty_years, availability, source_file, data_quality_score
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    id, category, brand, name, price, features, tier, use_case_tags, compatibility_tags
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
-                    product['id'], product['name'], product['price'], product['brand'],
-                    product['category'], product['features'], product['specifications'],
-                    product['model_number'], product['warranty_years'], product['availability'],
-                    product['source_file'], product['data_quality_score']
+                    product['id'], product['category'], product['brand'], product['name'],
+                    product['price'], product['features'], product['tier'],
+                    product['use_case_tags'], product['compatibility_tags']
                 ))
                 inserted_count += 1
                 
@@ -568,22 +588,8 @@ def generate_data_quality_report() -> Dict[str, Any]:
     cursor.execute('SELECT COUNT(*) FROM products')
     total_products = cursor.fetchone()[0]
     
-    cursor.execute('SELECT AVG(data_quality_score) FROM products')
-    avg_quality_score = cursor.fetchone()[0] or 0
-    
-    # Quality distribution
-    cursor.execute('''
-    SELECT 
-        CASE 
-            WHEN data_quality_score >= 0.8 THEN 'High'
-            WHEN data_quality_score >= 0.6 THEN 'Medium'
-            ELSE 'Low'
-        END as quality_level,
-        COUNT(*) as count
-    FROM products
-    GROUP BY quality_level
-    ''')
-    quality_distribution = dict(cursor.fetchall())
+    cursor.execute('SELECT AVG(price) FROM products WHERE price > 0')
+    avg_price = cursor.fetchone()[0] or 0
     
     # Category distribution
     cursor.execute('SELECT category, COUNT(*) FROM products GROUP BY category ORDER BY COUNT(*) DESC')
@@ -593,24 +599,24 @@ def generate_data_quality_report() -> Dict[str, Any]:
     cursor.execute('SELECT brand, COUNT(*) FROM products GROUP BY brand ORDER BY COUNT(*) DESC LIMIT 10')
     top_brands = dict(cursor.fetchall())
     
-    # Recent issues
-    cursor.execute('''
-    SELECT issue_type, COUNT(*) FROM data_quality_log 
-    WHERE created_at >= datetime('now', '-7 days')
-    GROUP BY issue_type
-    ''')
-    recent_issues = dict(cursor.fetchall())
+    # Tier distribution
+    cursor.execute('SELECT tier, COUNT(*) FROM products GROUP BY tier ORDER BY COUNT(*) DESC')
+    tier_distribution = dict(cursor.fetchall())
+    
+    # Price range statistics
+    cursor.execute('SELECT MIN(price), MAX(price) FROM products WHERE price > 0')
+    price_range = cursor.fetchone()
     
     conn.close()
     
     report = {
         'timestamp': datetime.now().isoformat(),
         'total_products': total_products,
-        'average_quality_score': round(avg_quality_score, 3),
-        'quality_distribution': quality_distribution,
+        'average_price': round(avg_price, 2) if avg_price else 0,
+        'price_range': {'min': price_range[0], 'max': price_range[1]} if price_range[0] else {'min': 0, 'max': 0},
         'category_distribution': category_distribution,
         'top_brands': top_brands,
-        'recent_issues': recent_issues
+        'tier_distribution': tier_distribution
     }
     
     return report
@@ -669,8 +675,9 @@ def main():
     # Print summary
     print(f"\n=== DATA INGESTION SUMMARY ===")
     print(f"Total products processed: {total_processed}")
-    print(f"Average data quality score: {report['average_quality_score']}")
-    print(f"Quality distribution: {report['quality_distribution']}")
+    print(f"Average price: ${report['average_price']}")
+    print(f"Category distribution: {report['category_distribution']}")
+    print(f"Tier distribution: {report['tier_distribution']}")
     print(f"Data quality report: {report_path}")
 
 if __name__ == "__main__":
