@@ -7,35 +7,156 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        .glassmorphism { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .toast { position: fixed; top: 20px; right: 20px; z-index: 1000; transform: translateX(120%); transition: transform 0.3s ease-in-out; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+            color: white;
+        }
+        .glassmorphism { 
+            background: rgba(255, 255, 255, 0.15); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .toast { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 1000; 
+            transform: translateX(120%); 
+            transition: transform 0.3s ease-in-out; 
+        }
         .toast.show { transform: translateX(0); }
         .virtual-scroll { height: 500px; overflow-y: auto; }
-        .loading-spinner { border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 2px solid white; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        .loading-spinner { 
+            border: 2px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 50%; 
+            border-top: 2px solid white; 
+            width: 20px; 
+            height: 20px; 
+            animation: spin 1s linear infinite; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .boq-header { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-        .boq-section { border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 0.5rem; margin-bottom: 1rem; overflow: hidden; }
-        .boq-section-header { background: rgba(0,0,0,0.3); color: white; font-weight: 600; padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .boq-header { 
+            background: linear-gradient(135deg, #4f46e5, #7c3aed); 
+            color: white; 
+            padding: 1rem; 
+            border-radius: 0.5rem; 
+            margin-bottom: 1rem; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .boq-section { 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 0.5rem; 
+            margin-bottom: 1rem; 
+            overflow: hidden; 
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .boq-section-header { 
+            background: rgba(0, 0, 0, 0.4); 
+            color: white; 
+            font-weight: 600; 
+            padding: 0.75rem 1rem; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2); 
+        }
         .boq-table { width: 100%; border-collapse: collapse; }
-        .boq-table th { background: rgba(255, 255, 255, 0.1); color: white; padding: 0.75rem; text-align: left; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        .boq-table td { padding: 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); vertical-align: top; }
-        .boq-table tr:hover { background: rgba(255, 255, 255, 0.02); }
+        .boq-table th { 
+            background: rgba(0, 0, 0, 0.3); 
+            color: white; 
+            padding: 0.75rem; 
+            text-align: left; 
+            font-weight: 600; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2); 
+        }
+        .boq-table td { 
+            padding: 0.75rem; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+            vertical-align: top; 
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .boq-table tr:hover { background: rgba(255, 255, 255, 0.05); }
         .item-name { font-weight: 600; color: white; margin-bottom: 0.25rem; }
-        .item-brand { color: #60a5fa; font-size: 0.875rem; margin-bottom: 0.25rem; }
-        .item-features { color: rgba(255, 255, 255, 0.7); font-size: 0.8rem; line-height: 1.4; }
-        .section-total { background: rgba(255, 255, 255, 0.05); font-weight: 600; }
-        .grand-total-section { background: linear-gradient(135deg, #059669, #047857); color: white; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; }
-        .recommendations-section { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 0.5rem; padding: 1rem; margin-top: 1rem; }
+        .item-brand { color: #93c5fd; font-size: 0.875rem; margin-bottom: 0.25rem; }
+        .item-features { color: rgba(255, 255, 255, 0.85); font-size: 0.8rem; line-height: 1.4; }
+        .section-total { 
+            background: rgba(0, 0, 0, 0.3); 
+            font-weight: 600; 
+        }
+        .grand-total-section { 
+            background: linear-gradient(135deg, #047857, #059669); 
+            color: white; 
+            padding: 1rem; 
+            border-radius: 0.5rem; 
+            margin-top: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .recommendations-section { 
+            background: rgba(59, 130, 246, 0.15); 
+            border: 1px solid rgba(59, 130, 246, 0.4); 
+            border-radius: 0.5rem; 
+            padding: 1rem; 
+            margin-top: 1rem; 
+        }
         .print-hidden { display: none; }
+
+        /* Input field styles */
+        input[type="text"], 
+        input[type="date"], 
+        input[type="number"],
+        select,
+        textarea {
+            background: rgba(0, 0, 0, 0.2) !important;
+            color: white !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        /* Scrollbar styling */
+        .virtual-scroll::-webkit-scrollbar {
+            width: 8px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .virtual-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .virtual-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
         @media print {
             body { background: white !important; color: black !important; }
-            .glassmorphism { background: white !important; backdrop-filter: none !important; border: 1px solid #ccc !important; }
-            .boq-header, .boq-section-header, .grand-total-section { background: #f3f4f6 !important; color: black !important; }
+            .glassmorphism { 
+                background: white !important; 
+                backdrop-filter: none !important; 
+                border: 1px solid #ccc !important; 
+                box-shadow: none !important;
+            }
+            .boq-header, .boq-section-header, .grand-total-section { 
+                background: #f3f4f6 !important; 
+                color: black !important; 
+                box-shadow: none !important;
+            }
             .boq-table th { background: #f9fafb !important; color: black !important; }
             .item-name, .item-brand { color: black !important; }
-            .item-features { color: #6b7280 !important; }
+            .item-features { color: #4b5563 !important; }
             .print-hidden { display: none !important; }
+            input[type="text"], 
+            input[type="date"], 
+            input[type="number"],
+            select,
+            textarea {
+                background: white !important;
+                color: black !important;
+                border-color: #e5e7eb !important;
+            }
         }
     </style>
 </head>
