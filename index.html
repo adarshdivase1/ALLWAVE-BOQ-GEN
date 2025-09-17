@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visual BOQ Generator v9.0 - Pro</title>
+    <title>Visual BOQ Generator v10.0 - AI Assisted</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -15,100 +15,242 @@
         .virtual-scroll::-webkit-scrollbar { width: 8px; background: rgba(0, 0, 0, 0.1); }
         .virtual-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 8px; }
         .product-library-item, .boq-table tbody tr { cursor: grab; }
-        .product-library-item:active, .boq-table tbody tr:active { cursor: grabbing; }
         .remove-zone { border: 2px dashed var(--error-red); background: rgba(239, 68, 68, 0.1); }
         .toast { position: fixed; top: 20px; right: 20px; z-index: 1000; transform: translateX(120%); transition: transform 0.4s ease; }
         .toast.show { transform: translateX(0); }
-        /* --- Styles for the new Visual Room Builder --- */
-        .room-layout-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
         .layout-slot { background: rgba(0, 0, 0, 0.2); border: 2px dashed var(--glass-border); border-radius: 8px; padding: 1rem; min-height: 120px; transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .layout-slot.sortable-ghost { background: var(--accent-blue); opacity: 0.5; }
-        .layout-slot.filled { border-style: solid; border-color: var(--accent-blue); }
-        .slot-label { font-weight: 500; color: rgba(255,255,255,0.6); margin-bottom: 0.5rem; }
-        .placed-item { background: rgba(255,255,255,0.1); padding: 0.5rem; border-radius: 6px; text-align: center; width: 100%; }
-        .placed-item .item-name { font-size: 0.875rem; font-weight: 600; }
+        .layout-slot.filled { border-style: solid; border-color: var(--accent-blue); padding: 0.5rem; }
+        .slot-label { font-weight: 500; color: rgba(255,255,255,0.6); }
+        .placed-item { text-align: center; width: 100%; }
+        .placed-item .item-name { font-size: 0.875rem; font-weight: 600; line-height: 1.2; }
         .placed-item .item-brand { font-size: 0.75rem; color: #93c5fd; }
+        .form-input { width: 100%; background: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; border-radius: 8px !important; padding: 12px 16px !important; color: white !important; font-size: 1rem; }
     </style>
 </head>
 <body class="p-4">
     <div id="toastContainer"></div>
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 hidden"><div class="text-white text-lg font-semibold">Generating AI Suggestion...</div></div>
+    
     <div class="premium-glass rounded-3xl shadow-2xl max-w-screen-2xl w-full p-8 space-y-8 mx-auto">
         <div class="text-center text-white">
-            <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Visual BOQ Generator v9.0</h1>
-            <p class="text-white/80 text-lg">Design Your System Visually, Generate Your Quote Instantly</p>
+            <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Visual BOQ Generator v10.0</h1>
+            <p class="text-white/80 text-lg">AI-Assisted Design & Quoting</p>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-8">
             <div class="flex flex-col gap-8">
                 <div class="premium-glass rounded-2xl p-6">
-                    <h2 class="text-2xl font-semibold text-white mb-4">1. Design Your Room Layout</h2>
-                    <div class="room-layout-grid">
-                        <div id="slot-display" class="layout-slot" data-category="Displays & Projectors">
-                            <span class="slot-label">Main Display</span>
-                        </div>
-                        <div id="slot-videobar" class="layout-slot" data-category="UC & Collaboration Devices">
-                             <span class="slot-label">Video Bar</span>
-                        </div>
-                        <div id="slot-controller" class="layout-slot" data-category="UC & Collaboration Devices">
-                             <span class="slot-label">Room Controller</span>
-                        </div>
+                    <h2 class="text-2xl font-semibold text-white mb-4">1. Describe Your Project</h2>
+                    <form id="boqForm" class="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                        <div><label class="font-semibold text-sm">Room Size</label><select id="roomSize" class="form-input mt-1"><option value="small">Small</option><option value="medium" selected>Medium</option><option value="large">Large</option></select></div>
+                        <div><label class="font-semibold text-sm">Use Case</label><select id="useCase" class="form-input mt-1"><option value="meeting_room">Meeting Room</option><option value="boardroom" selected>Boardroom</option><option value="huddle_room">Huddle Room</option></select></div>
+                        <div><label class="font-semibold text-sm">Brand Preference</label><select id="brandPreference" class="form-input mt-1"><option value="">Any</option><option value="logitech" selected>Logitech</option><option value="poly">Poly</option><option value="cisco">Cisco</option></select></div>
+                        <button type="submit" id="generateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg h-14">Generate System</button>
+                    </form>
+                </div>
+
+                <div class="premium-glass rounded-2xl p-6">
+                    <h2 class="text-2xl font-semibold text-white mb-4">2. Visual Layout (Drag to Swap)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div id="slot-display" class="layout-slot" data-category="Displays & Projectors"><span class="slot-label">Main Display</span></div>
+                        <div id="slot-videobar" class="layout-slot" data-category="UC & Collaboration Devices"><span class="slot-label">Video Bar</span></div>
+                        <div id="slot-controller" class="layout-slot" data-category="UC & Collaboration Devices"><span class="slot-label">Room Controller</span></div>
                     </div>
                 </div>
 
                 <div>
-                    <h2 class="text-2xl font-semibold text-white mb-4">2. Bill of Quantities (BOQ)</h2>
-                    <div id="boqContent" class="virtual-scroll p-1 h-[50vh] min-h-[400px]">
-                        <div id="emptyState" class="text-center py-16"><h3 class="text-xl font-semibold text-white/80 mb-2">Your BOQ is Empty</h3><p class="text-white/60">Drag products from the library into the Room Layout above to begin.</p></div>
-                        <div id="boqDisplay"></div>
+                    <h2 class="text-2xl font-semibold text-white mb-4">3. Bill of Quantities</h2>
+                    <div id="boqContent" class="virtual-scroll p-1 h-[40vh] min-h-[300px] premium-glass rounded-2xl">
+                        <div id="boqDisplay">
+                            <div class="text-center py-16 text-white/70">Please generate a system to begin.</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="premium-glass rounded-2xl p-6 flex flex-col">
-                <h2 class="text-2xl font-semibold text-white mb-4">3. Product Library</h2>
-                <div class="flex gap-4 mb-4"><input type="text" id="productSearch" class="form-input flex-grow" placeholder="Search products..."><select id="categoryFilter" class="form-input w-1/3"><option value="all">All Categories</option></select></div>
-                <div id="productLibrary" class="virtual-scroll flex-grow"><div class="text-center py-10 text-white/70">Loading products...</div></div>
-                <div id="removeZone" class="remove-zone mt-4"><span class="text-red-400 font-semibold">Drag items here to remove</span></div>
+                <h2 class="text-2xl font-semibold text-white mb-4">Product Library</h2>
+                <div class="flex gap-4 mb-4"><input type="text" id="productSearch" class="form-input flex-grow" placeholder="Search to find alternatives..."><select id="categoryFilter" class="form-input w-1/3"><option value="all">All Categories</option></select></div>
+                <div id="productLibrary" class="virtual-scroll flex-grow"><div class="text-center py-10 text-white/70">Loading...</div></div>
+                <div id="removeZone" class="remove-zone mt-4 hidden"><span class="text-red-400 font-semibold">Drag items here to remove</span></div>
             </div>
         </div>
     </div>
 
     <script>
         const BACKEND_URL = 'https://adarshav-boq-backend.hf.space';
-        const INITIAL_DISPLAY_COUNT = 15;
         let allProducts = [];
+        let currentBoqItems = [];
 
+        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            initializeApp();
+            document.getElementById('boqForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('productSearch').addEventListener('input', renderProductLibrary);
+            document.getElementById('categoryFilter').addEventListener('change', renderProductLibrary);
             fetchProductsAndCategories();
         });
 
-        function initializeApp() {
-            document.getElementById('productSearch').addEventListener('input', renderProductLibrary);
-            document.getElementById('categoryFilter').addEventListener('change', renderProductLibrary);
-            setupDragAndDrop();
-        }
-
         async function fetchProductsAndCategories() {
             try {
-                const [productsRes, categoriesRes] = await Promise.all([ fetch(`${BACKEND_URL}/api/products`), fetch(`${BACKEND_URL}/api/categories`) ]);
-                if (!productsRes.ok || !categoriesRes.ok) throw new Error('Failed to fetch initial data from backend');
-                allProducts = await productsRes.json();
-                const { categories } = await categoriesRes.json();
-                populateCategoryFilter(categories);
+                const res = await fetch(`${BACKEND_URL}/api/products`);
+                if (!res.ok) throw new Error('Backend not available');
+                allProducts = await res.json();
                 renderProductLibrary();
+                setupDragAndDrop(); // Setup D&D after products are loaded
             } catch (error) {
-                console.error("Error fetching initial data:", error);
-                document.getElementById('productLibrary').innerHTML = `<div class="text-center py-10 text-red-400">Failed to load products.</div>`;
+                showToast(error.message, 'error');
+            }
+        }
+        
+        // --- AI GENERATION ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.remove('hidden');
+
+            const formData = {
+                projectName: "AI Generated Project", clientName: "Visual Client",
+                roomSize: document.getElementById('roomSize').value,
+                useCase: document.getElementById('useCase').value,
+                requirements: `prefer ${document.getElementById('brandPreference').value} ecosystem`,
+                budgetRange: "standard", priority: "balanced", contingency: 15
+            };
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/generate_boq`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+                if (!response.ok) { const errData = await response.json(); throw new Error(errData.detail); }
+                const boqData = await response.json();
+                
+                // This is the key: populate both the layout and the BOQ list
+                populateLayoutFromBoq(boqData);
+                renderBoq(boqData);
+                showToast('AI System Generated!', 'success');
+            } catch (error) {
+                showToast(`Generation Failed: ${error.message}`, 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
             }
         }
 
-        function populateCategoryFilter(categories) {
-            const filter = document.getElementById('categoryFilter');
-            filter.innerHTML = '<option value="all">All Categories</option>';
-            categories.forEach(cat => { const option = document.createElement('option'); option.value = cat; option.textContent = cat; filter.appendChild(option); });
+        // --- VISUAL LAYOUT & BOQ SYNC ---
+        function populateLayoutFromBoq(boqData) {
+            clearLayoutSlots();
+            const display = boqData.sections.flatMap(s => s.items).find(i => i.category === 'Displays & Projectors');
+            const videoBar = boqData.sections.flatMap(s => s.items).find(i => i.name.toLowerCase().includes('bar') || i.name.toLowerCase().includes('kit'));
+            const controller = boqData.sections.flatMap(s => s.items).find(i => i.name.toLowerCase().includes('controller') || i.name.toLowerCase().includes('tap'));
+
+            if(display) populateSlot('slot-display', allProducts.find(p => p.id === display.productId));
+            if(videoBar) populateSlot('slot-videobar', allProducts.find(p => p.id === videoBar.productId));
+            if(controller) populateSlot('slot-controller', allProducts.find(p => p.id === controller.productId));
+        }
+
+        function populateSlot(slotId, product) {
+            const slot = document.getElementById(slotId);
+            if (!slot || !product) return;
+            slot.innerHTML = createPlacedItemHTML(product);
+            slot.classList.add('filled');
+        }
+
+        function createPlacedItemHTML(product) {
+            return `<div class="placed-item" data-product-id="${product.id}">
+                <div class="item-name">${product.name}</div>
+                <div class="item-brand">${product.brand}</div>
+            </div>`;
+        }
+
+        function clearLayoutSlots() {
+            document.querySelectorAll('.layout-slot').forEach(slot => {
+                const label = slot.querySelector('.slot-label')?.textContent || "Slot";
+                slot.innerHTML = `<span class="slot-label">${label}</span>`;
+                slot.classList.remove('filled');
+            });
         }
         
+        function updateBoqFromLayout() {
+            const productIdsInLayout = new Set();
+            document.querySelectorAll('.layout-slot .placed-item').forEach(itemEl => {
+                productIdsInLayout.add(itemEl.getAttribute('data-product-id'));
+            });
+
+            // Re-run the AI generation with the explicit list of products
+            // This is a simplified version; a full implementation would be more complex
+            const newBoqItems = allProducts.filter(p => productIdsInLayout.has(p.id));
+            
+            // For now, let's just re-render the BOQ with the new items
+            // A more advanced version would call the backend again for a full recalculation
+            const dummyBoqData = { sections: [{ name: "Hardware", items: newBoqItems.map(p => ({...p, productId:p.id, quantity: 1, totalPrice: p.price})), sectionTotal: 0 }] };
+            renderBoq(dummyBoqData, true);
+        }
+
+
+        // --- DRAG & DROP SETUP ---
+        function setupDragAndDrop() {
+            new Sortable(document.getElementById('productLibrary'), {
+                group: { name: 'products', pull: 'clone', put: false }, sort: false,
+            });
+
+            document.querySelectorAll('.layout-slot').forEach(slot => {
+                new Sortable(slot, {
+                    group: 'products',
+                    onAdd: function (evt) {
+                        const productId = evt.item.getAttribute('data-product-id');
+                        const product = allProducts.find(p => p.id === productId);
+                        if (!product) return;
+                        
+                        // Category validation
+                        const acceptedCategory = evt.to.getAttribute('data-category');
+                        if (product.category !== acceptedCategory) {
+                            showToast(`This slot only accepts '${acceptedCategory}'.`, 'error');
+                            evt.item.remove(); return;
+                        }
+                        
+                        // Clear previous content and add new item
+                        evt.to.innerHTML = createPlacedItemHTML(product);
+                        evt.to.classList.add('filled');
+                        evt.item.remove();
+                        
+                        updateBoqFromLayout();
+                    }
+                });
+            });
+        }
+
+        // --- UI & DATA RENDERING ---
+        function renderBoq(boqData, isManualUpdate = false) {
+            const boqDisplay = document.getElementById('boqDisplay');
+            let allItems = boqData.sections.flatMap(s => s.items);
+            let hardwareTotal = 0;
+
+            if (isManualUpdate) {
+                // Manually add other necessary items like mounts and services
+                const display = allItems.find(i => i.category === 'Displays & Projectors');
+                if (display && !allItems.some(i => i.category === 'Mounts, Racks & Enclosures')) {
+                    const mount = allProducts.find(p => p.category === 'Mounts, Racks & Enclosures' && p.name.toLowerCase().includes('mount'));
+                    if (mount) allItems.push({...mount, productId:mount.id, quantity: 1, totalPrice: mount.price});
+                }
+            }
+            
+            hardwareTotal = allItems.filter(i => i.category !== 'Services').reduce((acc, item) => acc + item.totalPrice, 0);
+            let serviceCost = hardwareTotal * 0.25;
+            let subtotal = hardwareTotal + serviceCost;
+
+            const boqHTML = `<table class="w-full text-left">
+                <thead><tr class="border-b border-white/10"><th class="p-2 w-1/2">Item</th><th class="p-2">Brand</th><th class="p-2 text-right">Price</th></tr></thead>
+                <tbody>
+                    ${allItems.filter(i => i.category !== 'Services').map(item => `
+                        <tr class="border-b border-white/5"><td class="p-2">${item.name}</td><td class="p-2 text-blue-300">${item.brand}</td><td class="p-2 text-right font-mono">$${item.totalPrice.toFixed(2)}</td></tr>
+                    `).join('')}
+                    <tr class="border-b border-white/5 bg-purple-500/10 font-bold">
+                        <td class="p-2">Professional Services Package</td><td class="p-2 text-purple-300">Services</td><td class="p-2 text-right font-mono">$${serviceCost.toFixed(2)}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="grand-total-section mt-4"><div class="flex justify-between py-1 text-xl font-bold"><span>Grand Total:</span><span class="font-mono">$${subtotal.toFixed(2)}</span></div></div>`;
+
+            boqDisplay.innerHTML = boqHTML;
+        }
+
         function renderProductLibrary() {
             const libraryEl = document.getElementById('productLibrary');
             const searchTerm = document.getElementById('productSearch').value.toLowerCase();
@@ -124,148 +266,6 @@
             let productHTML = productsToDisplay.map(p => `<div class="product-library-item p-3 mb-2 rounded-lg bg-white/5 hover:bg-white/10" data-product-id="${p.id}"><p class="font-bold text-white">${p.name}</p><p class="text-sm text-blue-300">${p.brand || 'N/A'} - $${p.price.toFixed(2)}</p></div>`).join('');
             if (isInitialView) { productHTML += `<div class="text-center p-4 text-white/50 text-sm">Showing featured products. Use search for more.</div>`; }
             libraryEl.innerHTML = productHTML;
-        }
-        
-        function setupDragAndDrop() {
-            // Make the library draggable
-            new Sortable(document.getElementById('productLibrary'), {
-                group: { name: 'products', pull: 'clone', put: false },
-                sort: false,
-                animation: 150
-            });
-
-            // Make each layout slot a drop zone
-            document.querySelectorAll('.layout-slot').forEach(slot => {
-                new Sortable(slot, {
-                    group: 'products',
-                    onAdd: function (evt) {
-                        const productId = evt.item.getAttribute('data-product-id');
-                        const product = allProducts.find(p => p.id === productId);
-                        if (!product) return;
-
-                        // Check if the product category matches the slot's accepted category
-                        const acceptedCategory = evt.to.getAttribute('data-category');
-                        if (product.category !== acceptedCategory) {
-                            showToast(`This slot only accepts items from the '${acceptedCategory}' category.`, 'error');
-                            evt.item.remove(); // Remove the clone from the slot
-                            return;
-                        }
-
-                        // Clear the slot and add the new item visually
-                        evt.to.innerHTML = createPlacedItemHTML(product);
-                        evt.to.classList.add('filled');
-                        evt.item.remove(); // remove original dragged clone
-                        
-                        updateBoqFromLayout();
-                    }
-                });
-            });
-
-            // Make the BOQ table a drop zone for manual additions
-            new Sortable(document.getElementById('boqDisplay'), {
-                 group: 'products',
-                 onAdd: function (evt) {
-                    const productId = evt.item.getAttribute('data-product-id');
-                    const product = allProducts.find(p => p.id === productId);
-                    if (product) addProductToBoq(product);
-                    evt.item.remove();
-                 }
-            });
-            
-            // Make the remove zone a drop zone
-            new Sortable(document.getElementById('removeZone'), {
-                group: 'products', // Can accept items from layout slots
-                onAdd: function(evt) {
-                    const slotId = evt.from.id;
-                    if(slotId && slotId.startsWith('slot-')) {
-                        const slot = document.getElementById(slotId);
-                        slot.innerHTML = `<span class="slot-label">${slot.querySelector('.slot-label')?.textContent || 'Slot'}</span>`;
-                        slot.classList.remove('filled');
-                    }
-                    evt.item.remove();
-                    updateBoqFromLayout();
-                }
-            });
-        }
-        
-        function createPlacedItemHTML(product) {
-            return `<div class="placed-item" data-product-id="${product.id}">
-                        <p class="item-name">${product.name}</p>
-                        <p class="item-brand">${product.brand}</p>
-                    </div>
-                    <span class="slot-label" style="display:none;">${product.category}</span>`;
-        }
-
-        function updateBoqFromLayout() {
-            const boqItems = [];
-            document.querySelectorAll('.layout-slot .placed-item').forEach(itemEl => {
-                const productId = itemEl.getAttribute('data-product-id');
-                const product = allProducts.find(p => p.id === productId);
-                if (product) {
-                    boqItems.push(product);
-                }
-            });
-            
-            // Add any manual items already in the BOQ
-            document.querySelectorAll('#boqTableBody tr').forEach(row => {
-                 const productId = row.getAttribute('data-product-id');
-                 if (!boqItems.some(item => item.id === productId)) {
-                    const product = allProducts.find(p => p.id === productId);
-                    if(product) boqItems.push(product);
-                 }
-            });
-
-            renderBoq(boqItems);
-        }
-
-        function addProductToBoq(product) {
-            const existingItems = [];
-            document.querySelectorAll('#boqTableBody tr').forEach(row => {
-                existingItems.push(allProducts.find(p => p.id === row.getAttribute('data-product-id')));
-            });
-            if (!existingItems.some(item => item.id === product.id)) {
-                 renderBoq([...existingItems, product]);
-            }
-        }
-
-        function renderBoq(items) {
-            const boqDisplay = document.getElementById('boqDisplay');
-            const emptyState = document.getElementById('emptyState');
-            
-            if (items.length === 0) {
-                boqDisplay.innerHTML = '';
-                emptyState.style.display = 'block';
-                return;
-            }
-            emptyState.style.display = 'none';
-
-            let hardwareTotal = items.reduce((acc, item) => acc + item.price, 0);
-            let serviceCost = hardwareTotal * 0.25;
-            let subtotal = hardwareTotal + serviceCost;
-
-            const boqHTML = `
-                <table class="w-full text-left">
-                    <thead><tr class="border-b border-white/10"><th class="p-2">Item</th><th class="p-2">Brand</th><th class="p-2 text-right">Price</th></tr></thead>
-                    <tbody id="boqTableBody">
-                        ${items.map(item => `
-                            <tr class="border-b border-white/5" data-product-id="${item.id}">
-                                <td class="p-2">${item.name}</td>
-                                <td class="p-2 text-blue-300">${item.brand}</td>
-                                <td class="p-2 text-right font-mono">$${item.price.toFixed(2)}</td>
-                            </tr>
-                        `).join('')}
-                        <tr class="border-b border-white/5 bg-purple-500/10">
-                            <td class="p-2 font-bold">Professional Services Package</td>
-                            <td class="p-2 text-purple-300">Services</td>
-                            <td class="p-2 text-right font-mono">$${serviceCost.toFixed(2)}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="grand-total-section mt-4">
-                    <div class="flex justify-between py-1 text-lg"><span>Subtotal:</span><span class="font-mono">$${subtotal.toFixed(2)}</span></div>
-                </div>
-            `;
-            boqDisplay.innerHTML = boqHTML;
         }
 
         function showToast(message, type = 'success') {
