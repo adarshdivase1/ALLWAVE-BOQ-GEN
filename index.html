@@ -1,1251 +1,705 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional BOQ Generator v5.0 - Enhanced</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            min-height: 100vh; 
-            color: white;
-        }
-        .glassmorphism { 
-            background: rgba(255, 255, 255, 0.15); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid rgba(255, 255, 255, 0.3); 
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        .toast { 
-            position: fixed; 
-            top: 20px; 
-            right: 20px; 
-            z-index: 1000; 
-            transform: translateX(120%); 
-            transition: transform 0.3s ease-in-out; 
-        }
-        .toast.show { transform: translateX(0); }
-        .virtual-scroll { height: 500px; overflow-y: auto; }
-        .loading-spinner { 
-            border: 2px solid rgba(255, 255, 255, 0.3); 
-            border-radius: 50%; 
-            border-top: 2px solid white; 
-            width: 20px; 
-            height: 20px; 
-            animation: spin 1s linear infinite; 
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .boq-header { 
-            background: linear-gradient(135deg, #4f46e5, #7c3aed); 
-            color: white; 
-            padding: 1rem; 
-            border-radius: 0.5rem; 
-            margin-bottom: 1rem; 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        .boq-section { 
-            border: 1px solid rgba(255, 255, 255, 0.3); 
-            border-radius: 0.5rem; 
-            margin-bottom: 1rem; 
-            overflow: hidden; 
-            background: rgba(0, 0, 0, 0.2);
-        }
-        .boq-section-header { 
-            background: rgba(0, 0, 0, 0.4); 
-            color: white; 
-            font-weight: 600; 
-            padding: 0.75rem 1rem; 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2); 
-        }
-        .boq-table { width: 100%; border-collapse: collapse; }
-        .boq-table th { 
-            background: rgba(0, 0, 0, 0.3); 
-            color: white; 
-            padding: 0.75rem; 
-            text-align: left; 
-            font-weight: 600; 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2); 
-        }
-        .boq-table td { 
-            padding: 0.75rem; 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
-            vertical-align: top; 
-            color: rgba(255, 255, 255, 0.9);
-        }
-        .boq-table tr:hover { background: rgba(255, 255, 255, 0.05); }
-        .item-name { font-weight: 600; color: white; margin-bottom: 0.25rem; }
-        .item-brand { color: #93c5fd; font-size: 0.875rem; margin-bottom: 0.25rem; }
-        .item-features { color: rgba(255, 255, 255, 0.85); font-size: 0.8rem; line-height: 1.4; }
-        .section-total { 
-            background: rgba(0, 0, 0, 0.3); 
-            font-weight: 600; 
-        }
-        .grand-total-section { 
-            background: linear-gradient(135deg, #047857, #059669); 
-            color: white; 
-            padding: 1rem; 
-            border-radius: 0.5rem; 
-            margin-top: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        .recommendations-section { 
-            background: rgba(59, 130, 246, 0.15); 
-            border: 1px solid rgba(59, 130, 246, 0.4); 
-            border-radius: 0.5rem; 
-            padding: 1rem; 
-            margin-top: 1rem; 
-        }
-        .print-hidden { display: none; }
-        .validation-error { border-color: #ef4444 !important; }
-        .validation-success { border-color: #10b981 !important; }
-        .progress-bar {
-            width: 0%;
-            height: 4px;
-            background: linear-gradient(90deg, #6366f1, #8b5cf6);
-            transition: width 0.3s ease;
-        }
-        .system-preview {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-top: 1rem;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional BOQ Generator v4.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+            color: white;
+        }
+        .glassmorphism { 
+            background: rgba(255, 255, 255, 0.15); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .toast { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 1000; 
+            transform: translateX(120%); 
+            transition: transform 0.3s ease-in-out; 
+        }
+        .toast.show { transform: translateX(0); }
+        .virtual-scroll { height: 500px; overflow-y: auto; }
+        .loading-spinner { 
+            border: 2px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 50%; 
+            border-top: 2px solid white; 
+            width: 20px; 
+            height: 20px; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .boq-header { 
+            background: linear-gradient(135deg, #4f46e5, #7c3aed); 
+            color: white; 
+            padding: 1rem; 
+            border-radius: 0.5rem; 
+            margin-bottom: 1rem; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .boq-section { 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 0.5rem; 
+            margin-bottom: 1rem; 
+            overflow: hidden; 
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .boq-section-header { 
+            background: rgba(0, 0, 0, 0.4); 
+            color: white; 
+            font-weight: 600; 
+            padding: 0.75rem 1rem; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2); 
+        }
+        .boq-table { width: 100%; border-collapse: collapse; }
+        .boq-table th { 
+            background: rgba(0, 0, 0, 0.3); 
+            color: white; 
+            padding: 0.75rem; 
+            text-align: left; 
+            font-weight: 600; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2); 
+        }
+        .boq-table td { 
+            padding: 0.75rem; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+            vertical-align: top; 
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .boq-table tr:hover { background: rgba(255, 255, 255, 0.05); }
+        .item-name { font-weight: 600; color: white; margin-bottom: 0.25rem; }
+        .item-brand { color: #93c5fd; font-size: 0.875rem; margin-bottom: 0.25rem; }
+        .item-features { color: rgba(255, 255, 255, 0.85); font-size: 0.8rem; line-height: 1.4; }
+        .section-total { 
+            background: rgba(0, 0, 0, 0.3); 
+            font-weight: 600; 
+        }
+        .grand-total-section { 
+            background: linear-gradient(135deg, #047857, #059669); 
+            color: white; 
+            padding: 1rem; 
+            border-radius: 0.5rem; 
+            margin-top: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .recommendations-section { 
+            background: rgba(59, 130, 246, 0.15); 
+            border: 1px solid rgba(59, 130, 246, 0.4); 
+            border-radius: 0.5rem; 
+            padding: 1rem; 
+            margin-top: 1rem; 
+        }
+        .print-hidden { display: none; }
+        .validation-error { border-color: #ef4444 !important; }
+        .validation-success { border-color: #10b981 !important; }
 
-        /* Input field styles */
-        input[type="text"], 
-        input[type="date"], 
-        input[type="number"],
-        select,
-        textarea {
-            background: rgba(0, 0, 0, 0.2) !important;
-            color: white !important;
-            border-color: rgba(255, 255, 255, 0.3) !important;
-        }
+        /* Input field styles */
+        input[type="text"], 
+        input[type="date"], 
+        input[type="number"],
+        select,
+        textarea {
+            background: rgba(0, 0, 0, 0.2) !important;
+            color: white !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
 
-        input::placeholder,
-        textarea::placeholder {
-            color: rgba(255, 255, 255, 0.6) !important;
-        }
+        input::placeholder,
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
 
-        /* Scrollbar styling */
-        .virtual-scroll::-webkit-scrollbar {
-            width: 8px;
-            background: rgba(0, 0, 0, 0.1);
-        }
+        /* Scrollbar styling */
+        .virtual-scroll::-webkit-scrollbar {
+            width: 8px;
+            background: rgba(0, 0, 0, 0.1);
+        }
 
-        .virtual-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-        }
+        .virtual-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
 
-        .virtual-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.4);
-        }
+        .virtual-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
 
-        @media print {
-            body { background: white !important; color: black !important; }
-            .glassmorphism { 
-                background: white !important; 
-                backdrop-filter: none !important; 
-                border: 1px solid #ccc !important; 
-                box-shadow: none !important;
-            }
-            .boq-header, .boq-section-header, .grand-total-section { 
-                background: #f3f4f6 !important; 
-                color: black !important; 
-                box-shadow: none !important;
-            }
-            .boq-table th { background: #f9fafb !important; color: black !important; }
-            .item-name, .item-brand { color: black !important; }
-            .item-features { color: #4b5563 !important; }
-            .print-hidden { display: none !important; }
-            input[type="text"], 
-            input[type="date"], 
-            input[type="number"],
-            select,
-            textarea {
-                background: white !important;
-                color: black !important;
-                border-color: #e5e7eb !important;
-            }
-        }
-    </style>
+        @media print {
+            body { background: white !important; color: black !important; }
+            .glassmorphism { 
+                background: white !important; 
+                backdrop-filter: none !important; 
+                border: 1px solid #ccc !important; 
+                box-shadow: none !important;
+            }
+            .boq-header, .boq-section-header, .grand-total-section { 
+                background: #f3f4f6 !important; 
+                color: black !important; 
+                box-shadow: none !important;
+            }
+            .boq-table th { background: #f9fafb !important; color: black !important; }
+            .item-name, .item-brand { color: black !important; }
+            .item-features { color: #4b5563 !important; }
+            .print-hidden { display: none !important; }
+            input[type="text"], 
+            input[type="date"], 
+            input[type="number"],
+            select,
+            textarea {
+                background: white !important;
+                color: black !important;
+                border-color: #e5e7eb !important;
+            }
+        }
+    </style>
 </head>
 <body class="p-4 min-h-screen flex items-center justify-center">
-    <div id="toastContainer"></div>
-    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="glassmorphism rounded-lg p-6 flex items-center space-x-3">
-            <div class="loading-spinner"></div>
-            <span class="text-white" id="loadingText">Processing...</span>
-        </div>
-    </div>
+    <div id="toastContainer"></div>
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glassmorphism rounded-lg p-6 flex items-center space-x-3">
+            <div class="loading-spinner"></div>
+            <span class="text-white" id="loadingText">Processing...</span>
+        </div>
+    </div>
 
-    <div class="glassmorphism rounded-3xl shadow-xl max-w-7xl w-full p-8 space-y-8">
-        <div class="text-center text-white">
-            <h1 class="text-4xl font-extrabold mb-2">Professional BOQ Generator</h1>
-            <p class="text-white/80">Enhanced Bill of Quantities Generation System v5.0</p>
-            <div class="mt-2">
-                <span id="appStatus" class="inline-block px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full">Connecting...</span>
-            </div>
-        </div>
+    <div class="glassmorphism rounded-3xl shadow-xl max-w-7xl w-full p-8 space-y-8">
+        <div class="text-center text-white">
+            <h1 class="text-4xl font-extrabold mb-2">Professional BOQ Generator</h1>
+            <p class="text-white/80">Advanced Bill of Quantities Generation System v4.0</p>
+            <div class="mt-2">
+                <span id="appStatus" class="inline-block px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full">Connecting...</span>
+            </div>
+        </div>
 
-        <div class="grid lg:grid-cols-2 gap-8">
-            <div class="space-y-6">
-                <div class="glassmorphism rounded-2xl p-6 border border-white/20">
-                    <h2 class="text-2xl font-semibold text-white mb-4">Intelligent System Configuration</h2>
-                    
-                    <!-- Progress indicator -->
-                    <div class="mb-4">
-                        <div class="w-full bg-white/10 rounded-full h-1">
-                            <div id="progressBar" class="progress-bar rounded-full"></div>
-                        </div>
-                        <p id="progressText" class="text-sm text-white/70 mt-1">Step 1 of 4: Project Details</p>
-                    </div>
-                    
-                    <form id="enhancedBoqForm" class="space-y-4" novalidate>
-                        <!-- Step 1: Project Details -->
-                        <div id="step1" class="step-content">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-white/90 mb-1">Project Name *</label>
-                                    <input type="text" id="projectName" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., Executive Conference Room" required>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-white/90 mb-1">Client Name *</label>
-                                    <input type="text" id="clientName" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., ABC Corporation Ltd." required>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-white/90 mb-1">Project Location</label>
-                                    <input type="text" id="projectLocation" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., Mumbai, India">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-white/90 mb-1">Project Date</label>
-                                    <input type="date" id="projectDate" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
-                                </div>
-                            </div>
-                            
-                            <!-- Enhanced Budget Intelligence -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-white/90 mb-1">Budget Range *</label>
-                                    <select id="budgetRange" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" required>
-                                        <option value="">Select budget...</option>
-                                        <option value="economy">Economy ($5K - $15K)</option>
-                                        <option value="standard" selected>Standard ($15K - $35K)</option>
-                                        <option value="premium">Premium ($35K - $75K)</option>
-                                        <option value="enterprise">Enterprise ($75K+)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-white/90 mb-1">Priority Focus</label>
-                                    <select id="priority" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
-                                        <option value="balanced" selected>Balanced Performance</option>
-                                        <option value="cost">Cost Optimized</option>
-                                        <option value="quality">Premium Quality</option>
-                                        <option value="reliability">Future-Proof Investment</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-white/90 mb-1">Contingency %</label>
-                                <input type="number" id="contingency" value="15" min="0" max="50" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
-                            </div>
-                        </div>
-                        
-                        <!-- Step 2: Use Case Analysis -->
-                        <div id="step2" class="step-content hidden">
-                            <h3 class="text-lg font-semibold text-white mb-3">Use Case & Room Analysis</h3>
-                            
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-white/90 mb-1">Room Size *</label>
-                                    <select id="roomSize" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
-                                        <option value="small">Small Room (4-8 people)</option>
-                                        <option value="medium" selected>Medium Room (8-16 people)</option>
-                                        <option value="large">Large Room (16-30 people)</option>
-                                        <option value="xlarge">Extra Large (30+ people)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-white/90 mb-1">Primary Use Case *</label>
-                                    <select id="useCase" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
-                                        <option value="meeting_room" selected>Meeting Room</option>
-                                        <option value="boardroom">Executive Boardroom</option>
-                                        <option value="huddle_room">Huddle Room</option>
-                                        <option value="training_room">Training Room</option>
-                                        <option value="auditorium">Auditorium</option>
-                                        <option value="telepresence">Telepresence Room</option>
-                                        <option value="lecture_hall">Lecture Hall</option>
-                                        <option value="creative_space">Creative Collaboration Space</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Use case specific requirements -->
-                            <div class="mt-4">
-                                <label class="block text-sm font-medium text-white/90 mb-1">Special Requirements</label>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <label class="flex items-center space-x-2">
-                                        <input type="checkbox" id="req_4k" class="rounded">
-                                        <span class="text-white/90">4K Video Required</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2">
-                                        <input type="checkbox" id="req_recording" class="rounded">
-                                        <span class="text-white/90">Recording Capability</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2">
-                                        <input type="checkbox" id="req_wireless" class="rounded">
-                                        <span class="text-white/90">Wireless Presentation</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2">
-                                        <input type="checkbox" id="req_byod" class="rounded">
-                                        <span class="text-white/90">BYOD Support</span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <!-- Usage frequency -->
-                            <div class="mt-4">
-                                <label class="block text-sm font-medium text-white/90 mb-1">Expected Usage Frequency</label>
-                                <select id="usageFrequency" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
-                                    <option value="occasional">Occasional (< 5 hrs/week)</option>
-                                    <option value="regular" selected>Regular (5-20 hrs/week)</option>
-                                    <option value="heavy">Heavy Use (20+ hrs/week)</option>
-                                    <option value="continuous">Continuous (40+ hrs/week)</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <!-- Step 3: Brand & Ecosystem Preferences -->
-                        <div id="step3" class="step-content hidden">
-                            <h3 class="text-lg font-semibold text-white mb-3">Brand & Ecosystem Preferences</h3>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-white/90 mb-1">Brand Requirements & Preferences</label>
-                                <textarea id="projectRequirements" rows="3" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., Prefer Logitech for VC, Cisco networking, 4K displays, wireless presentation capabilities, Teams integration..."></textarea>
-                            </div>
-                            
-                            <div class="space-y-4 mt-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-white/90 mb-1">Preferred Ecosystem (Optional)</label>
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <label class="flex items-center space-x-2">
-                                            <input type="radio" name="ecosystem" value="logitech" class="text-blue-600">
-                                            <span class="text-white/90">Logitech (Versatile, Cost-effective)</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2">
-                                            <input type="radio" name="ecosystem" value="poly" class="text-blue-600">
-                                            <span class="text-white/90">Poly (Premium Audio Quality)</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2">
-                                            <input type="radio" name="ecosystem" value="cisco" class="text-blue-600">
-                                            <span class="text-white/90">Cisco (Enterprise Integration)</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2">
-                                            <input type="radio" name="ecosystem" value="microsoft" class="text-blue-600">
-                                            <span class="text-white/90">Microsoft (Teams Optimized)</span>
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <!-- System preview based on selections -->
-                                <div id="systemPreview" class="system-preview hidden">
-                                    <h4 class="font-semibold text-white mb-2">Recommended System Preview:</h4>
-                                    <div id="previewContent" class="text-sm text-white/80"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Step 4: Review & Generate -->
-                        <div id="step4" class="step-content hidden">
-                            <h3 class="text-lg font-semibold text-white mb-3">Review & Generate BOQ</h3>
-                            
-                            <div id="configurationSummary" class="bg-white/5 rounded-lg p-4 mb-4">
-                                <!-- Dynamic summary will be populated here -->
-                            </div>
-                            
-                            <!-- Validation results -->
-                            <div id="validationResults" class="hidden mb-4">
-                                <div id="validationErrors" class="bg-red-500/20 border border-red-500/40 rounded-lg p-3 mb-2 hidden">
-                                    <h4 class="font-semibold text-red-300 mb-1">Configuration Issues:</h4>
-                                    <ul id="errorList" class="text-sm text-red-200"></ul>
-                                </div>
-                                
-                                <div id="validationWarnings" class="bg-yellow-500/20 border border-yellow-500/40 rounded-lg p-3 mb-2 hidden">
-                                    <h4 class="font-semibold text-yellow-300 mb-1">Recommendations:</h4>
-                                    <ul id="warningList" class="text-sm text-yellow-200"></ul>
-                                </div>
-                                
-                                <div id="validationSuccess" class="bg-green-500/20 border border-green-500/40 rounded-lg p-3 hidden">
-                                    <h4 class="font-semibold text-green-300 mb-1">Configuration Valid</h4>
-                                    <p class="text-sm text-green-200">Your system configuration looks great! Ready to generate BOQ.</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Navigation buttons -->
-                        <div class="flex justify-between pt-4">
-                            <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors hidden">
-                                Previous
-                            </button>
-                            
-                            <div class="flex space-x-2">
-                                <button type="button" id="nextBtn" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                                    Next
-                                </button>
-                                <button type="submit" id="generateBtn" class="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold rounded-lg flex items-center justify-center transition-all duration-300 hidden">
-                                    <span id="generateText">Generate Intelligent BOQ</span>
-                                    <div id="generateSpinner" class="hidden loading-spinner w-5 h-5 ml-2"></div>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            
-            <div class="space-y-6">
-                <div class="glassmorphism rounded-2xl p-6 border border-white/20">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-semibold text-white">Generated BOQ</h2>
-                        <div id="boqActions" class="hidden space-x-2">
-                            <button id="printBoqBtn" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors" title="Print BOQ">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zM5 14H4v-3h1v3zm5 4H7v-3h3v3zm4 0v-3h1v3h-1z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                            <button id="downloadCsvBtn" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors" title="Download CSV">
-                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="boqOutput" class="text-white/70 virtual-scroll">
-                        <div class="text-center py-8">
-                            <div class="mb-4">
-                                <svg class="mx-auto h-12 w-12 text-white/40" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <p class="text-lg">Configure your project details and click through the intelligent setup wizard to create a professional BOQ.</p>
-                            <p class="text-sm text-white/50 mt-2">Your BOQ will include detailed specifications, pricing, and intelligent system recommendations.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        <div class="grid lg:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <div class="glassmorphism rounded-2xl p-6 border border-white/20">
+                    <h2 class="text-2xl font-semibold text-white mb-4">Project Configuration</h2>
+                    <form id="boqForm" class="space-y-4" novalidate>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Project Name *</label>
+                                <input type="text" id="projectName" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., Executive Conference Room" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Client Name *</label>
+                                <input type="text" id="clientName" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., ABC Corporation Ltd." required>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Project Location</label>
+                                <input type="text" id="projectLocation" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., Mumbai, India">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Project Date</label>
+                                <input type="date" id="projectDate" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Room Size</label>
+                                <select id="roomSize" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
+                                    <option value="small">Small Room (4-8 people)</option>
+                                    <option value="medium" selected>Medium Room (8-16 people)</option>
+                                    <option value="large">Large Room (16-30 people)</option>
+                                    <option value="xlarge">Extra Large (30+ people)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Use Case</label>
+                                <select id="useCase" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
+                                    <option value="meeting_room">Meeting Room</option>
+                                    <option value="boardroom">Executive Boardroom</option>
+                                    <option value="huddle_room">Huddle Room</option>
+                                    <option value="training_room">Training Room</option>
+                                    <option value="auditorium">Auditorium</option>
+                                    <option value="telepresence">Telepresence Room</option>
+                                    <option value="lecture_hall">Lecture Hall</option>
+                                    <option value="creative_space">Creative Collaboration Space</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-white/90 mb-1">Brand Preference & Requirements</label>
+                            <textarea id="projectRequirements" rows="2" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3" placeholder="e.g., Prefer Logitech for VC, Cisco networking, 4K displays, wireless presentation..."></textarea>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Budget Range</label>
+                                <select id="budgetRange" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
+                                    <option value="economy">Economy ($5K-15K)</option>
+                                    <option value="standard" selected>Standard ($15K-35K)</option>
+                                    <option value="premium">Premium ($35K-75K)</option>
+                                    <option value="enterprise">Enterprise ($75K+)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Priority Focus</label>
+                                <select id="priority" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
+                                    <option value="balanced" selected>Balanced</option>
+                                    <option value="cost">Cost Optimized</option>
+                                    <option value="quality">Quality First</option>
+                                    <option value="reliability">Reliability</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-1">Contingency %</label>
+                                <input type="number" id="contingency" value="15" min="0" max="50" class="w-full rounded-lg border border-white/30 bg-white/10 text-white p-3">
+                            </div>
+                        </div>
+                        <div class="pt-2">
+                            <button type="submit" id="generateBtn" class="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center transition-all duration-300">
+                                <span id="generateText">Generate Professional BOQ</span>
+                                <div id="generateSpinner" class="hidden loading-spinner w-5 h-5 ml-2"></div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="glassmorphism rounded-2xl p-6 border border-white/20">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-semibold text-white">Generated BOQ</h2>
+                        <div id="boqActions" class="hidden space-x-2">
+                            <button id="printBoqBtn" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors" title="Print BOQ">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zM5 14H4v-3h1v3zm5 4H7v-3h3v3zm4 0v-3h1v3h-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <button id="downloadCsvBtn" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors" title="Download CSV">
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="boqOutput" class="text-white/70 virtual-scroll">
+                        <div class="text-center py-8">
+                            <div class="mb-4">
+                                <svg class="mx-auto h-12 w-12 text-white/40" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <p class="text-lg">Configure your project details and click "Generate" to create a professional BOQ.</p>
+                            <p class="text-sm text-white/50 mt-2">Your BOQ will include detailed specifications, pricing, and recommendations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        const CONFIG = { API_BASE_URL: 'https://adarshav-boq-backend.hf.space' };
-        
-        const utils = {
-            sanitizeHTML(str) { 
-                const div = document.createElement('div'); 
-                div.textContent = String(str || ''); 
-                return div.innerHTML; 
-            },
-            formatCurrency(amount) { 
-                return new Intl.NumberFormat('en-US', { 
-                    style: 'currency', 
-                    currency: 'USD' 
-                }).format(Number(amount || 0)); 
-            },
-            formatDate(dateStr) {
-                if (!dateStr) return new Date().toLocaleDateString();
-                return new Date(dateStr).toLocaleDateString();
-            }
-        };
+    <script>
+        const CONFIG = { API_BASE_URL: 'https://adarshav-boq-backend.hf.space/api' };
+        
+        const utils = {
+            sanitizeHTML(str) { 
+                const div = document.createElement('div'); 
+                div.textContent = String(str || ''); 
+                return div.innerHTML; 
+            },
+            formatCurrency(amount) { 
+                return new Intl.NumberFormat('en-US', { 
+                    style: 'currency', 
+                    currency: 'USD' 
+                }).format(Number(amount || 0)); 
+            },
+            formatDate(dateStr) {
+                if (!dateStr) return new Date().toLocaleDateString();
+                return new Date(dateStr).toLocaleDateString();
+            }
+        };
 
-        class ToastManager {
-            constructor() { 
-                this.container = document.getElementById('toastContainer'); 
-            }
-            
-            show(message, type = 'info', duration = 4000) {
-                const colors = { 
-                    success: 'bg-green-500', 
-                    error: 'bg-red-500', 
-                    info: 'bg-blue-500',
-                    warning: 'bg-yellow-500'
-                };
-                
-                const toast = document.createElement('div');
-                toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg`;
-                toast.innerHTML = `<span>${utils.sanitizeHTML(message)}</span>`;
-                
-                this.container.appendChild(toast);
-                setTimeout(() => toast.classList.add('show'), 100);
-                setTimeout(() => { 
-                    if (toast.parentElement) { 
-                        toast.classList.remove('show'); 
-                        setTimeout(() => toast.remove(), 300); 
-                    } 
-                }, duration);
-            }
-        }
+        class ToastManager {
+            constructor() { 
+                this.container = document.getElementById('toastContainer'); 
+            }
+            
+            show(message, type = 'info', duration = 4000) {
+                const colors = { 
+                    success: 'bg-green-500', 
+                    error: 'bg-red-500', 
+                    info: 'bg-blue-500',
+                    warning: 'bg-yellow-500'
+                };
+                
+                const toast = document.createElement('div');
+                toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg`;
+                toast.innerHTML = `<span>${utils.sanitizeHTML(message)}</span>`;
+                
+                this.container.appendChild(toast);
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => { 
+                    if (toast.parentElement) { 
+                        toast.classList.remove('show'); 
+                        setTimeout(() => toast.remove(), 300); 
+                    } 
+                }, duration);
+            }
+        }
 
-        class EnhancedBOQGenerator {
-            constructor() {
-                this.currentStep = 1;
-                this.maxSteps = 4;
-                this.config = {};
-                this.toast = new ToastManager();
-                this.currentBOQ = null;
-                this.setupEventListeners();
-                this.updateProgress();
-                this.checkBackendStatus();
-                this.setDefaultDate();
-            }
-            
-            setDefaultDate() {
-                document.getElementById('projectDate').value = new Date().toISOString().split('T')[0];
-            }
-            
-            setupEventListeners() {
-                // Navigation
-                document.getElementById('nextBtn').addEventListener('click', () => this.nextStep());
-                document.getElementById('prevBtn').addEventListener('click', () => this.prevStep());
-                
-                // Real-time validation
-                document.getElementById('enhancedBoqForm').addEventListener('input', () => this.validateCurrentStep());
-                
-                // Ecosystem selection preview
-                const ecosystemRadios = document.querySelectorAll('input[name="ecosystem"]');
-                ecosystemRadios.forEach(radio => {
-                    radio.addEventListener('change', () => this.updateSystemPreview());
-                });
-                
-                // Use case change handler
-                document.getElementById('useCase').addEventListener('change', () => this.updateUseCaseInfo());
-                // Form submission
-                document.getElementById('enhancedBoqForm').addEventListener('submit', (e) => this.handleFormSubmit(e));
-                
-                // Action buttons
-                document.getElementById('printBoqBtn').addEventListener('click', () => this.printBOQ());
-                document.getElementById('downloadCsvBtn').addEventListener('click', () => this.downloadCSV());
-            }
-            
-            updateUseCaseInfo() {
-                const useCase = document.getElementById('useCase').value;
-                const useCaseInfo = {
-                    'meeting_room': 'Standard meeting room with presentation capabilities',
-                    'boardroom': 'Executive boardroom with premium AV integration',
-                    'huddle_room': 'Compact collaboration space for small teams',
-                    'training_room': 'Learning environment with instructional AV',
-                    'auditorium': 'Large venue with advanced audio and lighting',
-                    'telepresence': 'High-end immersive video conferencing',
-                    'lecture_hall': 'Educational environment with tiered seating',
-                    'creative_space': 'Flexible collaboration with interactive displays'
-                };
-                
-                // Update system preview if visible
-                this.updateSystemPreview();
-            }
-            
-            updateSystemPreview() {
-                const ecosystem = document.querySelector('input[name="ecosystem"]:checked');
-                const useCase = document.getElementById('useCase').value;
-                const roomSize = document.getElementById('roomSize').value;
-                const preview = document.getElementById('systemPreview');
-                const previewContent = document.getElementById('previewContent');
-                
-                if (ecosystem) {
-                    const systems = {
-                        logitech: {
-                            small: "Logitech Rally Bar Mini + Tap scheduler + 55\" display",
-                            medium: "Logitech Rally Bar + Rally Mic Pods + 75\" display + Tap touch controller",
-                            large: "Logitech Rally Camera + ConferenceCam speakers + dual 85\" displays",
-                            xlarge: "Logitech Rally Plus system + PTZ cameras + multiple displays"
-                        },
-                        poly: {
-                            small: "Poly Studio P15 + TC8 controller + premium speakers",
-                            medium: "Poly Studio X50 + TC8 + ceiling microphones + 75\" display",
-                            large: "Poly Studio X70 + G7500 system + premium audio package",
-                            xlarge: "Poly G85 immersive system + advanced audio matrix"
-                        },
-                        cisco: {
-                            small: "Cisco Desk Pro + wireless presentation + touch controller",
-                            medium: "Cisco Room Bar + Navigator + premium displays",
-                            large: "Cisco Room 70 G2 + Precision cameras + advanced audio",
-                            xlarge: "Cisco Board Pro + immersive setup + enterprise integration"
-                        },
-                        microsoft: {
-                            small: "Surface Hub 2S 50\" + Teams Rooms certified peripherals",
-                            medium: "Surface Hub 2S 85\" + Teams Rooms compute + premium audio",
-                            large: "Dual Surface Hub displays + Teams Rooms Pro system",
-                            xlarge: "Microsoft Teams Rooms Premium deployment + advanced features"
-                        }
-                    };
-                    
-                    previewContent.innerHTML = systems[ecosystem.value][roomSize] || 'Custom system configuration';
-                    preview.classList.remove('hidden');
-                } else {
-                    preview.classList.add('hidden');
-                }
-            }
-            
-            async checkBackendStatus() {
-                const statusElement = document.getElementById('appStatus');
-                try {
-                    const response = await fetch(`${CONFIG.API_BASE_URL}/health`, {
-                        method: 'GET',
-                        timeout: 5000
-                    });
-                    
-                    if (response.ok) {
-                        statusElement.textContent = 'Connected';
-                        statusElement.className = 'inline-block px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full';
-                    } else {
-                        throw new Error('Backend not responding');
-                    }
-                } catch (error) {
-                    statusElement.textContent = 'Offline Mode';
-                    statusElement.className = 'inline-block px-3 py-1 bg-orange-500/20 text-orange-400 text-sm rounded-full';
-                    console.log('Backend unavailable, using offline mode');
-                }
-            }
-            
-            nextStep() {
-                if (this.validateCurrentStep() && this.currentStep < this.maxSteps) {
-                    this.currentStep++;
-                    this.showStep(this.currentStep);
-                    this.updateProgress();
-                }
-            }
-            
-            prevStep() {
-                if (this.currentStep > 1) {
-                    this.currentStep--;
-                    this.showStep(this.currentStep);
-                    this.updateProgress();
-                }
-            }
-            
-            showStep(step) {
-                // Hide all steps
-                document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
-                
-                // Show current step
-                document.getElementById(`step${step}`).classList.remove('hidden');
-                
-                // Update navigation buttons
-                document.getElementById('prevBtn').classList.toggle('hidden', step === 1);
-                document.getElementById('nextBtn').classList.toggle('hidden', step === this.maxSteps);
-                document.getElementById('generateBtn').classList.toggle('hidden', step !== this.maxSteps);
-                
-                // Special handling for final step
-                if (step === this.maxSteps) {
-                    this.updateConfigurationSummary();
-                    this.validateFinalConfiguration();
-                }
-            }
-            
-            updateProgress() {
-                const progressBar = document.getElementById('progressBar');
-                const progressText = document.getElementById('progressText');
-                
-                const progress = (this.currentStep / this.maxSteps) * 100;
-                progressBar.style.width = `${progress}%`;
-                
-                const stepNames = [
-                    'Project Details',
-                    'Use Case Analysis', 
-                    'Brand Preferences',
-                    'Review & Generate'
-                ];
-                
-                progressText.textContent = `Step ${this.currentStep} of ${this.maxSteps}: ${stepNames[this.currentStep - 1]}`;
-            }
-            
-            validateCurrentStep() {
-                const errors = [];
-                
-                switch (this.currentStep) {
-                    case 1:
-                        if (!document.getElementById('projectName').value.trim()) {
-                            errors.push('Project name is required');
-                        }
-                        if (!document.getElementById('clientName').value.trim()) {
-                            errors.push('Client name is required');
-                        }
-                        if (!document.getElementById('budgetRange').value) {
-                            errors.push('Budget range is required');
-                        }
-                        break;
-                    
-                    case 2:
-                        if (!document.getElementById('roomSize').value) {
-                            errors.push('Room size is required');
-                        }
-                        if (!document.getElementById('useCase').value) {
-                            errors.push('Use case is required');
-                        }
-                        break;
-                    
-                    case 3:
-                        // Optional validation for brand preferences
-                        break;
-                    
-                    case 4:
-                        // Final validation handled separately
-                        break;
-                }
-                
-                if (errors.length > 0) {
-                    this.toast.show(errors.join(', '), 'error');
-                    return false;
-                }
-                
-                return true;
-            }
-            
-            updateConfigurationSummary() {
-                const summary = document.getElementById('configurationSummary');
-                const config = this.gatherConfiguration();
-                
-                summary.innerHTML = `
-                    <h4 class="font-semibold text-white mb-3">Configuration Summary</h4>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <p><span class="text-white/60">Project:</span> ${config.projectName}</p>
-                            <p><span class="text-white/60">Client:</span> ${config.clientName}</p>
-                            <p><span class="text-white/60">Budget:</span> ${config.budgetRange}</p>
-                        </div>
-                        <div>
-                            <p><span class="text-white/60">Room Size:</span> ${config.roomSize}</p>
-                            <p><span class="text-white/60">Use Case:</span> ${config.useCase}</p>
-                            <p><span class="text-white/60">Priority:</span> ${config.priority}</p>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            validateFinalConfiguration() {
-                const validationResults = document.getElementById('validationResults');
-                const errors = document.getElementById('validationErrors');
-                const warnings = document.getElementById('validationWarnings');
-                const success = document.getElementById('validationSuccess');
-                
-                validationResults.classList.remove('hidden');
-                errors.classList.add('hidden');
-                warnings.classList.add('hidden');
-                success.classList.add('hidden');
-                
-                const config = this.gatherConfiguration();
-                const validationIssues = [];
-                const recommendations = [];
-                
-                // Budget vs requirements validation
-                if (config.budgetRange === 'economy' && config.useCase === 'telepresence') {
-                    recommendations.push('Consider upgrading budget for telepresence requirements');
-                }
-                
-                // Room size vs use case validation
-                if (config.roomSize === 'small' && config.useCase === 'auditorium') {
-                    validationIssues.push('Small room size incompatible with auditorium use case');
-                }
-                
-                if (validationIssues.length > 0) {
-                    document.getElementById('errorList').innerHTML = validationIssues.map(issue => `<li>• ${issue}</li>`).join('');
-                    errors.classList.remove('hidden');
-                } else if (recommendations.length > 0) {
-                    document.getElementById('warningList').innerHTML = recommendations.map(rec => `<li>• ${rec}</li>`).join('');
-                    warnings.classList.remove('hidden');
-                } else {
-                    success.classList.remove('hidden');
-                }
-            }
-            
-            gatherConfiguration() {
-                const ecosystem = document.querySelector('input[name="ecosystem"]:checked');
-                
-                return {
-                    projectName: document.getElementById('projectName').value,
-                    clientName: document.getElementById('clientName').value,
-                    projectLocation: document.getElementById('projectLocation').value,
-                    projectDate: document.getElementById('projectDate').value,
-                    budgetRange: document.getElementById('budgetRange').value,
-                    priority: document.getElementById('priority').value,
-                    contingency: document.getElementById('contingency').value,
-                    roomSize: document.getElementById('roomSize').value,
-                    useCase: document.getElementById('useCase').value,
-                    usageFrequency: document.getElementById('usageFrequency').value,
-                    requirements: document.getElementById('projectRequirements').value,
-                    ecosystem: ecosystem ? ecosystem.value : null,
-                    specialRequirements: {
-                        req_4k: document.getElementById('req_4k').checked,
-                        req_recording: document.getElementById('req_recording').checked,
-                        req_wireless: document.getElementById('req_wireless').checked,
-                        req_byod: document.getElementById('req_byod').checked
-                    }
-                };
-            }
-            
-            async handleFormSubmit(e) {
-                e.preventDefault();
-                
-                if (!this.validateFinalConfiguration()) {
-                    this.toast.show('Please fix configuration issues before generating BOQ', 'error');
-                    return;
-                }
-                
-                this.showLoading('Generating intelligent BOQ...');
-                
-                try {
-                    const config = this.gatherConfiguration();
-                    let boqData;
-                    
-                    try {
-                        // Try API first
-                        boqData = await this.generateBOQFromAPI(config);
-                    } catch (apiError) {
-                        console.log('API unavailable, using offline generation');
-                        // Fallback to offline generation
-                        boqData = this.generateOfflineBOQ(config);
-                    }
-                    
-                    this.currentBOQ = boqData;
-                    this.displayBOQ(boqData);
-                    this.toast.show('BOQ generated successfully!', 'success');
-                    
-                } catch (error) {
-                    console.error('BOQ generation error:', error);
-                    this.toast.show('Failed to generate BOQ. Please try again.', 'error');
-                } finally {
-                    this.hideLoading();
-                }
-            }
-            
-            async generateBOQFromAPI(config) {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/generate-boq`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(config)
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
-                }
-                
-                return await response.json();
-            }
-            
-            generateOfflineBOQ(config) {
-                // Offline BOQ generation logic
-                const boqData = {
-                    project: {
-                        name: config.projectName,
-                        client: config.clientName,
-                        location: config.projectLocation,
-                        date: config.projectDate,
-                        budget: config.budgetRange,
-                        contingency: parseFloat(config.contingency) || 15
-                    },
-                    sections: []
-                };
-                
-                // Generate sections based on configuration
-                boqData.sections = this.generateBOQSections(config);
-                
-                // Calculate totals
-                boqData.subtotal = boqData.sections.reduce((sum, section) => sum + section.total, 0);
-                boqData.contingencyAmount = boqData.subtotal * (boqData.project.contingency / 100);
-                boqData.grandTotal = boqData.subtotal + boqData.contingencyAmount;
-                
-                return boqData;
-            }
-            
-            generateBOQSections(config) {
-                const sections = [];
-                
-                // Video Conferencing Section
-                const vcSection = {
-                    name: 'Video Conferencing System',
-                    items: this.getVCItems(config),
-                    total: 0
-                };
-                vcSection.total = vcSection.items.reduce((sum, item) => sum + item.total, 0);
-                sections.push(vcSection);
-                
-                // Display Section
-                const displaySection = {
-                    name: 'Display & Presentation',
-                    items: this.getDisplayItems(config),
-                    total: 0
-                };
-                displaySection.total = displaySection.items.reduce((sum, item) => sum + item.total, 0);
-                sections.push(displaySection);
-                
-                // Audio Section
-                const audioSection = {
-                    name: 'Audio System',
-                    items: this.getAudioItems(config),
-                    total: 0
-                };
-                audioSection.total = audioSection.items.reduce((sum, item) => sum + item.total, 0);
-                sections.push(audioSection);
-                
-                // Control & Automation
-                const controlSection = {
-                    name: 'Control & Automation',
-                    items: this.getControlItems(config),
-                    total: 0
-                };
-                controlSection.total = controlSection.items.reduce((sum, item) => sum + item.total, 0);
-                sections.push(controlSection);
-                
-                // Installation & Configuration
-                const installSection = {
-                    name: 'Installation & Configuration',
-                    items: this.getInstallationItems(config),
-                    total: 0
-                };
-                installSection.total = installSection.items.reduce((sum, item) => sum + item.total, 0);
-                sections.push(installSection);
-                
-                return sections;
-            }
-            
-            getVCItems(config) {
-                const items = [];
-                
-                if (config.ecosystem === 'logitech') {
-                    if (config.roomSize === 'small') {
-                        items.push({
-                            name: 'Logitech Rally Bar Mini',
-                            brand: 'Logitech',
-                            features: 'All-in-one video bar with 4K camera, speakers, and mic array',
-                            quantity: 1,
-                            unitPrice: 2500,
-                            total: 2500
-                        });
-                    } else if (config.roomSize === 'medium') {
-                        items.push({
-                            name: 'Logitech Rally Bar',
-                            brand: 'Logitech',
-                            features: 'Premium all-in-one with AI-powered camera and premium audio',
-                            quantity: 1,
-                            unitPrice: 3500,
-                            total: 3500
-                        });
-                        items.push({
-                            name: 'Logitech Rally Mic Pods',
-                            brand: 'Logitech',
-                            features: 'Additional microphone coverage for larger rooms',
-                            quantity: 2,
-                            unitPrice: 350,
-                            total: 700
-                        });
-                    }
-                } else {
-                    // Default/generic items
-                    items.push({
-                        name: 'Professional Video Conferencing System',
-                        brand: 'Various',
-                        features: '4K camera, premium audio, enterprise-grade codec',
-                        quantity: 1,
-                        unitPrice: 3000,
-                        total: 3000
-                    });
-                }
-                
-                return items;
-            }
-            
-            getDisplayItems(config) {
-                const items = [];
-                const displaySize = config.roomSize === 'small' ? 55 : config.roomSize === 'medium' ? 75 : 85;
-                const displayPrice = displaySize * 25; // Rough pricing model
-                
-                items.push({
-                    name: `${displaySize}" 4K Professional Display`,
-                    brand: 'Samsung/LG',
-                    features: '4K UHD, commercial grade, 24/7 operation rated',
-                    quantity: 1,
-                    unitPrice: displayPrice,
-                    total: displayPrice
-                });
-                
-                if (config.specialRequirements.req_wireless) {
-                    items.push({
-                        name: 'Wireless Presentation System',
-                        brand: 'Barco/Kramer',
-                        features: 'Multi-device wireless presentation, BYOD support',
-                        quantity: 1,
-                        unitPrice: 800,
-                        total: 800
-                    });
-                }
-                
-                return items;
-            }
-            
-            getAudioItems(config) {
-                const items = [];
-                
-                if (config.roomSize === 'large' || config.roomSize === 'xlarge') {
-                    items.push({
-                        name: 'Ceiling Microphone Array',
-                        brand: 'Shure/Audio-Technica',
-                        features: 'Beamforming ceiling microphones with DSP',
-                        quantity: 2,
-                        unitPrice: 1200,
-                        total: 2400
-                    });
-                    
-                    items.push({
-                        name: 'Premium Speaker System',
-                        brand: 'QSC/Bose',
-                        features: 'Professional-grade ceiling or wall-mounted speakers',
-                        quantity: 4,
-                        unitPrice: 400,
-                        total: 1600
-                    });
-                }
-                
-                return items;
-            }
-            
-            getControlItems(config) {
-                const items = [];
-                
-                items.push({
-                    name: 'Touch Panel Controller',
-                    brand: 'Crestron/AMX',
-                    features: '10" touch panel for room control and scheduling',
-                    quantity: 1,
-                    unitPrice: 1500,
-                    total: 1500
-                });
-                
-                if (config.useCase === 'boardroom' || config.priority === 'quality') {
-                    items.push({
-                        name: 'Advanced Control Processor',
-                        brand: 'Crestron',
-                        features: 'Enterprise control system with cloud connectivity',
-                        quantity: 1,
-                        unitPrice: 2500,
-                        total: 2500
-                    });
-                }
-                
-                return items;
-            }
-            
-            getInstallationItems(config) {
-                const items = [];
-                
-                items.push({
-                    name: 'Professional Installation',
-                    brand: 'Certified Integrator',
-                    features: 'Complete system installation and cable management',
-                    quantity: 1,
-                    unitPrice: 2000,
-                    total: 2000
-                });
-                
-                items.push({
-                    name: 'System Configuration & Testing',
-                    brand: 'Technical Services',
-                    features: 'Complete setup, testing, and user training',
-                    quantity: 1,
-                    unitPrice: 1500,
-                    total: 1500
-                });
-                
-                return items;
-            }
-            
-            displayBOQ(boqData) {
-                const output = document.getElementById('boqOutput');
-                const actions = document.getElementById('boqActions');
-                
-                let html = `
-                    <div class="boq-header">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h2 class="text-2xl font-bold mb-1">Bill of Quantities</h2>
-                                <h3 class="text-lg font-semibold mb-2">${boqData.project.name}</h3>
-                                <div class="grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <p><strong>Client:</strong> ${boqData.project.client}</p>
-                                        <p><strong>Location:</strong> ${boqData.project.location || 'Not specified'}</p>
-                                    </div>
-                                    <div>
-                                        <p><strong>Date:</strong> ${utils.formatDate(boqData.project.date)}</p>
-                                        <p><strong>Budget Category:</strong> ${boqData.project.budget}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-2xl font-bold">${utils.formatCurrency(boqData.grandTotal)}</div>
-                                <div class="text-sm opacity-90">Total Project Cost</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                // Generate sections
-                boqData.sections.forEach(section => {
-                    html += `
-                        <div class="boq-section">
-                            <div class="boq-section-header">
-                                <div class="flex justify-between items-center">
-                                    <span>${section.name}</span>
-                                    <span>${utils.formatCurrency(section.total)}</span>
-                                </div>
-                            </div>
-                            <table class="boq-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 40%">Item Description</th>
-                                        <th style="width: 15%">Quantity</th>
-                                        <th style="width: 20%">Unit Price</th>
-                                        <th style="width: 20%">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                    `;
-                    
-                    section.items.forEach(item => {
-                        html += `
-                            <tr>
-                                <td>
-                                    <div class="item-name">${item.name}</div>
-                                    <div class="item-brand">${item.brand}</div>
-                                    <div class="item-features">${item.features}</div>
-                                </td>
-                                <td>${item.quantity}</td>
-                                <td>${utils.formatCurrency(item.unitPrice)}</td>
-                                <td>${utils.formatCurrency(item.total)}</td>
-                            </tr>
-                        `;
-                    });
-                    
-                    html += `
-                                    <tr class="section-total">
-                                        <td colspan="3"><strong>Section Total</strong></td>
-                                        <td><strong>${utils.formatCurrency(section.total)}</strong></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    `;
-                });
-                
-                // Grand total section
-                html += `
-                    <div class="grand-total-section">
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span>Subtotal:</span>
-                                <span class="font-semibold">${utils.formatCurrency(boqData.subtotal)}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span>Contingency (${boqData.project.contingency}%):</span>
-                                <span class="font-semibold">${utils.formatCurrency(boqData.contingencyAmount)}</span>
-                            </div>
-                            <hr class="border-white/30">
-                            <div class="flex justify-between items-center text-xl font-bold">
-                                <span>Grand Total:</span>
-                                <span>${utils.formatCurrency(boqData.grandTotal)}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                // Add recommendations
-                html += `
-                    <div class="recommendations-section">
-                        <h4 class="font-semibold text-white mb-2">Professional Recommendations:</h4>
-                        <ul class="text-sm text-white/90 space-y-1">
-                            <li>• Regular maintenance and software updates recommended</li>
-                            <li>• Consider extended warranty for critical components</li>
-                            <li>• User training sessions included for 30 days post-installation</li>
-                            <li>• Future expansion capabilities built into design</li>
-                        </ul>
-                    </div>
-                `;
-                
-                output.innerHTML = html;
-                actions.classList.remove('hidden');
-            }
-            
-            showLoading(message = 'Processing...') {
-                document.getElementById('loadingText').textContent = message;
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-                document.getElementById('generateSpinner').classList.remove('hidden');
-                document.getElementById('generateText').textContent = 'Generating...';
-            }
-            
-            hideLoading() {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('generateSpinner').classList.add('hidden');
-                document.getElementById('generateText').textContent = 'Generate Intelligent BOQ';
-            }
-            
-            printBOQ() {
-                if (!this.currentBOQ) {
-                    this.toast.show('No BOQ to print. Please generate a BOQ first.', 'warning');
-                    return;
-                }
-                window.print();
-            }
-            
-            downloadCSV() {
-                if (!this.currentBOQ) {
-                    this.toast.show('No BOQ to download. Please generate a BOQ first.', 'warning');
-                    return;
-                }
-                
-                let csvContent = 'Project,Client,Date,Section,Item,Brand,Features,Quantity,Unit Price,Total\n';
-                
-                this.currentBOQ.sections.forEach(section => {
-                    section.items.forEach(item => {
-                        const row = [
-                            this.currentBOQ.project.name,
-                            this.currentBOQ.project.client,
-                            this.currentBOQ.project.date,
-                            section.name,
-                            item.name,
-                            item.brand,
-                            item.features.replace(/,/g, ';'),
-                            item.quantity,
-                            item.unitPrice,
-                            item.total
-                        ].map(field => `"${field}"`).join(',');
-                        csvContent += row + '\n';
-                    });
-                });
-                
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `BOQ_${this.currentBOQ.project.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                
-                this.toast.show('CSV downloaded successfully!', 'success');
-            }
-        }
+        class BOQApp {
+            constructor() {
+                this.toast = new ToastManager();
+                this.currentBOQ = null;
+                this.initializeEventListeners();
+                this.checkBackendStatus();
+                this.setDefaultDate();
+            }
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', () => {
-            new EnhancedBOQGenerator();
-        });
-    </script>
+            setDefaultDate() {
+                document.getElementById('projectDate').value = new Date().toISOString().split('T')[0];
+            }
+
+            initializeEventListeners() {
+                document.getElementById('boqForm').addEventListener('submit', (e) => this.handleBOQGeneration(e));
+                document.getElementById('downloadCsvBtn').addEventListener('click', () => this.downloadBOQ());
+                document.getElementById('printBoqBtn').addEventListener('click', () => this.printBOQ());
+            }
+            
+            async handleBOQGeneration(e) {
+                e.preventDefault();
+                const config = this.getBOQConfig();
+                
+                try {
+                    if (!config.projectName || !config.clientName) { 
+                        this.toast.show('Project Name and Client Name are required fields.', 'error'); 
+                        return; 
+                    }
+                    
+                    this.setButtonLoading('generateBtn', true, 'Generating Professional BOQ...');
+                    
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/generate_boq`, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify(config) 
+                    });
+                    
+                    const boq = await response.json();
+                    
+                    if (!response.ok) throw new Error(boq.detail || 'Failed to generate BOQ.');
+                    
+                    this.currentBOQ = boq;
+                    this.renderBOQ(boq);
+                    this.toast.show('Professional BOQ generated successfully!', 'success');
+                    
+                } catch (error) {
+                    console.error('BOQ Generation Error:', error);
+                    this.toast.show(error.message, 'error');
+                } finally {
+                    this.setButtonLoading('generateBtn', false, 'Generate Professional BOQ');
+                }
+            }
+
+            renderBOQ(boq) {
+                const output = document.getElementById('boqOutput');
+                const actions = document.getElementById('boqActions');
+                
+                // Enhanced BOQ rendering with professional format
+                const sectionsHTML = boq.sections.map((section, sectionIndex) => {
+                    const itemsHTML = section.items.map((item, index) => `
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="text-center text-white/70">${sectionIndex + 1}.${index + 1}</td>
+                            <td>
+                                <div class="item-name">${utils.sanitizeHTML(item.name)}</div>
+                                <div class="item-brand">${utils.sanitizeHTML(item.brand || 'Generic')}</div>
+                                ${item.features ? `<div class="item-features">${utils.sanitizeHTML(item.features)}</div>` : ''}
+                                ${item.specifications ? `<div class="item-features"><strong>Specs:</strong> ${utils.sanitizeHTML(item.specifications)}</div>` : ''}
+                            </td>
+                            <td class="text-center text-white">${item.quantity}</td>
+                            <td class="text-center text-white/70">${item.unit || 'pcs'}</td>
+                            <td class="text-right text-white">${utils.formatCurrency(item.unitPrice)}</td>
+                            <td class="text-right text-white font-semibold">${utils.formatCurrency(item.totalPrice)}</td>
+                        </tr>`).join('');
+                    
+                    return `
+                        <div class="boq-section">
+                            <div class="boq-section-header">
+                                ${sectionIndex + 1}. ${utils.sanitizeHTML(section.name)}
+                            </div>
+                            <table class="boq-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">S.No.</th>
+                                        <th>Description & Specifications</th>
+                                        <th style="width: 80px;">Qty</th>
+                                        <th style="width: 80px;">Unit</th>
+                                        <th style="width: 120px;">Unit Price</th>
+                                        <th style="width: 120px;">Total Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsHTML}
+                                    <tr class="section-total">
+                                        <td colspan="5" class="text-right font-semibold text-white">Section Total:</td>
+                                        <td class="text-right font-semibold text-white">${utils.formatCurrency(section.sectionTotal)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>`;
+                }).join('');
+
+                const currentDate = new Date().toLocaleDateString();
+                
+                output.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="boq-header">
+                            <div class="text-center">
+                                <h3 class="text-2xl font-bold mb-2">BILL OF QUANTITIES (BOQ)</h3>
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div class="text-left">
+                                        <p><strong>Project:</strong> ${utils.sanitizeHTML(boq.projectName)}</p>
+                                        <p><strong>Client:</strong> ${utils.sanitizeHTML(boq.clientName)}</p>
+                                        ${boq.metadata.projectLocation ? `<p><strong>Location:</strong> ${utils.sanitizeHTML(boq.metadata.projectLocation)}</p>` : ''}
+                                    </div>
+                                    <div class="text-right">
+                                        <p><strong>BOQ ID:</strong> ${boq.id.substring(0, 8).toUpperCase()}</p>
+                                        <p><strong>Date:</strong> ${utils.formatDate(boq.metadata.projectDate || currentDate)}</p>
+                                        <p><strong>Valid Until:</strong> ${utils.formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${sectionsHTML}
+                        
+                        <div class="grand-total-section">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <h4 class="font-semibold text-lg mb-2">Summary</h4>
+                                    <p class="text-sm">Total Items: ${boq.summary.itemCount}</p>
+                                    <p class="text-sm">Room Size: ${boq.metadata.roomSize?.toUpperCase()} (${this.getRoomDescription(boq.metadata.roomSize)})</p>
+                                    <p class="text-sm">Use Case: ${boq.metadata.useCase?.replace('_', ' ').toUpperCase()}</p>
+                                </div>
+                                <div class="text-right space-y-1">
+                                    <p class="text-lg">Subtotal: <span class="font-semibold">${utils.formatCurrency(boq.summary.subtotal)}</span></p>
+                                    <p class="text-lg">Contingency (${boq.metadata.contingency || 10}%): <span class="font-semibold">${utils.formatCurrency(boq.summary.contingencyAmount)}</span></p>
+                                    <hr class="my-2 border-white/30">
+                                    <p class="text-2xl font-bold">GRAND TOTAL: ${utils.formatCurrency(boq.summary.totalCost)}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${boq.recommendations && boq.recommendations.length > 0 ? `
+                        <div class="recommendations-section print-hidden">
+                            <h4 class="font-semibold text-white text-lg mb-2">Professional Recommendations</h4>
+                            <ul class="space-y-1 text-sm text-white/80">
+                                ${boq.recommendations.map(r => `<li class="flex items-start space-x-2">
+                                    <span class="text-blue-400 mt-1">•</span>
+                                    <span>${utils.sanitizeHTML(r)}</span>
+                                </li>`).join('')}
+                            </ul>
+                        </div>` : ''}
+                        
+                        <div class="text-center text-xs text-white/50 mt-6 print-hidden">
+                            <p>This BOQ was generated using Professional BOQ Generator v4.0</p>
+                            <p>Generated on ${new Date().toLocaleString()}</p>
+                        </div>
+                    </div>`;
+                
+                actions.classList.remove('hidden');
+            }
+
+            getRoomDescription(size) {
+                const descriptions = {
+                    small: '4-8 people',
+                    medium: '8-16 people',
+                    large: '16-30 people',
+                    xlarge: '30+ people'
+                };
+                return descriptions[size] || 'Standard';
+            }
+
+            printBOQ() {
+                if (!this.currentBOQ) {
+                    this.toast.show('No BOQ available to print', 'error');
+                    return;
+                }
+                window.print();
+            }
+
+            // Enhanced CSV download with better formatting
+            downloadBOQ() {
+                if (!this.currentBOQ) { 
+                    this.toast.show('No BOQ available to download', 'error'); 
+                    return; 
+                }
+                
+                const boq = this.currentBOQ;
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+                
+                // Enhanced CSV with more details
+                const headers = [
+                    'Section', 'Item No.', 'Description', 'Brand', 'Category', 
+                    'Specifications', 'Quantity', 'Unit', 'Unit Price', 'Total Price'
+                ];
+                
+                const rows = [];
+                
+                // Add project header info
+                rows.push([`Project: ${boq.projectName}`]);
+                rows.push([`Client: ${boq.clientName}`]);
+                rows.push([`BOQ ID: ${boq.id.substring(0, 8).toUpperCase()}`]);
+                rows.push([`Generated: ${new Date().toLocaleString()}`]);
+                rows.push(['']); // Empty row
+                
+                // Add table headers
+                rows.push(headers);
+                
+                // Add items
+                boq.sections.forEach((section, sectionIndex) => {
+                    section.items.forEach((item, itemIndex) => {
+                        rows.push([
+                            section.name,
+                            `${sectionIndex + 1}.${itemIndex + 1}`,
+                            item.name || '',
+                            item.brand || '',
+                            item.category || '',
+                            item.features || '',
+                            item.quantity,
+                            item.unit || 'pcs',
+                            item.unitPrice.toFixed(2),
+                            item.totalPrice.toFixed(2)
+                        ].map(field => `"${String(field).replace(/"/g, '""')}"`));
+                    });
+                    
+                    // Add section total
+                    rows.push([
+                        '', '', 'Section Total', '', '', '', '', '', '', 
+                        `"${section.sectionTotal.toFixed(2)}"`
+                    ]);
+                });
+                
+                // Add summary
+                rows.push(['']); // Empty row
+                rows.push(['', '', 'SUBTOTAL', '', '', '', '', '', '', `"${boq.summary.subtotal.toFixed(2)}"`]);
+                rows.push(['', '', `CONTINGENCY (${boq.metadata.contingency || 10}%)`, '', '', '', '', '', '', `"${boq.summary.contingencyAmount.toFixed(2)}"`]);
+                rows.push(['', '', 'GRAND TOTAL', '', '', '', '', '', '', `"${boq.summary.totalCost.toFixed(2)}"`]);
+                
+                const csvContent = rows.map(row => Array.isArray(row) ? row.join(',') : row).join('\n');
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `BOQ-${boq.projectName.replace(/\s+/g, '_')}-${timestamp}.csv`;
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                this.toast.show('BOQ downloaded successfully', 'success');
+            }
+
+            getBOQConfig() {
+                return {
+                    projectName: document.getElementById('projectName').value,
+                    clientName: document.getElementById('clientName').value,
+                    projectLocation: document.getElementById('projectLocation').value,
+                    projectDate: document.getElementById('projectDate').value,
+                    roomSize: document.getElementById('roomSize').value,
+                    useCase: document.getElementById('useCase').value,
+                    projectRequirements: document.getElementById('projectRequirements').value,
+                    budgetRange: document.getElementById('budgetRange').value,
+                    priority: document.getElementById('priority').value,
+                    contingency: parseInt(document.getElementById('contingency').value) || 15
+                };
+            }
+
+            setButtonLoading(buttonId, loading, text) {
+                const button = document.getElementById(buttonId);
+                const textElement = button.querySelector('span');
+                const spinner = button.querySelector('.loading-spinner');
+                
+                if (loading) {
+                    button.disabled = true;
+                    textElement.textContent = text;
+                    if (spinner) spinner.classList.remove('hidden');
+                } else {
+                    button.disabled = false;
+                    textElement.textContent = text;
+                    if (spinner) spinner.classList.add('hidden');
+                }
+            }
+
+            async checkBackendStatus() {
+                const statusElement = document.getElementById('appStatus');
+                
+                try {
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/health`, {
+                        method: 'GET',
+                        timeout: 5000
+                    });
+                    
+                    if (response.ok) {
+                        statusElement.textContent = 'Connected';
+                        statusElement.className = 'inline-block px-3 py-1 bg-green-500/20 text-green-400 text-sm rounded-full';
+                    } else {
+                        throw new Error('Backend not responding');
+                    }
+                } catch (error) {
+                    console.warn('Backend connection failed:', error);
+                    statusElement.textContent = 'Offline Mode';
+                    statusElement.className = 'inline-block px-3 py-1 bg-red-500/20 text-red-400 text-sm rounded-full';
+                    this.toast.show('Backend unavailable. Demo mode enabled.', 'warning');
+                }
+            }
+
+            showLoadingOverlay(show = true, text = 'Processing...') {
+                const overlay = document.getElementById('loadingOverlay');
+                const loadingText = document.getElementById('loadingText');
+                
+                if (show) {
+                    loadingText.textContent = text;
+                    overlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('hidden');
+                }
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            window.boqApp = new BOQApp();
+        });
+
+        // Handle print styles
+        window.addEventListener('beforeprint', () => {
+            document.body.classList.add('printing');
+        });
+
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('printing');
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'p':
+                        e.preventDefault();
+                        if (window.boqApp && window.boqApp.currentBOQ) {
+                            window.boqApp.printBOQ();
+                        }
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        if (window.boqApp && window.boqApp.currentBOQ) {
+                            window.boqApp.downloadBOQ();
+                        }
+                        break;
+                }
+            }
+        });
+    </script>
 </body>
 </html>
