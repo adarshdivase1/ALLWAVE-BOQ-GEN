@@ -90,7 +90,9 @@
     </div>
 
     <script>
-        const BACKEND_URL = 'https://adarshav-boq-backend.hf.space';
+        // ** THIS IS THE CRITICAL FIX **
+        const BACKEND_URL = 'https://adarshav-boq-backend.hf.space'; 
+        
         const INITIAL_DISPLAY_COUNT = 15;
         let allProducts = [];
         let sortableInstances = [];
@@ -110,7 +112,11 @@
 
         async function fetchProductsAndCategories() {
             try {
-                const [productsRes, categoriesRes] = await Promise.all([fetch(`${BACKEND_URL}/api/products`), fetch(`${BACKEND_URL}/api/categories`)]);
+                // ** FIX: Use the full BACKEND_URL for API calls **
+                const [productsRes, categoriesRes] = await Promise.all([
+                    fetch(`${BACKEND_URL}/api/products`), 
+                    fetch(`${BACKEND_URL}/api/categories`)
+                ]);
                 if (!productsRes.ok || !categoriesRes.ok) throw new Error('Failed to fetch initial data from backend');
                 allProducts = await productsRes.json();
                 const { categories } = await categoriesRes.json();
@@ -162,6 +168,7 @@
             document.getElementById('generateText').textContent = 'Generating...';
 
             try {
+                // ** FIX: Use the full BACKEND_URL for API calls **
                 const response = await fetch(`${BACKEND_URL}/api/generate_boq`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
                 if (!response.ok) { const errData = await response.json().catch(() => ({ detail: response.statusText })); throw new Error(errData.detail); }
                 const boqData = await response.json();
@@ -190,7 +197,6 @@
             boqDisplay.innerHTML = headerHTML + sectionsHTML + summaryHTML + extrasHTML;
             
             initializeSortableForBOQ();
-            // ** THIS IS THE FIX FOR DRAG-AND-DROP **
             attachQuantityEventListeners();
             recalculateAllTotals();
         }
@@ -203,10 +209,7 @@
                     group: 'boq-items', animation: 150,
                     onAdd: (evt) => {
                         const product = allProducts.find(p => p.id === evt.item.getAttribute('data-product-id'));
-                        if (product) {
-                            const newItemEl = createItemElement(product);
-                            evt.to.replaceChild(newItemEl, evt.item);
-                        }
+                        if (product) { const newItemEl = createItemElement(product); evt.to.replaceChild(newItemEl, evt.item); }
                         recalculateAllTotals();
                     },
                     onEnd: recalculateAllTotals
@@ -223,17 +226,16 @@
         }
 
         function createItemElement(product, quantity = 1) {
-            const trWrapper = document.createElement('tbody'); // Use a wrapper to parse the full TR
+            const trWrapper = document.createElement('tbody');
             trWrapper.innerHTML = createItemHTML({ ...product, quantity, productId: product.id });
             const tr = trWrapper.firstChild;
             tr.querySelector('.item-quantity').addEventListener('input', recalculateAllTotals);
             return tr;
         }
 
-        // ** NEW FUNCTION TO ATTACH LISTENERS TO ALL QTY FIELDS **
         function attachQuantityEventListeners() {
             document.querySelectorAll('.item-quantity').forEach(input => {
-                input.removeEventListener('input', recalculateAllTotals); // Prevent duplicate listeners
+                input.removeEventListener('input', recalculateAllTotals);
                 input.addEventListener('input', recalculateAllTotals);
             });
         }
