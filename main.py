@@ -374,13 +374,78 @@ class IntelligentProductMatcher:
 
 # Logical System Builder
 class LogicalSystemBuilder:
-    def __init__(self, matcher: IntelligentProductMatcher, room_size: str, budget_range: str):
+    def __init__(self, matcher: IntelligentProductMatcher, room_size: str, budget_range: str, use_case: str = "meeting_room"):
         self.matcher = matcher
         self.room_size = room_size
         self.budget_range = budget_range
+        self.use_case = use_case  # Add use_case parameter
         self.recommendations = []
         self.assumptions = []
         self.selected_ecosystem = None
+        
+        # Define use case specific requirements
+        self.use_case_configs = {
+            'meeting_room': {
+                'primary_focus': 'video_conferencing',
+                'audio_priority': 'standard',
+                'display_requirement': 'single',
+                'interaction_style': 'collaborative',
+                'additional_accessories': []
+            },
+            'boardroom': {
+                'primary_focus': 'presentation',
+                'audio_priority': 'high',
+                'display_requirement': 'premium',
+                'interaction_style': 'executive',
+                'additional_accessories': ['wireless_presentation', 'premium_audio']
+            },
+            'huddle_room': {
+                'primary_focus': 'quick_meetings',
+                'audio_priority': 'standard',
+                'display_requirement': 'compact',
+                'interaction_style': 'informal',
+                'additional_accessories': []
+            },
+            'training_room': {
+                'primary_focus': 'education',
+                'audio_priority': 'high',
+                'display_requirement': 'large_display',
+                'interaction_style': 'instructor_led',
+                'additional_accessories': ['wireless_microphone', 'recording_equipment']
+            },
+            'auditorium': {
+                'primary_focus': 'large_presentation',
+                'audio_priority': 'premium',
+                'display_requirement': 'multiple_displays',
+                'interaction_style': 'broadcast',
+                'additional_accessories': ['professional_audio', 'lighting', 'recording_equipment']
+            },
+            'telepresence': {
+                'primary_focus': 'immersive_vc',
+                'audio_priority': 'premium',
+                'display_requirement': 'multiple_premium',
+                'interaction_style': 'immersive',
+                'additional_accessories': ['premium_lighting', 'acoustic_treatment']
+            },
+            'lecture_hall': {
+                'primary_focus': 'education_large',
+                'audio_priority': 'premium',
+                'display_requirement': 'projector_plus_displays',
+                'interaction_style': 'one_to_many',
+                'additional_accessories': ['wireless_microphone', 'document_camera', 'recording_equipment']
+            },
+            'creative_space': {
+                'primary_focus': 'collaboration',
+                'audio_priority': 'standard',
+                'display_requirement': 'interactive',
+                'interaction_style': 'creative',
+                'additional_accessories': ['digital_whiteboard', 'wireless_presentation']
+            }
+        }
+
+    def get_use_case_config(self):
+        """Get configuration for the current use case"""
+        return self.use_case_configs.get(self.use_case, self.use_case_configs['meeting_room'])
 
     def _create_item(self, product: Product, qty: int = 1, custom_description: str = None) -> Optional[BoqItem]:
         if not product:
@@ -405,46 +470,66 @@ class LogicalSystemBuilder:
         )
 
     def build_logical_system(self, primary_brand: str = None) -> List[BoqSection]:
-        """Build a logically consistent AV system"""
+        """Build a logically consistent AV system based on use case"""
         sections = []
+        use_case_config = self.get_use_case_config()
         
         if not primary_brand:
-            # Default to Logitech if no preference
             primary_brand = 'logitech'
         
         self.selected_ecosystem = primary_brand
-        logger.info(f"Building {primary_brand} ecosystem for {self.room_size} room")
+        logger.info(f"Building {primary_brand} ecosystem for {self.room_size} room - Use case: {self.use_case}")
         
-        # 1. Video Conferencing System (Primary)
-        vc_section = self._build_vc_system(primary_brand)
-        if vc_section:
-            sections.append(vc_section)
+        # Build sections based on use case requirements
+        if use_case_config['primary_focus'] in ['video_conferencing', 'quick_meetings', 'immersive_vc']:
+            # Video conferencing focused systems
+            vc_section = self._build_vc_system(primary_brand, use_case_config)
+            if vc_section:
+                sections.append(vc_section)
         
-        # 2. Display & Mounting System
-        display_section = self._build_display_system()
+        elif use_case_config['primary_focus'] in ['presentation', 'education', 'large_presentation', 'education_large']:
+            # Presentation focused systems
+            vc_section = self._build_presentation_system(primary_brand, use_case_config)
+            if vc_section:
+                sections.append(vc_section)
+        
+        elif use_case_config['primary_focus'] == 'collaboration':
+            # Collaboration focused systems
+            vc_section = self._build_collaboration_system(primary_brand, use_case_config)
+            if vc_section:
+                sections.append(vc_section)
+
+        # Display system - varies by use case
+        display_section = self._build_display_system_by_use_case(use_case_config)
         if display_section:
             sections.append(display_section)
         
-        # 3. Audio Enhancement (only for large rooms and if compatible)
-        if self.room_size in ['large', 'xlarge']:
-            audio_section = self._build_audio_enhancement(primary_brand)
+        # Audio system - varies by use case
+        if use_case_config['audio_priority'] in ['high', 'premium']:
+            audio_section = self._build_enhanced_audio_system(primary_brand, use_case_config)
             if audio_section:
                 sections.append(audio_section)
         
-        # 4. Connectivity & Infrastructure
-        infra_section = self._build_infrastructure()
+        # Additional accessories based on use case
+        if use_case_config['additional_accessories']:
+            accessories_section = self._build_use_case_accessories(use_case_config)
+            if accessories_section:
+                sections.append(accessories_section)
+        
+        # Infrastructure
+        infra_section = self._build_infrastructure_by_use_case(use_case_config)
         if infra_section:
             sections.append(infra_section)
         
-        # 5. Professional Services
+        # Services
         services_section = self._build_services(sections)
         if services_section:
             sections.append(services_section)
         
         return sections
 
-    def _build_vc_system(self, brand: str) -> Optional[BoqSection]:
-        """Build the core video conferencing system"""
+    def _build_vc_system(self, brand: str, use_case_config: dict) -> Optional[BoqSection]:
+        """Build video conferencing system based on use case"""
         items = []
         
         # Find primary device
@@ -453,123 +538,272 @@ class LogicalSystemBuilder:
             logger.error(f"No primary VC device found for {brand}")
             return None
         
-        items.append(self._create_item(
-            primary_device, 1, 
-            f"{primary_device.brand} {primary_device.name} (Primary Video Conferencing System)"
-        ))
+        # Quantity based on use case
+        if self.use_case == 'telepresence':
+            qty = 2  # Dual camera setup for telepresence
+            description = f"{primary_device.brand} {primary_device.name} (Dual Camera Telepresence Setup)"
+        else:
+            qty = 1
+            description = f"{primary_device.brand} {primary_device.name} (Primary Video Conferencing System)"
         
-        # Find compatible controller
+        items.append(self._create_item(primary_device, qty, description))
+        
+        # Controller based on use case
         controller = self.matcher.find_compatible_controller(primary_device)
         if controller:
+            if self.use_case in ['boardroom', 'telepresence']:
+                # Premium controller for executive use
+                items.append(self._create_item(
+                    controller, 1,
+                    f"{controller.brand} {controller.name} (Executive Touch Controller)"
+                ))
+            else:
+                items.append(self._create_item(
+                    controller, 1,
+                    f"{controller.brand} {controller.name} (Touch Controller)"
+                ))
+        
+        if items:
+            section_name = "Video Conferencing System"
+            if self.use_case == 'telepresence':
+                section_name = "Telepresence System"
+            elif self.use_case == 'huddle_room':
+                section_name = "Huddle Room AV System"
+            
+            return BoqSection(
+                name=section_name,
+                items=items,
+                sectionTotal=sum(item.totalPrice for item in items),
+                description=f"Complete {brand.title()} solution optimized for {self.use_case.replace('_', ' ')}"
+            )
+        
+        return None
+
+    def _build_presentation_system(self, brand: str, use_case_config: dict) -> Optional[BoqSection]:
+        """Build presentation-focused system"""
+        items = []
+        
+        # For presentation use cases, we might need different devices
+        primary_device = self.matcher.find_primary_vc_device(brand, self.room_size)
+        if primary_device:
+            if self.use_case in ['auditorium', 'lecture_hall']:
+                description = f"{primary_device.brand} {primary_device.name} (Professional Presentation System)"
+            else:
+                description = f"{primary_device.brand} {primary_device.name} (Presentation & Collaboration System)"
+            
+            items.append(self._create_item(primary_device, 1, description))
+        
+        # Add presentation-specific controllers
+        controller = self.matcher.find_compatible_controller(primary_device)
+        if controller and self.use_case in ['training_room', 'lecture_hall']:
             items.append(self._create_item(
                 controller, 1,
-                f"{controller.brand} {controller.name} (Touch Controller)"
+                f"{controller.brand} {controller.name} (Instructor Control Panel)"
             ))
-        else:
-            self.assumptions.append(f"Touch controller included with {primary_device.name}")
         
-        if items:
-            return BoqSection(
-                name="Video Conferencing System",
-                items=items,
-                sectionTotal=sum(item.totalPrice for item in items),
-                description=f"Complete {brand.title()} video conferencing solution for {self.room_size} rooms"
-            )
-        
-        return None
+        return BoqSection(
+            name="Presentation System",
+            items=items,
+            sectionTotal=sum(item.totalPrice for item in items),
+            description=f"Professional presentation system for {self.use_case.replace('_', ' ')}"
+        ) if items else None
 
-    def _build_audio_enhancement(self, brand: str) -> Optional[BoqSection]:
-        """Build audio enhancement for large rooms"""
+    def _build_collaboration_system(self, brand: str, use_case_config: dict) -> Optional[BoqSection]:
+        """Build collaboration-focused system"""
         items = []
         
-        # Find expansion microphones from the same ecosystem
-        accessories = self.matcher.find_compatible_accessories(
-            self.matcher.find_primary_vc_device(brand, self.room_size), 
-            self.room_size
-        )
-        
-        for accessory in accessories:
-            qty = 2 if self.room_size == 'xlarge' else 1
+        primary_device = self.matcher.find_primary_vc_device(brand, self.room_size)
+        if primary_device:
             items.append(self._create_item(
-                accessory, qty,
-                f"{accessory.brand} {accessory.name} (Expansion Microphones)"
+                primary_device, 1,
+                f"{primary_device.brand} {primary_device.name} (Creative Collaboration Hub)"
             ))
         
-        if items:
-            return BoqSection(
-                name="Audio Enhancement System",
-                items=items,
-                sectionTotal=sum(item.totalPrice for item in items),
-                description=f"Enhanced audio coverage for {self.room_size} meeting spaces"
-            )
-        
-        return None
+        return BoqSection(
+            name="Collaboration System",
+            items=items,
+            sectionTotal=sum(item.totalPrice for item in items),
+            description="Interactive collaboration system with wireless connectivity"
+        ) if items else None
 
-    def _build_display_system(self) -> Optional[BoqSection]:
-        """Build display and mounting system"""
+    def _build_display_system_by_use_case(self, use_case_config: dict) -> Optional[BoqSection]:
+        """Build display system based on use case requirements"""
         items = []
         
-        # Find display
-        display = self.matcher.find_display(self.room_size, self.budget_range)
-        if display:
-            items.append(self._create_item(display, 1))
+        display_req = use_case_config['display_requirement']
         
-        # Find mount
-        mount = self.matcher.find_mount()
-        if mount:
-            items.append(self._create_item(mount, 1))
+        if display_req == 'multiple_displays':
+            # Multiple displays for auditorium
+            display = self.matcher.find_display(self.room_size, self.budget_range)
+            if display:
+                items.append(self._create_item(display, 3, "Primary Display Array (3x displays)"))
+                
+                mount = self.matcher.find_mount()
+                if mount:
+                    items.append(self._create_item(mount, 3, "Display Mounts (3x units)"))
         
-        # Find HDMI cables
+        elif display_req == 'multiple_premium':
+            # Premium displays for telepresence
+            display = self.matcher.find_display('large', 'premium')
+            if display:
+                items.append(self._create_item(display, 2, "Premium Telepresence Displays (2x units)"))
+        
+        elif display_req == 'projector_plus_displays':
+            # Projector + displays for lecture hall
+            display = self.matcher.find_display(self.room_size, self.budget_range)
+            if display:
+                items.append(self._create_item(display, 1, "Primary Display"))
+            
+            # Add projector (would need projector products in database)
+            projector_products = self.matcher.products_by_category.get('Displays & Projectors', [])
+            projector = next((p for p in projector_products if 'projector' in p.name.lower()), None)
+            if projector:
+                items.append(self._create_item(projector, 1, "Lecture Hall Projector"))
+        
+        elif display_req == 'interactive':
+            # Interactive display for creative spaces
+            display = self.matcher.find_display(self.room_size, self.budget_range)
+            if display:
+                items.append(self._create_item(display, 1, "Interactive Collaboration Display"))
+        
+        else:
+            # Standard display
+            display = self.matcher.find_display(self.room_size, self.budget_range)
+            if display:
+                size_descriptor = "Compact" if display_req == 'compact' else "Professional"
+                items.append(self._create_item(display, 1, f"{size_descriptor} Display"))
+            
+            mount = self.matcher.find_mount()
+            if mount:
+                items.append(self._create_item(mount, 1))
+        
+        # Add cables based on setup complexity
         hdmi_cable = self.matcher.find_cables('hdmi')
         if hdmi_cable:
-            cable_qty = 2  # USB-C to HDMI + backup
-            items.append(self._create_item(hdmi_cable, cable_qty, "HDMI Cables (USB-C to HDMI + backup)"))
+            cable_qty = 3 if 'multiple' in display_req else 2
+            items.append(self._create_item(hdmi_cable, cable_qty, f"Display Cables ({cable_qty}x units)"))
         
         if items:
-            size_desc = "Professional display with mounting hardware"
-            if display:
-                size_match = None
-                for size in ['85', '82', '75', '70', '65', '60', '55', '50']:
-                    if size in display.name:
-                        size_match = f'{size}" '
-                        break
-                if size_match:
-                    size_desc = f"{size_match}{size_desc}"
-            
             return BoqSection(
                 name="Display & Mounting System",
                 items=items,
                 sectionTotal=sum(item.totalPrice for item in items),
-                description=size_desc
+                description=f"Display solution optimized for {self.use_case.replace('_', ' ')}"
             )
         
         return None
 
-    def _build_infrastructure(self) -> Optional[BoqSection]:
-        """Build networking and power infrastructure"""
+    def _build_enhanced_audio_system(self, brand: str, use_case_config: dict) -> Optional[BoqSection]:
+        """Build enhanced audio system for high-priority audio use cases"""
         items = []
         
-        # Network switch (if available)
+        if use_case_config['audio_priority'] == 'premium':
+            # Premium audio for auditorium, telepresence
+            accessories = self.matcher.find_compatible_accessories(
+                self.matcher.find_primary_vc_device(brand, self.room_size),  
+                self.room_size
+            )
+            
+            for accessory in accessories:
+                if 'mic' in accessory.name.lower():
+                    if self.use_case == 'auditorium':
+                        items.append(self._create_item(accessory, 4, "Ceiling Microphone Array (4x units)"))
+                    elif self.use_case == 'telepresence':
+                        items.append(self._create_item(accessory, 2, "Premium Table Microphones (2x units)"))
+                    else:
+                        items.append(self._create_item(accessory, 2, "Enhanced Audio Pickup (2x units)"))
+        
+        elif use_case_config['audio_priority'] == 'high':
+            # High quality audio for boardroom, training
+            accessories = self.matcher.find_compatible_accessories(
+                self.matcher.find_primary_vc_device(brand, self.room_size),  
+                self.room_size
+            )
+            
+            for accessory in accessories:
+                if 'mic' in accessory.name.lower():
+                    qty = 2 if self.use_case == 'training_room' else 1
+                    items.append(self._create_item(accessory, qty, f"Enhanced Microphones ({qty}x units)"))
+        
+        if items:
+            return BoqSection(
+                name="Enhanced Audio System",
+                items=items,
+                sectionTotal=sum(item.totalPrice for item in items),
+                description=f"Professional audio enhancement for {self.use_case.replace('_', ' ')}"
+            )
+        
+        return None
+
+    def _build_use_case_accessories(self, use_case_config: dict) -> Optional[BoqSection]:
+        """Build accessories specific to use case"""
+        items = []
+        
+        # This would be expanded with actual products from your database
+        # For now, creating placeholder items for demonstration
+        
+        for accessory_type in use_case_config['additional_accessories']:
+            if accessory_type == 'wireless_presentation':
+                # Find wireless presentation device
+                wireless_products = [p for p in self.matcher.products if 'wireless' in p.name.lower() and 'present' in p.name.lower()]
+                if wireless_products:
+                    items.append(self._create_item(wireless_products[0], 1, "Wireless Presentation System"))
+            
+            elif accessory_type == 'wireless_microphone':
+                # Find wireless microphone
+                mic_products = [p for p in self.matcher.products if 'wireless' in p.name.lower() and 'mic' in p.name.lower()]
+                if mic_products:
+                    items.append(self._create_item(mic_products[0], 1, "Wireless Instructor Microphone"))
+            
+            elif accessory_type == 'digital_whiteboard':
+                # Digital whiteboard for creative spaces
+                whiteboard_products = [p for p in self.matcher.products if 'whiteboard' in p.name.lower() or 'interactive' in p.name.lower()]
+                if whiteboard_products:
+                    items.append(self._create_item(whiteboard_products[0], 1, "Digital Whiteboard"))
+        
+        if items:
+            return BoqSection(
+                name="Specialized Accessories",
+                items=items,
+                sectionTotal=sum(item.totalPrice for item in items),
+                description=f"Use case specific accessories for {self.use_case.replace('_', ' ')}"
+            )
+        
+        return None
+
+    def _build_infrastructure_by_use_case(self, use_case_config: dict) -> Optional[BoqSection]:
+        """Build infrastructure based on use case complexity"""
+        items = []
+        
+        # Network infrastructure varies by use case
         network_products = self.matcher.products_by_category.get('Networking Equipment', [])
-        if network_products:
+        
+        if self.use_case in ['auditorium', 'lecture_hall', 'telepresence']:
+            # High-end infrastructure for complex use cases
+            managed_switch = next((p for p in network_products if 'managed' in p.name.lower() and 'switch' in p.name.lower()), None)
+            if managed_switch:
+                items.append(self._create_item(managed_switch, 1, "Managed Network Switch (Professional Grade)"))
+        else:
+            # Standard infrastructure
             switch = next((p for p in network_products if 'switch' in p.name.lower()), None)
             if switch:
                 items.append(self._create_item(switch, 1))
         
-        # UPS for premium installations
-        if self.budget_range in ['premium', 'enterprise']:
+        # Power infrastructure
+        if self.use_case in ['auditorium', 'telepresence'] or self.budget_range in ['premium', 'enterprise']:
             power_products = self.matcher.products_by_category.get('Power & Connectivity', [])
             if power_products:
                 ups = next((p for p in power_products if 'ups' in p.name.lower()), None)
                 if ups:
-                    items.append(self._create_item(ups, 1))
+                    ups_description = "Enterprise UPS System" if self.use_case == 'auditorium' else "Professional UPS System"
+                    items.append(self._create_item(ups, 1, ups_description))
         
         if items:
             return BoqSection(
                 name="Network & Infrastructure",
                 items=items,
                 sectionTotal=sum(item.totalPrice for item in items),
-                description="Network infrastructure and power management"
+                description=f"Infrastructure optimized for {self.use_case.replace('_', ' ')} requirements"
             )
         
         return None
@@ -619,35 +853,71 @@ class LogicalSystemBuilder:
         )
 
     def generate_intelligent_recommendations(self) -> List[str]:
-        """Generate intelligent recommendations based on the selected system"""
+        """Generate use case specific recommendations"""
         recommendations = []
+        use_case_config = self.get_use_case_config()
         
+        # Base ecosystem recommendation
         if self.selected_ecosystem:
             ecosystem_name = self.selected_ecosystem.title()
             recommendations.append(f"Complete {ecosystem_name} ecosystem ensures optimal compatibility and performance")
-            recommendations.append(f"Single-vendor solution simplifies support and maintenance")
         
-        # Room-specific recommendations
-        room_configs = {
-            'small': "Optimized for 4-8 person huddle rooms and small meeting spaces",
-            'medium': "Ideal for 8-16 person standard meeting rooms",
-            'large': "Designed for 16-30 person boardrooms with enhanced audio coverage",
-            'xlarge': "Enterprise solution for 30+ person large conference rooms and auditoriums"
+        # Use case specific recommendations
+        use_case_recommendations = {
+            'meeting_room': [
+                "Standard meeting room setup ideal for 4-16 participants",
+                "Optimized for hybrid meetings with remote participants"
+            ],
+            'boardroom': [
+                "Executive boardroom configuration with premium audio/video quality",
+                "Enhanced presentation capabilities for C-level meetings",
+                "Professional aesthetics suitable for client presentations"
+            ],
+            'huddle_room': [
+                "Compact solution perfect for quick team huddles and 1-on-1s",
+                "Easy to use interface for spontaneous meetings",
+                "Space-efficient design maximizes room utilization"
+            ],
+            'training_room': [
+                "Instructor-focused controls for effective training delivery",
+                "Enhanced audio pickup for interactive learning sessions",
+                "Recording capabilities for training documentation"
+            ],
+            'auditorium': [
+                "Large venue solution supporting 100+ participants",
+                "Professional-grade audio system with wireless microphone support",
+                "Multiple display configuration for optimal viewing angles"
+            ],
+            'telepresence': [
+                "Immersive telepresence experience with dual-camera setup",
+                "Premium audio processing for natural conversation flow",
+                "Dedicated lighting recommendations for optimal video quality"
+            ],
+            'lecture_hall': [
+                "Education-optimized setup with instructor presentation tools",
+                "Hybrid learning support for in-person and remote students",
+                "Document camera integration for real-time content sharing"
+            ],
+            'creative_space': [
+                "Interactive collaboration tools for creative workflows",
+                "Wireless connectivity for seamless device integration",
+                "Flexible configuration supporting various creative processes"
+            ]
         }
         
-        if self.room_size in room_configs:
-            recommendations.append(room_configs[self.room_size])
+        specific_recs = use_case_recommendations.get(self.use_case, [])
+        recommendations.extend(specific_recs)
         
-        # Technical recommendations
-        recommendations.append("Ensure minimum 10Mbps upload/download bandwidth per concurrent video call")
-        recommendations.append("Network QoS configuration recommended for optimal video quality")
+        # Technical recommendations based on use case complexity
+        if use_case_config['audio_priority'] == 'premium':
+            recommendations.append("Professional acoustic treatment recommended for optimal audio quality")
         
-        if self.room_size in ['large', 'xlarge']:
-            recommendations.append("Consider acoustic treatment for optimal audio performance in large spaces")
+        if use_case_config['display_requirement'].startswith('multiple'):
+            recommendations.append("Multiple display synchronization and calibration included in installation")
         
-        # Installation recommendations
-        recommendations.append("Professional calibration included for optimal camera framing and audio levels")
-        recommendations.append("System testing with your preferred video conferencing platform included")
+        if self.use_case in ['auditorium', 'lecture_hall']:
+            recommendations.append("Consider lighting control integration for optimal presentation visibility")
+            recommendations.append("Assisted listening system compatibility available upon request")
         
         return recommendations
 
@@ -708,12 +978,17 @@ def generate_boq_endpoint(config: BoqConfig):
         # Initialize intelligent systems
         ecosystem_manager = EcosystemManager()
         matcher = IntelligentProductMatcher(products, ecosystem_manager)
-        builder = LogicalSystemBuilder(matcher, config.roomSize or "medium", config.budgetRange)
+        # Pass use_case to the builder
+        builder = LogicalSystemBuilder(
+            matcher,  
+            config.roomSize or "medium",  
+            config.budgetRange,
+            config.useCase or "meeting_room"  # Add use_case parameter
+        )
         
         # Detect brand preference intelligently
         primary_brand = ecosystem_manager.detect_primary_brand(config.requirements)
         if not primary_brand:
-            # Default to Logitech if no clear preference
             primary_brand = 'logitech'
             logger.info("No brand preference detected, defaulting to Logitech ecosystem")
         else:
@@ -735,15 +1010,30 @@ def generate_boq_endpoint(config: BoqConfig):
         # Generate intelligent recommendations
         recommendations = builder.generate_intelligent_recommendations()
         
-        # Enhanced assumptions
-        assumptions = [
+        # Enhanced assumptions based on use case
+        base_assumptions = [
             "Prices valid for 30 days from quotation date",
             "All components from single ecosystem for guaranteed compatibility",
             "Installation site has adequate power (110-240V) and network infrastructure",
-            "Client provides necessary building access during installation",
-            "System tested with Microsoft Teams, Zoom, and WebEx platforms",
-            "User training session included with professional installation"
+            "Client provides necessary building access during installation"
         ]
+        
+        use_case_assumptions = {
+            'auditorium': [
+                "Venue has appropriate acoustic properties or acoustic treatment budget allocated",
+                "Professional lighting control system integration may require additional consultation"
+            ],
+            'telepresence': [
+                "Dedicated network bandwidth of minimum 20Mbps up/down per session",
+                "Controlled lighting environment or additional lighting equipment may be required"
+            ],
+            'training_room': [
+                "Recording and streaming capabilities may require additional network configuration",
+                "Content management system integration available as optional service"
+            ]
+        }
+        
+        assumptions = base_assumptions + use_case_assumptions.get(config.useCase or "meeting_room", [])
         
         # Professional terms
         terms_conditions = [
@@ -765,6 +1055,11 @@ def generate_boq_endpoint(config: BoqConfig):
             estimatedDelivery=(datetime.now() + timedelta(weeks=3)).strftime("%Y-%m-%d")
         )
         
+        # Enhanced metadata with use case info
+        enhanced_metadata = config.dict()
+        enhanced_metadata['use_case_config'] = builder.get_use_case_config()
+        enhanced_metadata['selected_ecosystem'] = builder.selected_ecosystem
+        
         # Create final BOQ
         boq = Boq(
             id=str(uuid.uuid4()),
@@ -774,13 +1069,13 @@ def generate_boq_endpoint(config: BoqConfig):
             validUntil=(datetime.now() + timedelta(days=30)).isoformat(),
             sections=sections,
             summary=summary,
-            metadata=config.dict(),
+            metadata=enhanced_metadata,
             recommendations=recommendations,
             terms_conditions=terms_conditions,
             assumptions=assumptions
         )
         
-        logger.info(f"Logical BOQ generated: {primary_brand} ecosystem, {len(sections)} sections, ${total_cost:.2f}")
+        logger.info(f"Use case specific BOQ generated: {config.useCase}, {primary_brand} ecosystem, {len(sections)} sections, ${total_cost:.2f}")
         return boq
         
     except HTTPException:
@@ -832,7 +1127,7 @@ def get_products_by_category(category: str):
     try:
         with get_db_connection() as conn:
             products = conn.execute(
-                'SELECT * FROM products WHERE category = ? ORDER BY brand, name', 
+                'SELECT * FROM products WHERE category = ? ORDER BY brand, name',
                 (category,)
             ).fetchall()
             return {"products": [Product(**dict(row)) for row in products]}
@@ -906,7 +1201,7 @@ def get_boq(boq_id: str):
     # This would typically fetch from a BOQ storage table
     # For now, return a not implemented response
     raise HTTPException(
-        status_code=501, 
+        status_code=501,  
         detail="BOQ retrieval not yet implemented - BOQs are generated on-demand"
     )
 
@@ -970,7 +1265,7 @@ def create_product(product: Product):
         with get_db_connection() as conn:
             conn.execute('''
                 INSERT INTO products (id, name, price, brand, category, features, specifications, 
-                                    warranty_years, model_number, availability)
+                                     warranty_years, model_number, availability)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 product.id, product.name, product.price, product.brand, product.category,
