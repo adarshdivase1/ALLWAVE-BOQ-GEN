@@ -372,9 +372,242 @@ class IntelligentProductMatcher:
         
         return cable_products[0] if cable_products else None
 
+# Enhanced Product Matcher with budget logic
+class EnhancedProductMatcher(IntelligentProductMatcher):
+    def __init__(self, products: List[Product], ecosystem_manager: EcosystemManager):
+        super().__init__(products, ecosystem_manager)
+        self.price_thresholds = {
+            'economy': (0, 15000),
+            'standard': (10000, 35000), 
+            'premium': (30000, 75000),
+            'enterprise': (70000, float('inf'))
+        }
+    
+    def find_optimal_system(self, config: BoqConfig) -> Dict[str, List[Product]]:
+        """Find optimal product mix within budget constraints"""
+        budget_min, budget_max = self.price_thresholds[config.budgetRange]
+        
+        # Core system components (must-have)
+        brand = self.detect_brand_preference(config.requirements, config.budgetRange)
+        core_system = {
+            'primary_vc': self.find_primary_vc_device(brand, config.roomSize),
+            'controller': None,
+            'display': self.find_display(config.roomSize, config.budgetRange),
+            'mount': self.find_mount(),
+            'cables': self.find_cables('hdmi')
+        }
+        
+        # Set controller based on primary device
+        if core_system['primary_vc']:
+            core_system['controller'] = self.find_compatible_controller(core_system['primary_vc'])
+        
+        # Filter for products within budget
+        core_products_filtered = []
+        for p in core_system.values():
+            if p and p.price <= budget_max:
+                core_products_filtered.append(p)
+
+        core_cost = sum(p.price for p in core_products_filtered if p)
+        
+        # Optional enhancements based on remaining budget
+        remaining_budget = budget_max - core_cost
+        enhancements = []
+        
+        if remaining_budget > 1000 and core_system['primary_vc']:
+            if config.roomSize in ['large', 'xlarge']:
+                expansion_mics = self.find_compatible_accessories(core_system['primary_vc'], config.roomSize)
+                enhancements.extend(expansion_mics)
+        
+        if remaining_budget > 2000:
+            wireless_present = self.find_wireless_presentation_system()
+            if wireless_present and wireless_present.price <= remaining_budget:
+                enhancements.append(wireless_present)
+                
+        return {
+            'core': core_products_filtered,
+            'enhancements': enhancements,
+            'estimated_total': core_cost + sum(p.price for p in enhancements)
+        }
+    
+    def find_wireless_presentation_system(self) -> Optional[Product]:
+        """Find wireless presentation solutions"""
+        wireless_products = [
+            p for p in self.products 
+            if 'wireless' in p.name.lower() and 
+            ('present' in p.name.lower() or 'cast' in p.name.lower() or 'airplay' in p.name.lower())
+        ]
+        return wireless_products[0] if wireless_products else None
+    
+    def detect_brand_preference(self, requirements: str, budget_range: str) -> str:
+        """Enhanced brand detection with fallback logic"""
+        detected = self.ecosystem_manager.detect_primary_brand(requirements)
+        if detected:
+            return detected
+            
+        # Fallback based on budget
+        budget_defaults = {
+            'economy': 'logitech',
+            'standard': 'logitech', 
+            'premium': 'poly',
+            'enterprise': 'cisco'
+        }
+        return budget_defaults.get(budget_range, 'logitech')
+
+# Advanced System Validation for Production BOQ
+class SystemValidator:
+    """Validates system completeness and compatibility"""
+    
+    def __init__(self):
+        # Essential components for different use cases
+        self.essential_components = {
+            'meeting_room': ['primary_vc', 'display', 'mount', 'cables'],
+            'boardroom': ['primary_vc', 'controller', 'display', 'mount', 'premium_audio'],
+            'auditorium': ['primary_vc', 'multiple_displays', 'premium_audio', 'wireless_mics'],
+            'telepresence': ['dual_cameras', 'premium_displays', 'acoustic_treatment']
+        }
+        
+        # Compatibility rules
+        self.compatibility_rules = {
+            'hdmi_4k': self._check_4k_compatibility,
+            'network_requirements': self._check_network_requirements,
+            'power_requirements': self._check_power_requirements
+        }
+    
+    def validate_system(self, sections: List[BoqSection], use_case: str) -> Dict[str, Any]:
+        """Comprehensive system validation"""
+        all_items = []
+        for section in sections:
+            all_items.extend(section.items)
+        
+        validation_results = {
+            'is_valid': True,
+            'errors': [],
+            'warnings': [],
+            'missing_components': [],
+            'recommendations': [],
+            'compatibility_issues': []
+        }
+        
+        # Check essential components
+        essential = self.essential_components.get(use_case, [])
+        missing = self._check_missing_components(all_items, essential)
+        if missing:
+            validation_results['missing_components'] = missing
+            validation_results['errors'].extend([f"Missing essential component: {comp}" for comp in missing])
+            validation_results['is_valid'] = False
+        
+        # Check compatibility
+        compatibility_issues = self._check_compatibility(all_items)
+        if compatibility_issues:
+            validation_results['compatibility_issues'] = compatibility_issues
+            validation_results['warnings'].extend(compatibility_issues)
+        
+        # Check for redundancy
+        redundant_items = self._check_redundancy(all_items)
+        if redundant_items:
+            validation_results['warnings'].extend([f"Potentially redundant: {item}" for item in redundant_items])
+        
+        # Generate smart recommendations
+        recommendations = self._generate_system_recommendations(all_items, use_case)
+        validation_results['recommendations'] = recommendations
+        
+        return validation_results
+    
+    def _check_missing_components(self, items: List[BoqItem], essential: List[str]) -> List[str]:
+        """Check for missing essential components"""
+        found_components = set()
+        
+        for item in items:
+            item_type = self._classify_item(item)
+            found_components.add(item_type)
+        
+        return [comp for comp in essential if comp not in found_components]
+    
+    def _classify_item(self, item: BoqItem) -> str:
+        """Classify item type for validation"""
+        name_lower = item.name.lower()
+        
+        if 'rally' in name_lower or 'studio' in name_lower or 'room kit' in name_lower or 'surface hub' in name_lower:
+            return 'primary_vc'
+        elif 'tap' in name_lower or 'touch' in name_lower:
+            return 'controller'
+        elif 'display' in name_lower or 'monitor' in name_lower:
+            return 'display'
+        elif 'mount' in name_lower:
+            return 'mount'
+        elif 'cable' in name_lower:
+            return 'cables'
+        elif 'mic' in name_lower and 'wireless' in name_lower:
+            return 'wireless_mics'
+        elif 'speaker' in name_lower or 'audio' in name_lower:
+            return 'premium_audio'
+        
+        return 'accessory'
+    
+    def _check_compatibility(self, items: List[BoqItem]) -> List[str]:
+        """Check for compatibility issues"""
+        issues = []
+        
+        # Find primary VC device and check ecosystem consistency
+        primary_vc = next((item for item in items if self._classify_item(item) == 'primary_vc'), None)
+        if primary_vc:
+            ecosystem_brand = primary_vc.brand.lower()
+            
+            # Check if controllers match ecosystem
+            controllers = [item for item in items if self._classify_item(item) == 'controller']
+            for controller in controllers:
+                if controller.brand.lower() != ecosystem_brand:
+                    issues.append(f"Controller {controller.name} may not be compatible with {primary_vc.name}")
+        
+        return issues
+    
+    def _check_redundancy(self, items: List[BoqItem]) -> List[str]:
+        """Check for potentially redundant items"""
+        redundant = []
+        
+        # Check for multiple controllers
+        controllers = [item for item in items if self._classify_item(item) == 'controller']
+        if len(controllers) > 1:
+            redundant.extend([f"Multiple controllers: {c.name}" for c in controllers[1:]])
+        
+        return redundant
+    
+    def _generate_system_recommendations(self, items: List[BoqItem], use_case: str) -> List[str]:
+        """Generate intelligent system recommendations"""
+        recommendations = []
+        
+        total_cost = sum(item.totalPrice for item in items)
+        
+        if total_cost > 50000:
+            recommendations.append("Consider extended warranty for high-value system")
+            
+        if use_case in ['boardroom', 'auditorium']:
+            recommendations.append("Professional acoustic treatment recommended for optimal audio quality")
+            
+        # Check for missing wireless presentation
+        has_wireless = any('wireless' in item.name.lower() and 'present' in item.name.lower() for item in items)
+        if not has_wireless and use_case in ['meeting_room', 'boardroom']:
+            recommendations.append("Consider adding wireless presentation solution for BYOD support")
+            
+        return recommendations
+    
+    def _check_4k_compatibility(self, display: BoqItem, vc_device: BoqItem) -> bool:
+        """Check if 4K display is compatible with VC device"""
+        display_is_4k = '4k' in display.name.lower() or 'uhd' in display.name.lower()
+        vc_supports_4k = '4k' in vc_device.name.lower() or vc_device.brand.lower() in ['logitech', 'poly', 'cisco']
+        return not display_is_4k or vc_supports_4k
+
+    def _check_network_requirements(self, system: List[BoqItem]) -> bool:
+        """Placeholder for network checks"""
+        return True # Not implemented, but signature is here
+
+    def _check_power_requirements(self, items: List[BoqItem]) -> bool:
+        """Placeholder for power checks"""
+        return True # Not implemented, but signature is here
+
 # Logical System Builder
 class LogicalSystemBuilder:
-    def __init__(self, matcher: IntelligentProductMatcher, room_size: str, budget_range: str, use_case: str = "meeting_room"):
+    def __init__(self, matcher: EnhancedProductMatcher, room_size: str, budget_range: str, use_case: str = "meeting_room"):
         self.matcher = matcher
         self.room_size = room_size
         self.budget_range = budget_range
@@ -977,17 +1210,18 @@ def generate_boq_endpoint(config: BoqConfig):
         
         # Initialize intelligent systems
         ecosystem_manager = EcosystemManager()
-        matcher = IntelligentProductMatcher(products, ecosystem_manager)
+        # Use the EnhancedProductMatcher
+        matcher = EnhancedProductMatcher(products, ecosystem_manager)
         # Pass use_case to the builder
         builder = LogicalSystemBuilder(
             matcher,  
             config.roomSize or "medium",  
             config.budgetRange,
-            config.useCase or "meeting_room"  # Add use_case parameter
+            config.useCase or "meeting_room"
         )
         
         # Detect brand preference intelligently
-        primary_brand = ecosystem_manager.detect_primary_brand(config.requirements)
+        primary_brand = matcher.detect_brand_preference(config.requirements, config.budgetRange)
         if not primary_brand:
             primary_brand = 'logitech'
             logger.info("No brand preference detected, defaulting to Logitech ecosystem")
@@ -1007,9 +1241,18 @@ def generate_boq_endpoint(config: BoqConfig):
         item_count = sum(len(section.items) for section in sections)
         average_item_cost = subtotal / item_count if item_count > 0 else 0
         
+        # Run system validation
+        validator = SystemValidator()
+        validation_results = validator.validate_system(sections, config.useCase)
+
         # Generate intelligent recommendations
         recommendations = builder.generate_intelligent_recommendations()
         
+        # Add validation recommendations to the final list
+        recommendations.extend(validation_results['recommendations'])
+        # Add validation warnings as recommendations
+        recommendations.extend([f"Warning: {w}" for w in validation_results['warnings']])
+
         # Enhanced assumptions based on use case
         base_assumptions = [
             "Prices valid for 30 days from quotation date",
@@ -1059,6 +1302,12 @@ def generate_boq_endpoint(config: BoqConfig):
         enhanced_metadata = config.dict()
         enhanced_metadata['use_case_config'] = builder.get_use_case_config()
         enhanced_metadata['selected_ecosystem'] = builder.selected_ecosystem
+        
+        # Add validation errors to a new field in metadata
+        if validation_results['errors']:
+            enhanced_metadata['validation_errors'] = validation_results['errors']
+            logger.error(f"BOQ generation failed validation: {validation_results['errors']}")
+            raise HTTPException(status_code=400, detail="Generated BOQ failed validation checks: " + ", ".join(validation_results['errors']))
         
         # Create final BOQ
         boq = Boq(
