@@ -20,8 +20,9 @@
         }
         body { font-family: 'Inter', sans-serif; background: var(--primary-gradient); min-height: 100vh; color: white; overflow: hidden; margin: 0; padding: 0; }
         .premium-glass { background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3); }
-        .control-panel { position: fixed; top: 20px; left: 20px; z-index: 100; max-width: 420px; max-height: calc(100vh - 40px); overflow-y: auto; }
-        .boq-panel { position: fixed; top: 20px; right: 20px; z-index: 100; max-width: 480px; max-height: calc(100vh - 40px); overflow-y: auto; }
+        .control-panel, .boq-panel { position: fixed; top: 20px; z-index: 100; max-width: 420px; max-height: calc(100vh - 40px); overflow-y: auto; transition: transform 0.3s ease-in-out; }
+        .control-panel { left: 20px; }
+        .boq-panel { right: 20px; }
         .mini-panel { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; max-width: 600px; }
         .equipment-item { cursor: grab; transition: all 0.3s ease; border: 2px solid transparent; position: relative; overflow: hidden; }
         .equipment-item:hover { border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.1); transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3); }
@@ -164,7 +165,7 @@
         let raycaster, mouse;
         let panelsVisible = true;
         let selectedObject = null;
-        let allEquipmentData = []; // Populated from backend
+        let allEquipmentData = [];
         const TABLE_HEIGHT = 0.75;
         const equipmentSizeDatabase = {
             'default': { width: 0.5, height: 0.5, depth: 0.1, color: 0x555555 },
@@ -201,7 +202,7 @@
                 showToast('Error connecting to backend. Please check console.', 'error');
                 console.error("Backend connection error:", error);
             } finally {
-                setTimeout(() => { if(statusEl) statusEl.style.opacity = '0'; }, 3000);
+                setTimeout(() => { if (statusEl) statusEl.style.opacity = '0'; }, 3000);
             }
         }
 
@@ -274,13 +275,11 @@
 
         function renderBackendResponse(response) {
             if (!response || !response.boq) {
-                console.error("Invalid response from backend:", response);
-                return;
+                console.error("Invalid response from backend:", response); return;
             }
             const boqData = response.boq;
             updateBoqPanelFromBackend(boqData);
             placeModelsFromBackend(boqData);
-            updateAnalytics();
         }
 
         function updateBoqPanelFromBackend(boqData) {
@@ -296,7 +295,7 @@
                 totalCost += sectionTotal;
                 let sectionHtml = `<div class="boq-section"><h3 class="text-lg font-semibold mb-3 text-blue-300">${getCategoryIcon(categoryName)} ${categoryName}<span class="float-right text-green-400">$${sectionTotal.toLocaleString()}</span></h3>`;
                 categoryData.items.forEach(item => {
-                    sectionHtml += `<div class="boq-item"><div class="font-semibold text-white">${item.name}</div><div class="text-sm text-blue-300">${item.brand}</div><div class="text-xs text-white/60 mt-1">Qty: ${item.quantity} × $${item.unit_price.toLocaleString()} = $${item.total_price.toLocaleString()}</div></div>`;
+                    sectionHtml += `<div class="boq-item" data-product-id="${item.productId}"><div class="font-semibold text-white">${item.name}</div><div class="text-sm text-blue-300">${item.brand}</div><div class="text-xs text-white/60 mt-1">Qty: ${item.quantity} × $${item.unit_price.toLocaleString()} = $${item.total_price.toLocaleString()}</div></div>`;
                 });
                 sectionHtml += '</div>';
                 boqContent.innerHTML += sectionHtml;
@@ -319,11 +318,11 @@
             });
             const smartLayout = getSmartLayout(itemsToPlace);
             smartLayout.forEach((item, index) => {
-                setTimeout(() => createEquipment(item.data, item.position), index * 100);
+                setTimeout(() => createEquipment(item.data, item.position), index * 50);
             });
         }
         
-        // --- 3D VISUALIZATION & LOGIC ---
+        // --- 3D VISUALIZATION ---
         function initThreeJS() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0a0a0a);
@@ -375,6 +374,7 @@
             const floor = new THREE.Mesh(new THREE.PlaneGeometry(room.width, room.depth), new THREE.MeshLambertMaterial({ map: texture }));
             floor.rotation.x = -Math.PI / 2;
             floor.receiveShadow = true;
+            floor.name = "floor";
             roomGroup.add(floor);
             const wallMaterial = new THREE.MeshLambertMaterial({ color: 0x2d3748, side: THREE.DoubleSide });
             const backWall = new THREE.Mesh(new THREE.PlaneGeometry(room.width, room.height), wallMaterial);
@@ -389,7 +389,7 @@
             updateAnalytics();
         }
 
-        function createConferenceTable(room) {
+        function createConferenceTable() {
             const tableGroup = new THREE.Group();
             const tableWidth = Math.max(1.2, room.width * 0.5);
             const tableDepth = Math.max(2.4, room.depth * 0.6);
@@ -409,7 +409,7 @@
             equipmentGroup.add(body);
             equipmentGroup.position.set(position.x, position.y, position.z);
             equipmentGroup.castShadow = true;
-            equipmentGroup.userData = { ...data, placed: true }; // Store backend data
+            equipmentGroup.userData = { ...data, placed: true };
             equipmentGroup.name = `equipment_${data.id}_${Date.now()}`;
             scene.add(equipmentGroup);
             placedEquipment.push(equipmentGroup);
@@ -417,7 +417,7 @@
             updateAnalytics();
             return equipmentGroup;
         }
-        
+
         // --- UI & EVENT LISTENERS ---
         function setupEventListeners() {
             document.getElementById('updateRoom').addEventListener('click', () => {
@@ -429,7 +429,7 @@
             document.getElementById('equipmentSearch').addEventListener('input', (e) => filterEquipment(e.target.value.toLowerCase()));
             document.getElementById('quickGenerate').addEventListener('click', handleAIGenerateClick);
             document.getElementById('togglePanels').addEventListener('click', togglePanels);
-            document.getElementById('loadRecommended').addEventListener('click', loadRecommendedEquipment);
+            document.getElementById('loadRecommended').addEventListener('click', handleAIGenerateClick); // Repurposed button
             document.getElementById('exportBOQ').addEventListener('click', exportBOQ);
             document.getElementById('clearAll').addEventListener('click', () => clearAllEquipment(true));
             document.getElementById('topView').addEventListener('click', () => setView('top'));
@@ -440,17 +440,34 @@
             renderer.domElement.addEventListener('click', onMouseClick);
             window.addEventListener('resize', onWindowResize);
         }
+        
+        function setupDragAndDrop() {
+            const renderContainer = document.getElementById('renderContainer');
+            renderContainer.addEventListener('dragover', (e) => e.preventDefault());
+            renderContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                    const rect = renderContainer.getBoundingClientRect();
+                    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                    raycaster.setFromCamera(mouse, camera);
+                    const floor = scene.getObjectByName("floor");
+                    if (!floor) return;
+                    const intersects = raycaster.intersectObject(floor);
+                    if (intersects.length > 0) {
+                        const pos = intersects[0].point;
+                        const sizeInfo = equipmentSizeDatabase[data.category] || equipmentSizeDatabase['default'];
+                        createEquipment(data, { x: pos.x, y: sizeInfo.height / 2, z: pos.z });
+                    }
+                } catch (error) { console.error('Drop error:', error); }
+            });
+        }
 
         function createEquipmentItem(data) {
             const item = document.createElement('div');
             item.className = 'equipment-item premium-glass rounded-lg p-3 mb-2';
-            item.innerHTML = `
-                <div class="font-semibold text-sm text-white truncate">${data.name}</div>
-                <div class="text-xs text-blue-300 mb-1">${data.brand} • ${data.model || data.category}</div>
-                <div class="flex items-center justify-between mt-2">
-                    <span class="text-sm font-bold text-green-400">$${data.price.toLocaleString()}</span>
-                    <span class="text-xs uppercase font-bold text-white/70">${data.tier || 'Standard'}</span>
-                </div>`;
+            item.innerHTML = `<div class="font-semibold text-sm text-white truncate">${data.name}</div><div class="text-xs text-blue-300 mb-1">${data.brand} • ${data.model || data.category}</div><div class="flex items-center justify-between mt-2"><span class="text-sm font-bold text-green-400">$${data.price.toLocaleString()}</span><span class="text-xs uppercase font-bold text-white/70">${data.tier || 'Standard'}</span></div>`;
             item.draggable = true;
             item.addEventListener('dragstart', (e) => {
                 e.dataTransfer.setData('application/json', JSON.stringify(data));
@@ -459,8 +476,59 @@
             item.addEventListener('dragend', () => item.style.opacity = '1');
             return item;
         }
-        
-        // --- HELPER FUNCTIONS ---
+
+        // --- HELPER & UTILITY FUNCTIONS ---
+        function updateBOQ() {
+            const boqContent = document.getElementById('boqContent');
+            if (placedEquipment.length === 0) {
+                boqContent.innerHTML = `<div class="text-center text-white/60 py-8"><div>Drag items from the library to build a BOQ.</div></div>`;
+                return;
+            }
+            const categories = {};
+            let totalCost = 0;
+            placedEquipment.forEach(item => {
+                const data = item.userData;
+                if (!categories[data.category]) categories[data.category] = [];
+                categories[data.category].push(data);
+                totalCost += data.price;
+            });
+            let html = '';
+            Object.keys(categories).sort().forEach(categoryName => {
+                const items = categories[categoryName];
+                const categoryTotal = items.reduce((sum, item) => sum + item.price, 0);
+                html += `<div class="boq-section"><h3 class="text-lg font-semibold mb-3 text-blue-300">${getCategoryIcon(categoryName)} ${categoryName}<span class="float-right text-green-400">$${categoryTotal.toLocaleString()}</span></h3>`;
+                const itemCounts = {};
+                items.forEach(item => { itemCounts[item.id] = (itemCounts[item.id] || 0) + 1; });
+                Object.keys(itemCounts).forEach(itemId => {
+                    const item = items.find(i => i.id === itemId);
+                    const quantity = itemCounts[itemId];
+                    const lineTotal = item.price * quantity;
+                    html += `<div class="boq-item"><div class="font-semibold text-white">${item.name}</div><div class="text-xs text-white/60 mt-1">Qty: ${quantity} × $${item.price.toLocaleString()} = $${lineTotal.toLocaleString()}</div></div>`;
+                });
+                html += '</div>';
+            });
+            html += `<div class="border-t border-white/20 pt-4 mt-4"><div class="flex justify-between items-center text-xl font-bold"><span>Total Project Cost:</span><span class="text-green-400">$${totalCost.toLocaleString()}</span></div></div>`;
+            boqContent.innerHTML = html;
+        }
+
+        function exportBOQ() {
+            if (placedEquipment.length === 0) return showToast('No equipment to export.', 'error');
+            let csv = 'Category,Item,Brand,Quantity,Unit Price,Total Price\n';
+            const itemCounts = {};
+            placedEquipment.forEach(item => { itemCounts[item.userData.id] = (itemCounts[item.userData.id] || 0) + 1; });
+            Object.keys(itemCounts).forEach(itemId => {
+                const item = placedEquipment.find(i => i.userData.id === itemId).userData;
+                const quantity = itemCounts[itemId];
+                csv += `"${item.category}","${item.name}","${item.brand}",${quantity},${item.price},${item.price * quantity}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob);
+            a.download = `BOQ_${document.getElementById('projectName').value.replace(/\s+/g, '_')}.csv`;
+            a.click();
+            showToast('BOQ exported successfully.', 'success');
+        }
+
         function getCategoryIcon(category) {
             const icons = { 'Display': '📺', 'Camera': '📹', 'Audio': '🎵', 'Control': '🎛️', 'Network': '🌐', 'UC': '🤝' };
             for (const key in icons) if (category.includes(key)) return icons[key];
@@ -471,11 +539,10 @@
             const layout = [];
             let counters = {};
             items.forEach(itemData => {
-                let position = { x: 0, y: 0, z: 0 };
+                let position = { x: 0, y: 0.5, z: 0 };
                 const cat = itemData.category || 'default';
                 counters[cat] = (counters[cat] || 0) + 1;
                 let count = counters[cat];
-
                 if (cat.includes('Display')) position = { x: 0, y: 1.5, z: -room.depth / 2 + 0.1 };
                 else if (cat.includes('Camera') || cat.includes('UC')) position = { x: 0, y: room.height - 0.3, z: room.depth / 2 - 0.2 };
                 else if (cat.includes('Microphone')) position = { x: 0, y: room.height - 0.1, z: 0 };
@@ -493,8 +560,26 @@
             placedEquipment = [];
             updateBOQ();
             updateAnalytics();
-            document.getElementById('boqContent').innerHTML = `<div class="text-center text-white/60 py-8">Scene cleared.</div>`;
             if (showConfirmation) showToast('Scene cleared', 'success');
+        }
+
+        function togglePanels() {
+            panelsVisible = !panelsVisible;
+            const controlPanel = document.getElementById('controlPanel');
+            const boqPanel = document.getElementById('boqPanel');
+            controlPanel.style.transform = panelsVisible ? 'translateX(0)' : 'translateX(-110%)';
+            boqPanel.style.transform = panelsVisible ? 'translateX(0)' : 'translateX(110%)';
+        }
+
+        function setView(viewType) {
+            const distance = Math.max(room.width, room.depth) * 1.5;
+            switch(viewType) {
+                case 'top': camera.position.set(0, distance, 0.01); controls.target.set(0,0,0); break;
+                case 'front': camera.position.set(0, room.height/2, distance); controls.target.set(0, room.height/2, 0); break;
+                case 'iso': camera.position.set(distance * 0.8, distance * 0.6, distance * 0.8); controls.target.set(0,0,0); break;
+                case 'reset': camera.position.set(12, 8, 12); controls.target.set(0,0,0); break;
+            }
+            controls.update();
         }
 
         function showToast(message, type = 'info') {
@@ -514,21 +599,16 @@
         function showLoading(show) { document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
         function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
         function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
-
-        // --- DUMMY/PLACEHOLDER FUNCTIONS (to be implemented or adapted) ---
-        function updateBOQ() { /* For manual drag-and-drop, could be implemented later */ }
-        function updateAnalytics() { 
+        function updateAnalytics() {
             const totalCost = placedEquipment.reduce((sum, item) => sum + (item.userData.price || 0), 0);
             document.getElementById('equipmentCount').textContent = `${placedEquipment.length} items`;
+            document.getElementById('coverageArea').textContent = `${(room.width * room.depth).toFixed(1)} m²`;
             document.getElementById('quickStats').textContent = `Room: ${room.width}m×${room.depth}m | Items: ${placedEquipment.length} | Total: $${totalCost.toLocaleString()}`;
         }
-        function loadRecommendedEquipment() { showToast('Please use "AI Generate" for a backend-powered recommendation.', 'info'); }
-        function filterEquipment(searchTerm) { /* Could be implemented to filter the already-loaded library */ }
-        function exportBOQ() { showToast('Export functionality to be implemented.', 'info'); }
-        function applyRoomPreset(preset) { /* Logic remains the same */ }
-        function setView(view) { /* Logic remains the same */ }
-        function onMouseClick(event) { /* Logic remains the same */ }
-        function togglePanels() { /* Logic remains the same */ }
+        function onMouseClick() { /* Can be implemented later for item selection */ }
+        function filterEquipment() { /* Can be implemented later */ }
+        function applyRoomPreset(preset) { /* Can be implemented later */ }
+
     </script>
 </body>
 </html>
