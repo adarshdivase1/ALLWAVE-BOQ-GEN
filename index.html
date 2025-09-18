@@ -295,7 +295,13 @@
                 totalCost += sectionTotal;
                 let sectionHtml = `<div class="boq-section"><h3 class="text-lg font-semibold mb-3 text-blue-300">${getCategoryIcon(categoryName)} ${categoryName}<span class="float-right text-green-400">$${sectionTotal.toLocaleString()}</span></h3>`;
                 categoryData.items.forEach(item => {
-                    sectionHtml += `<div class="boq-item" data-product-id="${item.productId}"><div class="font-semibold text-white">${item.name}</div><div class="text-sm text-blue-300">${item.brand}</div><div class="text-xs text-white/60 mt-1">Qty: ${item.quantity} × $${item.unit_price.toLocaleString()} = $${item.total_price.toLocaleString()}</div></div>`;
+                    sectionHtml += `<div class="boq-item" data-product-id="${item.productId}">
+                        <div class="font-semibold text-white">${item.name}</div>
+                        <div class="text-sm text-blue-300">${item.brand}</div>
+                        <div class="text-xs text-white/60 mt-1">
+                            Qty: ${item.quantity} × $${item.unitPrice.toLocaleString()} = $${item.totalPrice.toLocaleString()}
+                        </div>
+                    </div>`;
                 });
                 sectionHtml += '</div>';
                 boqContent.innerHTML += sectionHtml;
@@ -305,17 +311,19 @@
                 document.getElementById('recommendationsContent').innerHTML = boqData.recommendations.map(rec => `<div class="text-sm mb-1">💡 ${rec}</div>`).join('');
             }
         }
-
+        
         function placeModelsFromBackend(boqData) {
             const itemsToPlace = [];
-            Object.values(boqData.categories).forEach(cat => {
-                cat.items.forEach(item => {
-                    for (let i = 0; i < item.quantity; i++) {
-                        const fullProductData = allEquipmentData.find(p => p.id === item.productId);
-                        if (fullProductData) itemsToPlace.push(fullProductData);
-                    }
+            if (boqData.categories) {
+                Object.values(boqData.categories).forEach(cat => {
+                    cat.items.forEach(item => {
+                        for (let i = 0; i < item.quantity; i++) {
+                            const fullProductData = allEquipmentData.find(p => p.id === item.productId);
+                            if (fullProductData) itemsToPlace.push(fullProductData);
+                        }
+                    });
                 });
-            });
+            }
             const smartLayout = getSmartLayout(itemsToPlace);
             smartLayout.forEach((item, index) => {
                 setTimeout(() => createEquipment(item.data, item.position), index * 50);
@@ -417,7 +425,7 @@
             updateAnalytics();
             return equipmentGroup;
         }
-
+        
         // --- UI & EVENT LISTENERS ---
         function setupEventListeners() {
             document.getElementById('updateRoom').addEventListener('click', () => {
@@ -429,7 +437,7 @@
             document.getElementById('equipmentSearch').addEventListener('input', (e) => filterEquipment(e.target.value.toLowerCase()));
             document.getElementById('quickGenerate').addEventListener('click', handleAIGenerateClick);
             document.getElementById('togglePanels').addEventListener('click', togglePanels);
-            document.getElementById('loadRecommended').addEventListener('click', handleAIGenerateClick); // Repurposed button
+            document.getElementById('loadRecommended').addEventListener('click', handleAIGenerateClick);
             document.getElementById('exportBOQ').addEventListener('click', exportBOQ);
             document.getElementById('clearAll').addEventListener('click', () => clearAllEquipment(true));
             document.getElementById('topView').addEventListener('click', () => setView('top'));
@@ -606,8 +614,31 @@
             document.getElementById('quickStats').textContent = `Room: ${room.width}m×${room.depth}m | Items: ${placedEquipment.length} | Total: $${totalCost.toLocaleString()}`;
         }
         function onMouseClick() { /* Can be implemented later for item selection */ }
-        function filterEquipment() { /* Can be implemented later */ }
-        function applyRoomPreset(preset) { /* Can be implemented later */ }
+        function filterEquipment(searchTerm) {
+            const items = document.querySelectorAll('#equipmentLibrary .equipment-item');
+            items.forEach(item => {
+                const name = item.querySelector('.font-semibold').textContent.toLowerCase();
+                const brand = item.querySelector('.text-xs').textContent.toLowerCase();
+                item.style.display = (name.includes(searchTerm) || brand.includes(searchTerm)) ? '' : 'none';
+            });
+        }
+        function applyRoomPreset(preset) {
+            const presets = {
+                meeting: { width: 6, depth: 4, size: 'small', useCase: 'meeting_room', quality: 'standard' },
+                boardroom: { width: 8, depth: 6, size: 'medium', useCase: 'boardroom', quality: 'premium' },
+                auditorium: { width: 15, depth: 12, size: 'auditorium', useCase: 'auditorium', quality: 'enterprise' },
+                huddle: { width: 4, depth: 3, size: 'small', useCase: 'huddle_room', quality: 'standard' }
+            };
+            const config = presets[preset];
+            if (!config) return;
+            document.getElementById('roomWidth').value = config.width;
+            document.getElementById('roomDepth').value = config.depth;
+            document.getElementById('roomSize').value = config.size;
+            document.getElementById('useCase').value = config.useCase;
+            document.getElementById('qualityLevel').value = config.quality;
+            document.getElementById('updateRoom').click();
+            showToast(`Applied ${preset} preset`, 'success');
+        }
 
     </script>
 </body>
