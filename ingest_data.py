@@ -1,4 +1,4 @@
-# ingest_data.py (Production-Ready v4.0 - With Smart Column Detection)
+# ingest_data.py (Production-Ready v4.0 - With Smart Column detection)
 
 import os
 import pandas as pd
