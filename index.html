@@ -145,17 +145,6 @@
             border-radius: 8px;
         }
         
-        #canvas3d {
-            cursor: grab;
-            width: 100vw;
-            height: 100vh;
-            display: block;
-        }
-        
-        #canvas3d:active {
-            cursor: grabbing;
-        }
-        
         .loading-spinner {
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
@@ -323,6 +312,14 @@
             padding: 16px;
             margin-top: 16px;
         }
+        
+        .category-header {
+            font-weight: 600;
+            margin: 16px 0 8px 0;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -461,6 +458,18 @@
                         <option value="enterprise">Ultra High-End</option>
                     </select>
                 </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">Brand Preference</label>
+                    <select id="brandPreference" class="form-select">
+                        <option value="">No Preference</option>
+                        <option value="logitech">Logitech</option>
+                        <option value="poly">Poly</option>
+                        <option value="cisco">Cisco</option>
+                        <option value="microsoft">Microsoft</option>
+                        <option value="zoom">Zoom</option>
+                    </select>
+                </div>
             </div>
             
             <div class="grid grid-cols-2 gap-3">
@@ -486,130 +495,10 @@
                 <input type="text" id="equipmentSearch" class="form-input" placeholder="Search equipment..." />
             </div>
             
-            <div class="space-y-2 max-h-64 overflow-y-auto virtual-scroll">
-                <!-- Displays & Visual -->
-                <div class="text-sm font-semibold text-blue-300 mb-2">📺 Displays & Visual</div>
-                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
-                     draggable="true" 
-                     data-type="display" 
-                     data-name="Interactive 86&quot; 4K Display" 
-                     data-price="4500" 
-                     data-category="Displays & Projectors"
-                     data-brand="Professional"
-                     data-tier="premium">
-                    <div class="quality-indicator quality-premium"></div>
-                    <div class="font-semibold text-sm">Interactive 86" 4K Display</div>
-                    <div class="text-xs text-blue-300">Touch-enabled, Wall Mount - $4,500</div>
-                </div>
-                
-                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
-                     draggable="true" 
-                     data-type="projector" 
-                     data-name="4K Laser Projector" 
-                     data-price="8500" 
-                     data-category="Displays & Projectors"
-                     data-brand="Professional"
-                     data-tier="enterprise">
-                    <div class="quality-indicator quality-enterprise"></div>
-                    <div class="font-semibold text-sm">4K Laser Projector</div>
-                    <div class="text-xs text-blue-300">6000 Lumens, Ceiling Mount - $8,500</div>
-                </div>
-                
-                <!-- Audio/Video Collaboration -->
-                <div class="text-sm font-semibold text-green-300 mb-2 mt-4">🎥 UC & Collaboration</div>
-                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
-                     draggable="true" 
-                     data-type="videobar" 
-                     data-name="Logitech Rally Bar" 
-                     data-price="2700" 
-                     data-category="UC & Collaboration Devices"
-                     data-brand="Logitech"
-                     data-tier="premium">
-                    <div class="quality-indicator quality-premium"></div>
-                    <div class="font-semibold text-sm">Logitech Rally Bar</div>
-                    <div class="text-xs text-green-300">AI-Powered All-in-One - $2,700</div>
-                </div>
-                
-                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
-                     draggable="true" 
-                     data-type="camera" 
-                     data-name="PTZ 4K Conference Camera" 
-                     data-price="2200" 
-                     data-category="UC & Collaboration Devices"
-                     data-brand="Professional"
-                     data-tier="premium">
-                    <div class="quality-indicator quality-premium"></div>
-                    <div class="font-semibold text-sm">PTZ 4K Conference Camera</div>
-                    <div class="text-xs text-green-300">AI Tracking, Ceiling Mount - $2,200</div>
-                </div>
-                
-                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
-                     draggable="true" 
-                     data-type="controller" 
-                     data-name="Logitech Tap IP" 
-                     data-price="1200" 
-                     data-category="UC & Collaboration Devices"
-                     data-brand="Logitech"
-                     data-tier="standard">
-                    <div class="quality-indicator quality-standard"></div>
-                    <div class="font-semibold text-sm">Logitech Tap IP</div>
-                    <div class="text-xs text-green-300">Touch Room Controller - $1,200</div>
-                </div>
-                
-                <!-- Audio Systems -->
-                <div class="text-sm font-semibold text-yellow-300 mb-2 mt-4">🔊 Audio Systems</div>
-                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
-                     draggable="true" 
-                     data-type="speaker" 
-                     data-name="Premium Ceiling Speaker Array" 
-                     data-price="850" 
-                     data-category="Audio: Speakers & Amplifiers"
-                     data-brand="Professional"
-                     data-tier="premium">
-                    <div class="quality-indicator quality-premium"></div>
-                    <div class="font-semibold text-sm">Premium Ceiling Speaker Array</div>
-                    <div class="text-xs text-yellow-300">Spatial Audio, Per Unit - $850</div>
-                </div>
-                
-                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
-                     draggable="true" 
-                     data-type="microphone" 
-                     data-name="AI Microphone Array" 
-                     data-price="1400" 
-                     data-category="Audio: Microphones & Conferencing"
-                     data-brand="Logitech"
-                     data-tier="premium">
-                    <div class="quality-indicator quality-premium"></div>
-                    <div class="font-semibold text-sm">AI Microphone Array</div>
-                    <div class="text-xs text-yellow-300">Beamforming, Noise Cancellation - $1,400</div>
-                </div>
-                
-                <!-- Control & Infrastructure -->
-                <div class="text-sm font-semibold text-purple-300 mb-2 mt-4">⚙️ Control & Infrastructure</div>
-                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
-                     draggable="true" 
-                     data-type="processor" 
-                     data-name="AV Control Processor" 
-                     data-price="3200" 
-                     data-category="Control & Processing"
-                     data-brand="Professional"
-                     data-tier="enterprise">
-                    <div class="quality-indicator quality-enterprise"></div>
-                    <div class="font-semibold text-sm">AV Control Processor</div>
-                    <div class="text-xs text-purple-300">Enterprise Grade, Rack Mount - $3,200</div>
-                </div>
-                
-                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
-                     draggable="true" 
-                     data-type="network" 
-                     data-name="Managed Network Switch" 
-                     data-price="800" 
-                     data-category="Network & Infrastructure"
-                     data-brand="Professional"
-                     data-tier="standard">
-                    <div class="quality-indicator quality-standard"></div>
-                    <div class="font-semibold text-sm">Managed Network Switch</div>
-                    <div class="text-xs text-purple-300">24-Port PoE+, Rack Mount - $800</div>
+            <div id="equipmentLibrary" class="space-y-2 max-h-64 overflow-y-auto virtual-scroll">
+                <div class="text-center py-8 text-white/60">
+                    <div class="loading-spinner mb-4 mx-auto"></div>
+                    <div class="text-sm">Loading equipment library...</div>
                 </div>
             </div>
         </div>
@@ -644,18 +533,19 @@
         
         <!-- Analytics Panel -->
         <div class="analytics-panel mb-6">
+            <div class="text-sm font-semibold text-purple-200 mb-2">📊 Room Analytics</div>
             <div id="analyticsContent" class="text-xs text-white/80 space-y-2">
                 <div class="flex justify-between">
-                    <span>Coverage Ratio:</span>
-                    <span id="coverageRatio" class="font-mono">85%</span>
+                    <span>Room Area:</span>
+                    <span id="roomArea" class="font-mono">48m²</span>
                 </div>
                 <div class="flex justify-between">
-                    <span>Audio Points:</span>
-                    <span id="audioPoints" class="font-mono">12</span>
+                    <span>Complexity Score:</span>
+                    <span id="complexityScore" class="font-mono">5/10</span>
                 </div>
                 <div class="flex justify-between">
-                    <span>Network Efficiency:</span>
-                    <span id="networkEfficiency" class="font-mono">92%</span>
+                    <span>Acoustic Rating:</span>
+                    <span id="acousticRating" class="font-mono">Good</span>
                 </div>
             </div>
         </div>
@@ -695,77 +585,54 @@
         let scene, camera, renderer, controls;
         let room, roomWidth = 8, roomDepth = 6, roomHeight = 3;
         let placedEquipment = [];
-        let boqItems = [];
-        let isDragging = false;
-        let dragStartPosition = { x: 0, y: 0 };
-        let isMouseDown = false;
+        let boqData = null;
+        let allProducts = [];
+        let panelsVisible = true;
         
-        // Equipment database
-        const equipmentDatabase = {
-            display: {
+        // Backend API URL
+        const API_BASE_URL = 'https://adarshav-boq-backend.hf.space';
+        
+        // Equipment visualization database
+        const equipmentVisualization = {
+            'Displays & Projectors': {
                 geometry: () => new THREE.BoxGeometry(2, 1.5, 0.1),
                 material: () => new THREE.MeshPhongMaterial({ color: 0x2c3e50 }),
                 position: [0, 1.5, -2.9]
             },
-            projector: {
-                geometry: () => new THREE.CylinderGeometry(0.3, 0.3, 0.8),
-                material: () => new THREE.MeshPhongMaterial({ color: 0x34495e }),
-                position: [0, 2.8, 0]
-            },
-            videobar: {
+            'UC & Collaboration Devices': {
                 geometry: () => new THREE.BoxGeometry(1.2, 0.15, 0.2),
                 material: () => new THREE.MeshPhongMaterial({ color: 0x1abc9c }),
                 position: [0, 2.2, -2.8]
             },
-            camera: {
-                geometry: () => new THREE.SphereGeometry(0.2),
-                material: () => new THREE.MeshPhongMaterial({ color: 0x3498db }),
-                position: [0, 2.7, 0]
-            },
-            controller: {
-                geometry: () => new THREE.BoxGeometry(0.3, 0.05, 0.2),
-                material: () => new THREE.MeshPhongMaterial({ color: 0x9b59b6 }),
-                position: [0, 1, 0]
-            },
-            speaker: {
+            'Audio: Speakers & Amplifiers': {
                 geometry: () => new THREE.CylinderGeometry(0.15, 0.15, 0.3),
                 material: () => new THREE.MeshPhongMaterial({ color: 0xe67e22 }),
                 position: [2, 2.8, 2]
             },
-            microphone: {
+            'Audio: Microphones & Conferencing': {
                 geometry: () => new THREE.CylinderGeometry(0.1, 0.1, 0.4),
                 material: () => new THREE.MeshPhongMaterial({ color: 0xf39c12 }),
                 position: [0, 1, 0]
             },
-            processor: {
+            'Control & Processing': {
                 geometry: () => new THREE.BoxGeometry(0.5, 0.3, 0.4),
                 material: () => new THREE.MeshPhongMaterial({ color: 0x8e44ad }),
                 position: [-3, 0.5, -2]
             },
-            network: {
+            'Network & Infrastructure': {
                 geometry: () => new THREE.BoxGeometry(0.4, 0.2, 0.3),
                 material: () => new THREE.MeshPhongMaterial({ color: 0x16a085 }),
                 position: [-3, 0.8, -2]
-            }
-        };
-
-        // Room presets
-        const roomPresets = {
-            meeting: {
-                width: 6, depth: 4, capacity: 'small', useCase: 'meeting_room',
-                equipment: ['display', 'videobar', 'speaker', 'microphone', 'controller']
             },
-            boardroom: {
-                width: 8, depth: 6, capacity: 'medium', useCase: 'boardroom',
-                equipment: ['display', 'videobar', 'camera', 'speaker', 'microphone', 'controller', 'processor']
+            'Cables & Connectors': {
+                geometry: () => new THREE.BoxGeometry(0.2, 0.1, 0.1),
+                material: () => new THREE.MeshPhongMaterial({ color: 0x34495e }),
+                position: [-2.5, 0.2, -2.5]
             },
-            auditorium: {
-                width: 15, depth: 10, capacity: 'xlarge', useCase: 'auditorium',
-                equipment: ['projector', 'camera', 'speaker', 'speaker', 'microphone', 'processor', 'network']
-            },
-            huddle: {
-                width: 4, depth: 3, capacity: 'small', useCase: 'huddle_room',
-                equipment: ['display', 'videobar', 'speaker']
+            'default': {
+                geometry: () => new THREE.BoxGeometry(0.5, 0.5, 0.5),
+                material: () => new THREE.MeshPhongMaterial({ color: 0x95a5a6 }),
+                position: [0, 0.5, 0]
             }
         };
 
@@ -775,124 +642,164 @@
             setupScene();
             setupEventListeners();
             createRoom();
+            loadEquipmentLibrary();
             updateQuickStats();
-            
-            // Auto-generate initial BOQ
-            setTimeout(() => {
-                generateAIBoq();
-            }, 1000);
         }
 
         // Check backend connection status
-        function checkBackendConnection() {
+        async function checkBackendConnection() {
             const status = document.getElementById('connectionStatus');
-            // Simulate connection check
-            setTimeout(() => {
-                status.className = 'connection-status status-online';
-                status.innerHTML = '✅ AI Backend Online';
-            }, 2000);
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    status.className = 'connection-status status-online';
+                    status.innerHTML = `✅ Backend Online (${data.product_count} products)`;
+                } else {
+                    throw new Error('Connection failed');
+                }
+            } catch (error) {
+                status.className = 'connection-status status-offline';
+                d Offline - Using Demo Mode';
+                loadDemoData();
+            }
         }
 
-        // Setup 3D scene
+        // Load demo data when backend is unavailable
+        function loadDemoData() {
+            allProducts = [
+                {
+                    id: 1,
+                    name: "75\" 4K Interactive Display",
+                    category: "Displays & Projectors",
+                    subcategory: "Interactive Displays",
+                    brand: "Samsung",
+                    model: "WM75R",
+                    price: 3500,
+                    quality_tier: "premium",
+                    description: "Professional 75-inch 4K interactive display with touch capability"
+                },
+                {
+                    id: 2,
+                    name: "Conference Camera 4K",
+                    category: "UC & Collaboration Devices",
+                    subcategory: "Conference Cameras",
+                    brand: "Logitech",
+                    model: "Rally Plus",
+                    price: 2200,
+                    quality_tier: "premium",
+                    description: "Ultra HD conference camera with AI-powered auto-framing"
+                },
+                {
+                    id: 3,
+                    name: "Ceiling Speakers (Pair)",
+                    category: "Audio: Speakers & Amplifiers",
+                    subcategory: "Ceiling Speakers",
+                    brand: "Bose",
+                    model: "EdgeMax EM90",
+                    price: 800,
+                    quality_tier: "standard",
+                    description: "Professional ceiling speakers with wide coverage"
+                },
+                {
+                    id: 4,
+                    name: "Wireless Microphone System",
+                    category: "Audio: Microphones & Conferencing",
+                    subcategory: "Wireless Microphones",
+                    brand: "Shure",
+                    model: "QLXD24/SM58",
+                    price: 1200,
+                    quality_tier: "premium",
+                    description: "Digital wireless handheld microphone system"
+                },
+                {
+                    id: 5,
+                    name: "Control System Processor",
+                    category: "Control & Processing",
+                    subcategory: "Control Processors",
+                    brand: "Crestron",
+                    model: "CP4",
+                    price: 2800,
+                    quality_tier: "enterprise",
+                    description: "4-Series control system processor"
+                },
+                {
+                    id: 6,
+                    name: "Network Switch 24-Port",
+                    category: "Network & Infrastructure",
+                    subcategory: "Network Switches",
+                    brand: "Cisco",
+                    model: "SG350-24",
+                    price: 450,
+                    quality_tier: "standard",
+                    description: "24-port Gigabit managed switch"
+                },
+                {
+                    id: 7,
+                    name: "HDMI Cable 15ft",
+                    category: "Cables & Connectors",
+                    subcategory: "HDMI Cables",
+                    brand: "Generic",
+                    model: "HDMI-15FT-4K",
+                    price: 25,
+                    quality_tier: "standard",
+                    description: "High-speed HDMI cable 4K@60Hz"
+                }
+            ];
+        }
+
+        // Setup Three.js scene
         function setupScene() {
             const container = document.getElementById('renderContainer');
             
-            // Scene setup
+            // Create scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a1a);
-            scene.fog = new THREE.Fog(0x0a0a1a, 50, 100);
-            
-            // Camera setup
+            scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.Fog(0x0a0a0a, 10, 50);
+
+            // Create camera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(10, 8, 10);
-            
-            // Renderer setup
+
+            // Create renderer
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setClearColor(0x000000, 0);
             container.appendChild(renderer.domElement);
-            
-            // Enhanced lighting
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
             scene.add(ambientLight);
-            
+
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
             directionalLight.position.set(10, 10, 5);
             directionalLight.castShadow = true;
             directionalLight.shadow.mapSize.width = 2048;
             directionalLight.shadow.mapSize.height = 2048;
             scene.add(directionalLight);
-            
-            const pointLight = new THREE.PointLight(0x3b82f6, 0.6, 30);
+
+            const pointLight = new THREE.PointLight(0x3b82f6, 0.5, 20);
             pointLight.position.set(0, 5, 0);
             scene.add(pointLight);
-            
-            // Simple orbit controls simulation
-            setupCameraControls();
-            
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Start render loop
             animate();
         }
 
-        // Simple camera controls
-        function setupCameraControls() {
-            let mouseX = 0, mouseY = 0;
-            let targetX = 0, targetY = 0;
-            let isRotating = false;
-            
-            renderer.domElement.addEventListener('mousedown', (event) => {
-                if (event.button === 0) {
-                    isRotating = true;
-                    mouseX = event.clientX;
-                    mouseY = event.clientY;
-                }
-            });
-            
-            renderer.domElement.addEventListener('mousemove', (event) => {
-                if (isRotating) {
-                    targetX += (event.clientX - mouseX) * 0.01;
-                    targetY += (event.clientY - mouseY) * 0.01;
-                    targetY = Math.max(-Math.PI/2, Math.min(Math.PI/2, targetY));
-                    
-                    mouseX = event.clientX;
-                    mouseY = event.clientY;
-                }
-            });
-            
-            renderer.domElement.addEventListener('mouseup', () => {
-                isRotating = false;
-            });
-            
-            renderer.domElement.addEventListener('wheel', (event) => {
-                const distance = camera.position.length();
-                const newDistance = distance + event.deltaY * 0.01;
-                const clampedDistance = Math.max(5, Math.min(30, newDistance));
-                
-                camera.position.normalize().multiplyScalar(clampedDistance);
-            });
-            
-            // Update camera position
-            function updateCamera() {
-                const distance = camera.position.length();
-                camera.position.x = distance * Math.sin(targetX) * Math.cos(targetY);
-                camera.position.y = distance * Math.sin(targetY);
-                camera.position.z = distance * Math.cos(targetX) * Math.cos(targetY);
-                camera.lookAt(0, 0, 0);
-            }
-            
-            setInterval(updateCamera, 16);
-        }
-
-        // Create room
+        // Create room geometry
         function createRoom() {
             // Remove existing room
             if (room) {
                 scene.remove(room);
             }
-            
+
             room = new THREE.Group();
-            
+
             // Floor
             const floorGeometry = new THREE.PlaneGeometry(roomWidth, roomDepth);
             const floorMaterial = new THREE.MeshPhongMaterial({ 
@@ -904,7 +811,7 @@
             floor.rotation.x = -Math.PI / 2;
             floor.receiveShadow = true;
             room.add(floor);
-            
+
             // Walls
             const wallMaterial = new THREE.MeshPhongMaterial({ 
                 color: 0x34495e,
@@ -912,182 +819,224 @@
                 opacity: 0.6,
                 side: THREE.DoubleSide
             });
-            
+
+            // Front wall
+            const frontWallGeometry = new THREE.PlaneGeometry(roomWidth, roomHeight);
+            const frontWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
+            frontWall.position.set(0, roomHeight / 2, -roomDepth / 2);
+            room.add(frontWall);
+
             // Back wall
-            const backWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(roomWidth, roomHeight),
-                wallMaterial
-            );
-            backWall.position.set(0, roomHeight/2, -roomDepth/2);
+            const backWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
+            backWall.position.set(0, roomHeight / 2, roomDepth / 2);
+            backWall.rotation.y = Math.PI;
             room.add(backWall);
-            
-            // Side walls
-            const leftWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(roomDepth, roomHeight),
-                wallMaterial
-            );
-            leftWall.position.set(-roomWidth/2, roomHeight/2, 0);
+
+            // Left wall
+            const sideWallGeometry = new THREE.PlaneGeometry(roomDepth, roomHeight);
+            const leftWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
+            leftWall.position.set(-roomWidth / 2, roomHeight / 2, 0);
             leftWall.rotation.y = Math.PI / 2;
             room.add(leftWall);
-            
-            const rightWall = new THREE.Mesh(
-                new THREE.PlaneGeometry(roomDepth, roomHeight),
-                wallMaterial
-            );
-            rightWall.position.set(roomWidth/2, roomHeight/2, 0);
+
+            // Right wall
+            const rightWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
+            rightWall.position.set(roomWidth / 2, roomHeight / 2, 0);
             rightWall.rotation.y = -Math.PI / 2;
             room.add(rightWall);
-            
-            // Add grid helper
-            const gridHelper = new THREE.GridHelper(Math.max(roomWidth, roomDepth) + 2, 20, 0x444444, 0x222222);
-            gridHelper.position.y = 0.01;
-            room.add(gridHelper);
-            
+
+            // Add wireframe outline
+            const wireframeGeometry = new THREE.BoxGeometry(roomWidth, roomHeight, roomDepth);
+            const wireframeMaterial = new THREE.MeshBasicMaterial({
+                color: 0x3b82f6,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.3
+            });
+            const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
+            wireframe.position.y = roomHeight / 2;
+            room.add(wireframe);
+
             scene.add(room);
+            updateAnalytics();
         }
 
-        // Setup event listeners
-        function setupEventListeners() {
-            // Room controls
-            document.getElementById('updateRoom').addEventListener('click', updateRoom);
-            document.getElementById('generateFullBoq').addEventListener('click', generateAIBoq);
-            document.getElementById('quickGenerate').addEventListener('click', generateAIBoq);
-            
-            // BOQ controls
-            document.getElementById('clearBoq').addEventListener('click', clearBoq);
-            document.getElementById('exportBoq').addEventListener('click', exportBoq);
-            
-            // Panel toggle
-            document.getElementById('togglePanels').addEventListener('click', togglePanels);
-            
-            // View controls
-            document.getElementById('topView').addEventListener('click', () => setView('top'));
-            document.getElementById('frontView').addEventListener('click', () => setView('front'));
-            document.getElementById('isoView').addEventListener('click', () => setView('iso'));
-            document.getElementById('resetView').addEventListener('click', () => setView('reset'));
-            
-            // Room presets
-            document.querySelectorAll('.room-preset-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const preset = e.currentTarget.dataset.preset;
-                    applyRoomPreset(preset);
-                    
-                    // Update active state
-                    document.querySelectorAll('.room-preset-btn').forEach(b => b.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
-                });
-            });
-            
-            // Drag and drop
-            setupDragAndDrop();
-            
-            // Window resize
-            window.addEventListener('resize', onWindowResize);
-            
-            // Real-time updates
-            ['roomWidth', 'roomDepth', 'roomSize', 'useCase', 'budgetRange'].forEach(id => {
-                document.getElementById(id).addEventListener('change', updateQuickStats);
-            });
-        }
-
-        // Setup drag and drop
-        function setupDragAndDrop() {
-            document.querySelectorAll('.draggable').forEach(item => {
-                item.addEventListener('dragstart', handleDragStart);
-                item.addEventListener('dragend', handleDragEnd);
-            });
-            
-            renderer.domElement.addEventListener('dragover', handleDragOver);
-            renderer.domElement.addEventListener('drop', handleDrop);
-        }
-
-        function handleDragStart(e) {
-            e.dataTransfer.setData('text/plain', JSON.stringify({
-                type: e.target.dataset.type,
-                name: e.target.dataset.name,
-                price: e.target.dataset.price,
-                category: e.target.dataset.category,
-                brand: e.target.dataset.brand,
-                tier: e.target.dataset.tier
-            }));
-            e.target.style.opacity = '0.5';
-        }
-
-        function handleDragEnd(e) {
-            e.target.style.opacity = '1';
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            
+        // Load equipment library
+        async function loadEquipmentLibrary() {
             try {
-                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                addEquipmentToRoom(data);
-                showToast(`Added ${data.name} to room`, 'success');
+                // Try to load from backend first
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/products`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        allProducts = data.products || [];
+                    } else {
+                        throw new Error('Backend unavailable');
+                    }
+                } catch (error) {
+                    // Use demo data if backend fails
+                    if (allProducts.length === 0) {
+                        loadDemoData();
+                    }
+                }
+
+                displayEquipmentLibrary(allProducts);
             } catch (error) {
-                console.error('Drop error:', error);
-                showToast('Failed to add equipment', 'error');
+                console.error('Error loading equipment library:', error);
+                showToast('Failed to load equipment library', 'error');
             }
         }
 
-        // Add equipment to room
-        function addEquipmentToRoom(equipmentData) {
-            if (!equipmentDatabase[equipmentData.type]) return;
-            
-            const config = equipmentDatabase[equipmentData.type];
-            const geometry = config.geometry();
-            const material = config.material();
-            const mesh = new THREE.Mesh(geometry, material);
-            
-            // Position equipment
-            const [x, y, z] = config.position;
-            mesh.position.set(x, y, z);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            
-            // Add to scene
-            room.add(mesh);
-            placedEquipment.push({
-                mesh: mesh,
-                data: equipmentData
+        // Display equipment library
+        function displayEquipmentLibrary(products) {
+            const library = document.getElementById('equipmentLibrary');
+            library.innerHTML = '';
+
+            const categories = {};
+            products.forEach(product => {
+                if (!categories[product.category]) {
+                    categories[product.category] = [];
+                }
+                categories[product.category].push(product);
             });
-            
-            // Add to BOQ
-            addToBoq(equipmentData);
+
+            Object.keys(categories).forEach(category => {
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'category-header bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-200';
+                categoryHeader.textContent = category;
+                library.appendChild(categoryHeader);
+
+                categories[category].forEach(product => {
+                    const item = createEquipmentItem(product);
+                    library.appendChild(item);
+                });
+            });
         }
 
-        // Add item to BOQ
-        function addToBoq(item) {
-            const existingItem = boqItems.find(boq => boq.name === item.name);
+        // Create equipment item element
+        function createEquipmentItem(product) {
+            const div = document.createElement('div');
+            div.className = 'equipment-item premium-glass rounded-lg p-3 mb-2 relative';
+            div.draggable = true;
+            div.dataset.productId = product.id;
+
+            const qualityClass = `quality-${product.quality_tier || 'standard'}`;
             
+            div.innerHTML = `
+                <div class="quality-indicator ${qualityClass}"></div>
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="font-semibold text-sm text-white">${product.name}</div>
+                        <div class="text-xs text-white/60 mt-1">${product.brand} ${product.model || ''}</div>
+                        <div class="text-xs text-white/50 mt-1">${product.subcategory || product.category}</div>
+                    </div>
+                    <div class="text-right ml-3">
+                        <div class="font-bold text-green-400">$${product.price?.toLocaleString() || 'N/A'}</div>
+                        <div class="text-xs text-white/60 capitalize">${product.quality_tier || 'standard'}</div>
+                    </div>
+                </div>
+            `;
+
+            // Drag events
+            div.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('application/json', JSON.stringify(product));
+                div.style.opacity = '0.5';
+            });
+
+            div.addEventListener('dragend', () => {
+                div.style.opacity = '1';
+            });
+
+            // Click to add
+            div.addEventListener('click', () => {
+                addProductToBoq(product);
+                add3DEquipment(product);
+                showToast(`Added ${product.name} to BOQ`, 'success');
+            });
+
+            return div;
+        }
+
+        // Add product to BOQ
+        function addProductToBoq(product) {
+            if (!boqData) {
+                boqData = {
+                    project_name: document.getElementById('projectName').value,
+                    client_name: document.getElementById('clientName').value,
+                    room_dimensions: `${roomWidth}m × ${roomDepth}m`,
+                    room_capacity: document.getElementById('roomSize').value,
+                    use_case: document.getElementById('useCase').value,
+                    quality_tier: document.getElementById('budgetRange').value,
+                    categories: {}
+                };
+            }
+
+            const category = product.category;
+            if (!boqData.categories[category]) {
+                boqData.categories[category] = {
+                    items: [],
+                    total_cost: 0
+                };
+            }
+
+            // Check if product already exists, increment quantity if it does
+            const existingItem = boqData.categories[category].items.find(item => item.id === product.id);
             if (existingItem) {
                 existingItem.quantity += 1;
-                existingItem.total = existingItem.quantity * existingItem.price;
+                existingItem.total_price = existingItem.quantity * existingItem.unit_price;
             } else {
-                boqItems.push({
-                    name: item.name,
-                    category: item.category,
-                    brand: item.brand,
-                    tier: item.tier,
-                    price: parseFloat(item.price),
+                boqData.categories[category].items.push({
+                    id: product.id,
+                    name: product.name,
+                    brand: product.brand,
+                    model: product.model || '',
+                    unit_price: product.price || 0,
                     quantity: 1,
-                    total: parseFloat(item.price)
+                    total_price: product.price || 0,
+                    quality_tier: product.quality_tier || 'standard',
+                    description: product.description || ''
                 });
             }
-            
+
             updateBoqDisplay();
             updateQuickStats();
+        }
+
+        // Add 3D equipment to scene
+        function add3DEquipment(product) {
+            const categoryConfig = equipmentVisualization[product.category] || equipmentVisualization['default'];
+            
+            const geometry = categoryConfig.geometry();
+            const material = categoryConfig.material();
+            const equipment = new THREE.Mesh(geometry, material);
+            
+            const basePosition = categoryConfig.position;
+            const offset = placedEquipment.length * 0.3;
+            equipment.position.set(
+                basePosition[0] + (Math.random() - 0.5) * 2,
+                basePosition[1],
+                basePosition[2] + offset
+            );
+            
+            equipment.castShadow = true;
+            equipment.receiveShadow = true;
+            equipment.userData = { product };
+            equipment.className = 'equipment-3d';
+            
+            // Add hover effect
+            equipment.addEventListener = function(type, callback) {
+                // Placeholder for event handling
+            };
+            
+            scene.add(equipment);
+            placedEquipment.push(equipment);
         }
 
         // Update BOQ display
         function updateBoqDisplay() {
             const boqContent = document.getElementById('boqContent');
             
-            if (boqItems.length === 0) {
+            if (!boqData || Object.keys(boqData.categories).length === 0) {
                 boqContent.innerHTML = `
                     <div class="text-center py-8 text-white/60">
                         <div class="text-4xl mb-2">📦</div>
@@ -1097,483 +1046,478 @@
                 `;
                 return;
             }
-            
-            // Group by category
-            const categories = {};
-            boqItems.forEach(item => {
-                if (!categories[item.category]) {
-                    categories[item.category] = [];
-                }
-                categories[item.category].push(item);
-            });
-            
+
             let html = '';
-            Object.keys(categories).forEach(category => {
-                const categoryTotal = categories[category].reduce((sum, item) => sum + item.total, 0);
-                
+            let totalCost = 0;
+            let totalItems = 0;
+
+            Object.entries(boqData.categories).forEach(([category, data]) => {
+                const categoryTotal = data.items.reduce((sum, item) => sum + item.total_price, 0);
+                totalCost += categoryTotal;
+                totalItems += data.items.length;
+
                 html += `
                     <div class="boq-section">
-                        <div class="text-sm font-semibold text-blue-300 mb-2 flex justify-between">
-                            <span>${category}</span>
-                            <span>$${categoryTotal.toLocaleString()}</span>
-                        </div>
-                `;
-                
-                categories[category].forEach(item => {
-                    const tierColor = {
-                        economy: 'border-yellow-500',
-                        standard: 'border-blue-500',
-                        premium: 'border-purple-500',
-                        enterprise: 'border-green-500'
-                    }[item.tier] || 'border-gray-500';
-                    
-                    html += `
-                        <div class="boq-item ${tierColor}">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="font-semibold text-sm">${item.name}</div>
-                                    <div class="text-xs text-white/60">${item.brand} • ${item.tier} tier</div>
-                                    <div class="text-xs text-blue-300 mt-1">
-                                        ${item.quantity} × $${item.price.toLocaleString()} = $${item.total.toLocaleString()}
+                        <h4 class="text-sm font-semibold text-blue-300 mb-2">${category}</h4>
+                        ${data.items.map(item => `
+                            <div class="boq-item">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <div class="text-sm font-medium">${item.name}</div>
+                                        <div class="text-xs text-white/60">${item.brand} ${item.model}</div>
+                                        <div class="text-xs text-white/50 mt-1">Qty: ${item.quantity} × $${item.unit_price.toLocaleString()}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-green-400">$${item.total_price.toLocaleString()}</div>
+                                        <button class="text-xs text-red-400 hover:text-red-300 mt-1" onclick="removeBoqItem('${category}', ${item.id})">Remove</button>
                                     </div>
                                 </div>
-                                <button class="text-red-400 hover:text-red-300 text-xs ml-2" onclick="removeFromBoq('${item.name}')">
-                                    ❌
-                                </button>
                             </div>
+                        `).join('')}
+                        <div class="text-right mt-2 text-sm font-semibold text-blue-300">
+                            Category Total: $${categoryTotal.toLocaleString()}
                         </div>
-                    `;
-                });
-                
-                html += '</div>';
+                    </div>
+                `;
             });
-            
+
             boqContent.innerHTML = html;
             
             // Update totals
-            const totalCost = boqItems.reduce((sum, item) => sum + item.total, 0);
-            const totalItems = boqItems.reduce((sum, item) => sum + item.quantity, 0);
-            
             document.getElementById('totalCost').textContent = `$${totalCost.toLocaleString()}`;
             document.getElementById('totalItems').textContent = `${totalItems} items`;
         }
 
         // Remove item from BOQ
-        function removeFromBoq(itemName) {
-            const index = boqItems.findIndex(item => item.name === itemName);
-            if (index > -1) {
-                // Remove from 3D scene
-                const equipmentIndex = placedEquipment.findIndex(eq => eq.data.name === itemName);
-                if (equipmentIndex > -1) {
-                    room.remove(placedEquipment[equipmentIndex].mesh);
-                    placedEquipment.splice(equipmentIndex, 1);
-                }
+        function removeBoqItem(category, itemId) {
+            if (boqData && boqData.categories[category]) {
+                const items = boqData.categories[category].items;
+                const itemIndex = items.findIndex(item => item.id === itemId);
                 
-                boqItems.splice(index, 1);
-                updateBoqDisplay();
-                updateQuickStats();
-                showToast(`Removed ${itemName}`, 'info');
+                if (itemIndex > -1) {
+                    const item = items[itemIndex];
+                    if (item.quantity > 1) {
+                        item.quantity -= 1;
+                        item.total_price = item.quantity * item.unit_price;
+                    } else {
+                        items.splice(itemIndex, 1);
+                    }
+
+                    // Remove category if empty
+                    if (items.length === 0) {
+                        delete boqData.categories[category];
+                    }
+
+                    updateBoqDisplay();
+                    updateQuickStats();
+                    showToast('Item removed from BOQ', 'success');
+                }
             }
         }
-        
-        // Make removeFromBoq globally accessible
-        window.removeFromBoq = removeFromBoq;
 
-        // Generate AI BOQ
-        async function generateAIBoq() {
+        // Update analytics
+        function updateAnalytics() {
+            const area = roomWidth * roomDepth;
+            document.getElementById('roomArea').textContent = `${area}m²`;
+            
+            const complexity = Math.min(10, Math.floor((area / 10) + (placedEquipment.length / 5) + 2));
+            document.getElementById('complexityScore').textContent = `${complexity}/10`;
+            
+            const acoustic = area > 50 ? 'Excellent' : area > 30 ? 'Good' : area > 15 ? 'Fair' : 'Basic';
+            document.getElementById('acousticRating').textContent = acoustic;
+        }
+
+        // Update quick stats
+        function updateQuickStats() {
+            const totalCost = boqData ? 
+                Object.values(boqData.categories).reduce((sum, cat) => 
+                    sum + cat.items.reduce((itemSum, item) => itemSum + item.total_price, 0), 0
+                ) : 0;
+            
+            const totalItems = boqData ? 
+                Object.values(boqData.categories).reduce((sum, cat) => sum + cat.items.length, 0) : 0;
+
+            document.getElementById('quickStats').textContent = 
+                `Room: ${roomWidth}m×${roomDepth}m | Items: ${totalItems} | Total: $${totalCost.toLocaleString()}`;
+        }
+
+        // Generate full BOQ using AI
+        async function generateFullBoq() {
             const loadingOverlay = document.getElementById('loadingOverlay');
             loadingOverlay.classList.remove('hidden');
-            
-            // Clear existing equipment
-            clearBoq();
-            
+
             try {
-                // Simulate AI generation
-                await new Promise(resolve => setTimeout(resolve, 3000));
-                
-                const roomSize = document.getElementById('roomSize').value;
-                const useCase = document.getElementById('useCase').value;
-                const budgetRange = document.getElementById('budgetRange').value;
-                
-                // Generate equipment based on parameters
-                const equipment = generateEquipmentList(roomSize, useCase, budgetRange);
-                
-                // Add equipment to room and BOQ
-                for (const item of equipment) {
-                    await new Promise(resolve => setTimeout(resolve, 200)); // Stagger additions
-                    addEquipmentToRoom(item);
+                const requestData = {
+                    room_dimensions: [roomWidth, roomDepth, roomHeight],
+                    room_capacity: document.getElementById('roomSize').value,
+                    use_case: document.getElementById('useCase').value,
+                    budget_range: document.getElementById('budgetRange').value,
+                    special_requirements: document.getElementById('requirements').value,
+                    brand_preference: document.getElementById('brandPreference').value || null
+                };
+
+                let response;
+                try {
+                    response = await fetch(`${API_BASE_URL}/api/generate-boq`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData)
+                    });
+                } catch (error) {
+                    throw new Error('Backend unavailable');
                 }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
                 
-                // Show recommendations
-                showRecommendations();
-                
-                showToast('AI BOQ generated successfully!', 'success');
-                
+                if (data.status === 'success') {
+                    boqData = {
+                        project_name: document.getElementById('projectName').value,
+                        client_name: document.getElementById('clientName').value,
+                        room_dimensions: `${roomWidth}m × ${roomDepth}m`,
+                        room_capacity: document.getElementById('roomSize').value,
+                        use_case: document.getElementById('useCase').value,
+                        quality_tier: document.getElementById('budgetRange').value,
+                        categories: data.boq.categories || {}
+                    };
+
+                    updateBoqDisplay();
+                    updateQuickStats();
+                    
+                    // Show recommendations if available
+                    if (data.boq.recommendations) {
+                        const recSection = document.getElementById('recommendationsSection');
+                        const recContent = document.getElementById('recommendationsContent');
+                        recContent.innerHTML = data.boq.recommendations.join('<br>• ');
+                        recSection.classList.remove('hidden');
+                    }
+
+                    // Add 3D equipment for each item
+                    Object.values(boqData.categories).forEach(category => {
+                        category.items.forEach(item => {
+                            // Create a mock product object for 3D visualization
+                            const mockProduct = {
+                                id: item.id,
+                                name: item.name,
+                                category: Object.keys(boqData.categories).find(cat => 
+                                    boqData.categories[cat].items.some(i => i.id === item.id)
+                                )
+                            };
+                            add3DEquipment(mockProduct);
+                        });
+                    });
+
+                    showToast('✅ AI BOQ generated successfully!', 'success');
+                } else {
+                    throw new Error(data.message || 'Failed to generate BOQ');
+                }
             } catch (error) {
-                console.error('AI generation error:', error);
-                showToast('Failed to generate BOQ', 'error');
+                console.error('Error generating BOQ:', error);
+                showToast('⚠️ Using demo BOQ generation', 'warning');
+                generateDemoBoq();
             } finally {
                 loadingOverlay.classList.add('hidden');
             }
         }
 
-        // Generate equipment list based on parameters
-        function generateEquipmentList(roomSize, useCase, budgetRange) {
-            const equipment = [];
-            const baseEquipment = {
-                display: { type: 'display', name: 'Interactive 86" 4K Display', price: '4500', category: 'Displays & Projectors', brand: 'Professional', tier: 'premium' },
-                videobar: { type: 'videobar', name: 'Logitech Rally Bar', price: '2700', category: 'UC & Collaboration Devices', brand: 'Logitech', tier: 'premium' },
-                speaker: { type: 'speaker', name: 'Premium Ceiling Speaker Array', price: '850', category: 'Audio: Speakers & Amplifiers', brand: 'Professional', tier: 'premium' },
-                microphone: { type: 'microphone', name: 'AI Microphone Array', price: '1400', category: 'Audio: Microphones & Conferencing', brand: 'Logitech', tier: 'premium' },
-                controller: { type: 'controller', name: 'Logitech Tap IP', price: '1200', category: 'UC & Collaboration Devices', brand: 'Logitech', tier: 'standard' },
-                processor: { type: 'processor', name: 'AV Control Processor', price: '3200', category: 'Control & Processing', brand: 'Professional', tier: 'enterprise' },
-                camera: { type: 'camera', name: 'PTZ 4K Conference Camera', price: '2200', category: 'UC & Collaboration Devices', brand: 'Professional', tier: 'premium' },
-                network: { type: 'network', name: 'Managed Network Switch', price: '800', category: 'Network & Infrastructure', brand: 'Professional', tier: 'standard' }
+        // Generate demo BOQ when backend is unavailable
+        function generateDemoBoq() {
+            const useCase = document.getElementById('useCase').value;
+            const quality = document.getElementById('budgetRange').value;
+            
+            // Demo BOQ based on room requirements
+            const demoCategories = {
+                'Displays & Projectors': {
+                    items: [
+                        {
+                            id: 1,
+                            name: "75\" 4K Interactive Display",
+                            brand: "Samsung",
+                            model: "WM75R",
+                            unit_price: 3500,
+                            quantity: 1,
+                            total_price: 3500,
+                            quality_tier: "premium"
+                        }
+                    ]
+                },
+                'UC & Collaboration Devices': {
+                    items: [
+                        {
+                            id: 2,
+                            name: "Conference Camera 4K",
+                            brand: "Logitech",
+                            model: "Rally Plus",
+                            unit_price: 2200,
+                            quantity: 1,
+                            total_price: 2200,
+                            quality_tier: "premium"
+                        }
+                    ]
+                },
+                'Audio: Speakers & Amplifiers': {
+                    items: [
+                        {
+                            id: 3,
+                            name: "Ceiling Speakers (Pair)",
+                            brand: "Bose",
+                            model: "EdgeMax EM90",
+                            unit_price: 800,
+                            quantity: 2,
+                            total_price: 1600,
+                            quality_tier: "standard"
+                        }
+                    ]
+                }
             };
-            
-            // Core equipment for all rooms
-            equipment.push(baseEquipment.display);
-            equipment.push(baseEquipment.videobar);
-            equipment.push(baseEquipment.speaker);
-            equipment.push(baseEquipment.microphone);
-            equipment.push(baseEquipment.controller);
-            
-            // Add based on room size
-            if (roomSize === 'medium' || roomSize === 'large' || roomSize === 'xlarge') {
-                equipment.push(baseEquipment.processor);
-                equipment.push(baseEquipment.camera);
-            }
-            
-            if (roomSize === 'large' || roomSize === 'xlarge') {
-                equipment.push({...baseEquipment.speaker, name: 'Premium Ceiling Speaker Array (2)'});
-                equipment.push(baseEquipment.network);
-            }
-            
-            // Add based on use case
-            if (useCase === 'auditorium' || useCase === 'lecture_hall') {
-                equipment.push({ type: 'projector', name: '4K Laser Projector', price: '8500', category: 'Displays & Projectors', brand: 'Professional', tier: 'enterprise' });
-            }
-            
-            return equipment;
-        }
 
-        // Show recommendations
-        function showRecommendations() {
-            const section = document.getElementById('recommendationsSection');
-            const content = document.getElementById('recommendationsContent');
-            
-            const recommendations = [
-                "✅ Room acoustics optimized for the selected dimensions",
-                "✅ Camera positioning ensures optimal framing for all participants",
-                "✅ Audio coverage provides even sound distribution",
-                "⚠️ Consider adding acoustic treatment for rooms over 50m²",
-                "💡 Wireless presentation capability included for seamless sharing"
-            ];
-            
-            content.innerHTML = recommendations.map(rec => `<div class="mb-1">${rec}</div>`).join('');
-            section.classList.remove('hidden');
-        }
+            boqData = {
+                project_name: document.getElementById('projectName').value,
+                client_name: document.getElementById('clientName').value,
+                room_dimensions: `${roomWidth}m × ${roomDepth}m`,
+                room_capacity: document.getElementById('roomSize').value,
+                use_case: useCase,
+                quality_tier: quality,
+                categories: demoCategories
+            };
 
-        // Apply room preset
-        function applyRoomPreset(presetName) {
-            const preset = roomPresets[presetName];
-            if (!preset) return;
-            
-            // Update form values
-            document.getElementById('roomWidth').value = preset.width;
-            document.getElementById('roomDepth').value = preset.depth;
-            document.getElementById('roomSize').value = preset.capacity;
-            document.getElementById('useCase').value = preset.useCase;
-            
-            // Update room
-            roomWidth = preset.width;
-            roomDepth = preset.depth;
-            createRoom();
+            updateBoqDisplay();
             updateQuickStats();
             
-            showToast(`Applied ${presetName} preset`, 'success');
+            // Show demo recommendations
+            const recSection = document.getElementById('recommendationsSection');
+            const recContent = document.getElementById('recommendationsContent');
+            recContent.innerHTML = 'Consider adding wireless presentation system<br>• Upgrade to enterprise-grade control system<br>• Add backup power solution';
+            recSection.classList.remove('hidden');
         }
 
-        // Update room
-        function updateRoom() {
-            const newWidth = parseFloat(document.getElementById('roomWidth').value) || 8;
-            const newDepth = parseFloat(document.getElementById('roomDepth').value) || 6;
-            
-            if (newWidth < 3 || newWidth > 25 || newDepth < 3 || newDepth > 25) {
-                showToast('Room dimensions must be between 3m and 25m', 'error');
+        // Export BOQ
+        function exportBoq() {
+            if (!boqData) {
+                showToast('No BOQ data to export', 'warning');
                 return;
             }
+
+            const exportData = {
+                ...boqData,
+                generated_at: new Date().toISOString(),
+                total_cost: Object.values(boqData.categories).reduce((sum, cat) => 
+                    sum + cat.items.reduce((itemSum, item) => itemSum + item.total_price, 0), 0
+                ),
+                total_items: Object.values(boqData.categories).reduce((sum, cat) => sum + cat.items.length, 0)
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
             
-            roomWidth = newWidth;
-            roomDepth = newDepth;
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `BOQ_${boqData.project_name.replace(/\s+/g, '_')}_${Date.now()}.json`;
+            link.click();
             
-            // Clear placed equipment
-            placedEquipment.forEach(eq => room.remove(eq.mesh));
-            placedEquipment = [];
-            
-            createRoom();
-            updateQuickStats();
+            URL.revokeObjectURL(url);
+            showToast('BOQ exported successfully', 'success');
+        }
+
+        // Clear BOQ
+        function clearBoq() {
+            if (confirm('Are you sure you want to clear the entire BOQ?')) {
+                boqData = null;
+                placedEquipment.forEach(equipment => scene.remove(equipment));
+                placedEquipment = [];
+                updateBoqDisplay();
+                updateQuickStats();
+                document.getElementById('recommendationsSection').classList.add('hidden');
+                showToast('BOQ cleared', 'success');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast premium-glass rounded-lg px-6 py-3 ${type === 'success' ? 'border-green-500/50' : type === 'error' ? 'border-red-500/50' : type === 'warning' ? 'border-yellow-500/50' : 'border-blue-500/50'}`;
+            toast.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <div class="text-sm font-medium text-white">${message}</div>
+                </div>
+            `;
+
+            document.getElementById('toastContainer').appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Room controls
+            document.getElementById('updateRoom').addEventListener('click', () => {
+                roomWidth = parseFloat(document.getElementById('roomWidth').value) || 8;
+                roomDepth = parseFloat(document.getElementById('roomDepth').value) || 6;
+                createRoom();
+                updateQuickStats();
+                showToast('Room updated successfully', 'success');
+            });
+
+            // BOQ generation
+            document.getElementById('generateFullBoq').addEventListener('click', generateFullBoq);
+            document.getElementById('quickGenerate').addEventListener('click', generateFullBoq);
+
+            // BOQ controls
+            document.getElementById('exportBoq').addEventListener('click', exportBoq);
+            document.getElementById('clearBoq').addEventListener('click', clearBoq);
+
+            // Panel toggle
+            document.getElementById('togglePanels').addEventListener('click', () => {
+                panelsVisible = !panelsVisible;
+                const panels = [document.getElementById('controlPanel'), document.getElementById('boqPanel')];
+                panels.forEach(panel => {
+                    panel.style.display = panelsVisible ? 'block' : 'none';
+                });
+                showToast(panelsVisible ? 'Panels shown' : 'Panels hidden', 'info');
+            });
+
+            // Equipment search
+            document.getElementById('equipmentSearch').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredProducts = allProducts.filter(product => 
+                    product.name.toLowerCase().includes(searchTerm) ||
+                    product.brand.toLowerCase().includes(searchTerm) ||
+                    product.category.toLowerCase().includes(searchTerm)
+                );
+                displayEquipmentLibrary(filteredProducts);
+            });
+
+            // Room presets
+            document.querySelectorAll('.room-preset-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const preset = e.target.closest('.room-preset-btn').dataset.preset;
+                    applyRoomPreset(preset);
+                    
+                    // Update active state
+                    document.querySelectorAll('.room-preset-btn').forEach(b => b.classList.remove('active'));
+                    e.target.closest('.room-preset-btn').classList.add('active');
+                });
+            });
+
+            // View controls
+            document.getElementById('topView').addEventListener('click', () => {
+                camera.position.set(0, 15, 0);
+                camera.lookAt(0, 0, 0);
+            });
+
+            document.getElementById('frontView').addEventListener('click', () => {
+                camera.position.set(0, 2, 10);
+                camera.lookAt(0, 1, 0);
+            });
+
+            document.getElementById('isoView').addEventListener('click', () => {
+                camera.position.set(10, 8, 10);
+                camera.lookAt(0, 0, 0);
+            });
+
+            document.getElementById('resetView').addEventListener('click', () => {
+                camera.position.set(10, 8, 10);
+                camera.lookAt(0, 0, 0);
+            });
+
+            // Form updates
+            ['roomSize', 'useCase', 'budgetRange', 'brandPreference'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateProjectSummary);
+            });
+
+            ['projectName', 'clientName'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateProjectSummary);
+            });
+
             updateProjectSummary();
-            
-            showToast('Room updated successfully', 'success');
+        }
+
+       // Apply room preset
+        function applyRoomPreset(preset) {
+            const presets = {
+                meeting: {
+                    width: 6,
+                    depth: 4,
+                    capacity: 'small',
+                    useCase: 'meeting_room'
+                },
+                boardroom: {
+                    width: 10,
+                    depth: 8,
+                    capacity: 'medium',
+                    useCase: 'boardroom'
+                },
+                auditorium: {
+                    width: 15,
+                    depth: 12,
+                    capacity: 'xlarge',
+                    useCase: 'auditorium'
+                },
+                huddle: {
+                    width: 4,
+                    depth: 3,
+                    capacity: 'small',
+                    useCase: 'huddle_room'
+                }
+            };
+
+            const config = presets[preset];
+            if (config) {
+                document.getElementById('roomWidth').value = config.width;
+                document.getElementById('roomDepth').value = config.depth;
+                document.getElementById('roomSize').value = config.capacity;
+                document.getElementById('useCase').value = config.useCase;
+                
+                roomWidth = config.width;
+                roomDepth = config.depth;
+                
+                createRoom();
+                updateProjectSummary();
+                updateQuickStats();
+                showToast(`Applied ${preset} preset`, 'success');
+            }
         }
 
         // Update project summary
         function updateProjectSummary() {
             document.getElementById('summaryDimensions').textContent = `${roomWidth}m × ${roomDepth}m`;
-            document.getElementById('summaryCapacity').textContent = document.getElementById('roomSize').selectedOptions[0].text;
-            document.getElementById('summaryType').textContent = document.getElementById('useCase').selectedOptions[0].text;
-            document.getElementById('summaryTier').textContent = document.getElementById('budgetRange').selectedOptions[0].text;
-        }
-
-        // Update quick stats
-        function updateQuickStats() {
-            const totalCost = boqItems.reduce((sum, item) => sum + item.total, 0);
-            const totalItems = boqItems.reduce((sum, item) => sum + item.quantity, 0);
-            const width = document.getElementById('roomWidth').value || roomWidth;
-            const depth = document.getElementById('roomDepth').value || roomDepth;
-            
-            document.getElementById('quickStats').textContent = 
-                `Room: ${width}m×${depth}m | Items: ${totalItems} | Total: $${totalCost.toLocaleString()}`;
-        }
-
-        // Set camera view
-        function setView(view) {
-            const distance = 15;
-            
-            switch(view) {
-                case 'top':
-                    camera.position.set(0, distance, 0);
-                    break;
-                case 'front':
-                    camera.position.set(0, 5, distance);
-                    break;
-                case 'iso':
-                    camera.position.set(distance * 0.7, distance * 0.7, distance * 0.7);
-                    break;
-                case 'reset':
-                    camera.position.set(10, 8, 10);
-                    break;
-            }
-            camera.lookAt(0, 0, 0);
-        }
-
-        // Clear BOQ
-        function clearBoq() {
-            placedEquipment.forEach(eq => room.remove(eq.mesh));
-            placedEquipment = [];
-            boqItems = [];
-            updateBoqDisplay();
-            updateQuickStats();
-            
-            const section = document.getElementById('recommendationsSection');
-            section.classList.add('hidden');
-            
-            showToast('BOQ cleared', 'info');
-        }
-
-       // Export BOQ (continuation from the cut-off point)
-        function exportBoq() {
-            if (boqItems.length === 0) {
-                showToast('No items to export', 'error');
-                return;
-            }
-            
-            const projectName = document.getElementById('projectName').value || 'AV Room Project';
-            const clientName = document.getElementById('clientName').value || 'Client';
-            
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Project Name," + projectName + "\n";
-            csvContent += "Client Name," + clientName + "\n";
-            csvContent += "Room Dimensions," + roomWidth + "m x " + roomDepth + "m\n";
-            csvContent += "Generated Date," + new Date().toLocaleDateString() + "\n\n";
-            csvContent += "Category,Item Name,Brand,Tier,Quantity,Unit Price,Total Price\n";
-            
-            boqItems.forEach(item => {
-                csvContent += `"${item.category}","${item.name}","${item.brand}","${item.tier}",${item.quantity},$${item.price},$${item.total}\n`;
-            });
-            
-            const totalCost = boqItems.reduce((sum, item) => sum + item.total, 0);
-            csvContent += "\n,,,,,Total:,$" + totalCost;
-            
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `${projectName.replace(/\s+/g, '_')}_BOQ.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showToast('BOQ exported successfully', 'success');
-        }
-
-        // Toggle panels visibility
-        function togglePanels() {
-            const controlPanel = document.getElementById('controlPanel');
-            const boqPanel = document.getElementById('boqPanel');
-            
-            controlPanel.style.display = controlPanel.style.display === 'none' ? 'block' : 'none';
-            boqPanel.style.display = boqPanel.style.display === 'none' ? 'block' : 'none';
-        }
-
-        // Show toast notification
-        function showToast(message, type = 'info') {
-            const toastContainer = document.getElementById('toastContainer');
-            
-            const toast = document.createElement('div');
-            toast.className = `toast premium-glass rounded-lg px-6 py-3 text-white shadow-lg`;
-            
-            const bgColor = {
-                success: 'bg-green-600/20 border border-green-500/50',
-                error: 'bg-red-600/20 border border-red-500/50',
-                warning: 'bg-yellow-600/20 border border-yellow-500/50',
-                info: 'bg-blue-600/20 border border-blue-500/50'
-            }[type] || 'bg-blue-600/20 border border-blue-500/50';
-            
-            const icon = {
-                success: '✅',
-                error: '❌',
-                warning: '⚠️',
-                info: 'ℹ️'
-            }[type] || 'ℹ️';
-            
-            toast.className += ` ${bgColor}`;
-            toast.innerHTML = `
-                <div class="flex items-center space-x-2">
-                    <span>${icon}</span>
-                    <span class="font-medium">${message}</span>
-                </div>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Show toast
-            setTimeout(() => toast.classList.add('show'), 100);
-            
-            // Remove toast
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toastContainer.removeChild(toast), 400);
-            }, 3000);
-        }
-
-        // Window resize handler
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('summaryCapacity').textContent = document.getElementById('roomSize').options[document.getElementById('roomSize').selectedIndex].text;
+            document.getElementById('summaryType').textContent = document.getElementById('useCase').options[document.getElementById('useCase').selectedIndex].text;
+            document.getElementById('summaryTier').textContent = document.getElementById('budgetRange').options[document.getElementById('budgetRange').selectedIndex].text;
         }
 
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
             
-            // Add subtle animation to placed equipment
-            placedEquipment.forEach((eq, index) => {
-                if (eq.mesh) {
-                    eq.mesh.rotation.y += 0.001 * (index % 2 === 0 ? 1 : -1);
-                }
+            // Rotate equipment slightly for visual appeal
+            placedEquipment.forEach((equipment, index) => {
+                equipment.rotation.y += 0.005 * (index % 2 === 0 ? 1 : -1);
             });
-            
-            // Update analytics
-            updateAnalytics();
-            
+
             renderer.render(scene, camera);
         }
 
-        // Update analytics
-        function updateAnalytics() {
-            const roomArea = roomWidth * roomDepth;
-            const equipmentCount = placedEquipment.length;
-            
-            // Calculate coverage ratio
-            const coverageRatio = Math.min(100, (equipmentCount / (roomArea * 0.1)) * 100);
-            document.getElementById('coverageRatio').textContent = Math.round(coverageRatio) + '%';
-            
-            // Calculate audio points
-            const audioEquipment = placedEquipment.filter(eq => 
-                eq.data.type === 'speaker' || eq.data.type === 'microphone'
-            ).length;
-            document.getElementById('audioPoints').textContent = audioEquipment * 4;
-            
-            // Calculate network efficiency
-            const networkEquipment = placedEquipment.filter(eq => 
-                eq.data.category.includes('Network') || eq.data.category.includes('Control')
-            ).length;
-            const efficiency = Math.min(100, 60 + (networkEquipment * 15));
-            document.getElementById('networkEfficiency').textContent = efficiency + '%';
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // Equipment search functionality
-        document.getElementById('equipmentSearch').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const equipmentItems = document.querySelectorAll('.equipment-item');
-            
-            equipmentItems.forEach(item => {
-                const name = item.dataset.name?.toLowerCase() || '';
-                const category = item.dataset.category?.toLowerCase() || '';
-                const brand = item.dataset.brand?.toLowerCase() || '';
-                
-                if (name.includes(searchTerm) || category.includes(searchTerm) || brand.includes(searchTerm)) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        });
+        // Make functions globally accessible
+        window.removeBoqItem = removeBoqItem;
 
-        // Equipment click handlers for mobile
-        document.querySelectorAll('.equipment-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const data = {
-                    type: item.dataset.type,
-                    name: item.dataset.name,
-                    price: item.dataset.price,
-                    category: item.dataset.category,
-                    brand: item.dataset.brand,
-                    tier: item.dataset.tier
-                };
-                
-                addEquipmentToRoom(data);
-                showToast(`Added ${data.name}`, 'success');
-            });
-        });
-
-        // Initialize the application when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            init();
-            updateProjectSummary();
-        });
-
-        // Error handling
-        window.addEventListener('error', (e) => {
-            console.error('Application error:', e.error);
-            showToast('An error occurred. Please refresh the page.', 'error');
-        });
-
-        // Performance monitoring
-        let frameCount = 0;
-        let lastTime = performance.now();
-        
-        function monitorPerformance() {
-            frameCount++;
-            const currentTime = performance.now();
-            
-            if (currentTime - lastTime >= 1000) {
-                const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
-                
-                if (fps < 30) {
-                    console.warn('Low FPS detected:', fps);
-                }
-                
-                frameCount = 0;
-                lastTime = currentTime;
-            }
-            
-            requestAnimationFrame(monitorPerformance);
-        }
-        
-        monitorPerformance();
+        // Initialize the application
+        init();
     </script>
 </body>
-</html>text-purple-200 mb-2">📊 Project Analytics
+</html>
