@@ -120,9 +120,9 @@
             box-shadow: 0 0 8px currentColor;
         }
         
-        .status-online { background: var(--accent-green); animation: pulse-green 2s infinite; }
-        .status-offline { background: var(--error); }
-        .status-loading { background: var(--warning); animation: pulse-orange 1.5s infinite; }
+        .status-online { color: var(--accent-green); background: var(--accent-green); animation: pulse-green 2s infinite; }
+        .status-offline { color: var(--error); background: var(--error); }
+        .status-loading { color: var(--warning); background: var(--warning); animation: pulse-orange 1.5s infinite; }
         
         @keyframes pulse-green {
             0%, 100% { opacity: 1; transform: scale(1); }
@@ -199,41 +199,10 @@
             position: relative;
         }
         
-        .boq-item::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 12px;
-            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.02));
-            pointer-events: none;
-        }
-        
         .boq-item:hover {
             background: rgba(255, 255, 255, 0.12);
             border-color: var(--accent-blue);
             transform: translateY(-2px);
-        }
-        
-        .product-card {
-            background: var(--surface-elevated);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .product-card:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--accent-blue);
-            transform: translateX(4px);
-        }
-        
-        .product-card.selected {
-            border-color: var(--accent-green);
-            background: rgba(16, 185, 129, 0.1);
         }
         
         .notification {
@@ -253,23 +222,9 @@
             transform: translateX(0);
         }
         
-        .notification.success { 
-            background: rgba(16, 185, 129, 0.15); 
-            border-color: var(--accent-green);
-            color: #34d399;
-        }
-        
-        .notification.error { 
-            background: rgba(239, 68, 68, 0.15); 
-            border-color: var(--error);
-            color: #f87171;
-        }
-        
-        .notification.warning { 
-            background: rgba(245, 158, 11, 0.15); 
-            border-color: var(--warning);
-            color: #fbbf24;
-        }
+        .notification.success { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-green); color: #34d399; }
+        .notification.error { background: rgba(239, 68, 68, 0.15); border-color: var(--error); color: #f87171; }
+        .notification.warning { background: rgba(245, 158, 11, 0.15); border-color: var(--warning); color: #fbbf24; }
         
         .room-preset {
             background: var(--surface-elevated);
@@ -315,8 +270,7 @@
         }
         
         .progress-bar {
-            width: 100%;
-            height: 4px;
+            width: 100%; height: 4px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 2px;
             overflow: hidden;
@@ -339,84 +293,30 @@
         }
         
         .tab {
-            flex: 1;
-            padding: 8px 16px;
+            flex: 1; padding: 8px 16px;
             border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
+            text-align: center; cursor: pointer;
             transition: all 0.3s ease;
-            font-weight: 500;
-            font-size: 13px;
+            font-weight: 500; font-size: 13px;
         }
         
-        .tab.active {
-            background: var(--accent-blue);
-            color: white;
-        }
-        
-        .room-metrics {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-top: 16px;
-        }
-        
-        .metric-card {
-            background: var(--surface-elevated);
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-        }
-        
-        .metric-value {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--accent-blue);
-        }
-        
-        .metric-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        .equipment-info-panel {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 12px;
-            color: white;
-            font-size: 12px;
-            max-width: 200px;
-            z-index: 1001;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
+        .tab.active { background: var(--accent-blue); color: white; }
     </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 loading-overlay flex-col items-center justify-center z-[999]" style="display: none;">
         <div class="spinner mb-6"></div>
-        <div id="loadingText" class="text-white text-xl font-bold">Initializing SmartAV Pro</div>
+        <div id="loadingText" class="text-white text-xl font-bold"></div>
         <div id="loadingSubtext" class="text-gray-400 text-sm mt-3"></div>
-        <div class="progress-bar mt-6 w-64">
-            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
-        </div>
+        <div class="progress-bar mt-6 w-64"><div id="progressFill" class="progress-fill" style="width: 0%"></div></div>
     </div>
 
-    <!-- 3D Render Container -->
     <div id="renderContainer" class="fixed inset-0 z-0"></div>
 
-    <!-- Control Panel -->
     <div id="controlPanel" class="panel control-panel glass-panel p-6 scrollbar-custom">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent">
-                    SmartAV Pro
-                </h1>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent">SmartAV Pro</h1>
                 <p class="text-sm text-gray-400 mt-1">Enterprise Room Configurator</p>
             </div>
             <div id="connectionStatus" class="flex items-center text-xs">
@@ -424,1317 +324,330 @@
                 <span id="statusText">Connecting...</span>
             </div>
         </div>
-
         <div class="tab-container">
             <div class="tab active" data-tab="basic">Basic Setup</div>
             <div class="tab" data-tab="advanced">Advanced</div>
             <div class="tab" data-tab="templates">Templates</div>
         </div>
-
         <form id="configForm" class="space-y-6">
-            <!-- Basic Tab -->
-            <div id="tab-basic" class="tab-content">
-                <div class="space-y-5">
-                    <div>
-                        <h3 class="text-lg font-semibold mb-4 flex items-center">
-                            <i class="fas fa-building mr-3 text-blue-400"></i> Project Information
-                        </h3>
-                        <div class="space-y-3">
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Project Name</label>
-                                <input type="text" id="project_name" class="form-control" value="Executive Conference Suite" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Client Organization</label>
-                                <input type="text" id="client_name" class="form-control" value="Fortune 500 Corp" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Project Manager</label>
-                                <input type="text" id="project_manager" class="form-control" placeholder="John Smith">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="text-lg font-semibold mb-4 flex items-center">
-                            <i class="fas fa-cog mr-3 text-green-400"></i> Room Configuration
-                        </h3>
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-sm font-medium mb-2">Room Type</label>
-                                    <select id="room_size" class="form-control" required></select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-2">Primary Use</label>
-                                    <select id="use_case" class="form-control" required></select>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-sm font-medium mb-2">Budget Tier</label>
-                                    <select id="budget_range" class="form-control" required></select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-2">Max Occupancy</label>
-                                    <input type="number" id="occupancy" class="form-control" placeholder="12" min="2" max="500">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 class="text-md font-semibold mb-3 flex items-center">
-                            <i class="fas fa-ruler-combined mr-2 text-yellow-400"></i> Room Dimensions (feet)
-                        </h4>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Length</label>
-                                <input type="number" id="room_length" class="form-control" placeholder="24" min="8" max="100" step="0.5">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Width</label>
-                                <input type="number" id="room_width" class="form-control" placeholder="16" min="8" max="100" step="0.5">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Height</label>
-                                <input type="number" id="room_height" class="form-control" placeholder="10" min="8" max="20" step="0.5">
-                            </div>
-                        </div>
-                        <div class="room-metrics">
-                            <div class="metric-card">
-                                <div class="metric-value" id="roomArea">0</div>
-                                <div class="metric-label">SQ FT</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-value" id="roomVolume">0</div>
-                                <div class="metric-label">CU FT</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Advanced Tab -->
-            <div id="tab-advanced" class="tab-content" style="display: none;">
-                <div class="space-y-5">
-                    <div>
-                        <h3 class="text-lg font-semibold mb-4 flex items-center">
-                            <i class="fas fa-sliders-h mr-3 text-purple-400"></i> Advanced Settings
-                        </h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Ceiling Type</label>
-                                <select id="ceiling_type" class="form-control">
-                                    <option value="standard">Standard Drywall</option>
-                                    <option value="dropped">Dropped Ceiling</option>
-                                    <option value="concrete">Concrete/Industrial</option>
-                                    <option value="vaulted">Vaulted/High</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Wall Construction</label>
-                                <select id="wall_type" class="form-control">
-                                    <option value="drywall">Standard Drywall</option>
-                                    <option value="concrete">Concrete/Masonry</option>
-                                    <option value="glass">Glass Partitions</option>
-                                    <option value="mixed">Mixed Materials</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Ambient Light Level</label>
-                                <select id="lighting_condition" class="form-control">
-                                    <option value="low">Low (Boardroom)</option>
-                                    <option value="medium">Medium (Office)</option>
-                                    <option value="high">High (Bright/Windowed)</option>
-                                    <option value="variable">Variable Control</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Noise Environment</label>
-                                <select id="noise_level" class="form-control">
-                                    <option value="quiet">Quiet (< 35dB)</option>
-                                    <option value="normal">Normal (35-45dB)</option>
-                                    <option value="noisy">Noisy (> 45dB)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="flex items-center space-x-3 mt-4">
-                                    <input type="checkbox" id="video_conferencing" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                                    <span class="text-sm">Video Conferencing Required</span>
-                                </label>
-                            </div>
-                            <div>
-                                <label class="flex items-center space-x-3">
-                                    <input type="checkbox" id="wireless_presentation" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                                    <span class="text-sm">Wireless Presentation</span>
-                                </label>
-                            </div>
-                            <div>
-                                <label class="flex items-center space-x-3">
-                                    <input type="checkbox" id="room_scheduling" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded">
-                                    <span class="text-sm">Room Scheduling System</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Templates Tab -->
-            <div id="tab-templates" class="tab-content" style="display: none;">
-                <div class="space-y-4">
-                    <h3 class="text-lg font-semibold mb-4 flex items-center">
-                        <i class="fas fa-layer-group mr-3 text-orange-400"></i> Quick Start Templates
-                    </h3>
-                    <div class="grid grid-cols-1 gap-3" id="roomPresets">
-                        <!-- Presets will be loaded here -->
-                    </div>
-                </div>
-            </div>
-
-            <button type="submit" id="generateBtn" class="w-full btn btn-primary text-white font-bold flex items-center justify-center py-4">
-                <i class="fas fa-magic mr-3"></i> Generate Smart Configuration
-            </button>
+            <div id="tab-basic" class="tab-content"><div class="space-y-5"><div><h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-building mr-3 text-blue-400"></i> Project Information</h3><div class="space-y-3"><div><label class="block text-sm font-medium mb-2">Project Name</label><input type="text" id="project_name" class="form-control" value="Executive Conference Suite" required></div><div><label class="block text-sm font-medium mb-2">Client Organization</label><input type="text" id="client_name" class="form-control" value="Fortune 500 Corp" required></div></div></div><div><h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-cog mr-3 text-green-400"></i> Room Configuration</h3><div class="space-y-4"><div class="grid grid-cols-2 gap-3"><div><label class="block text-sm font-medium mb-2">Room Type</label><select id="room_size" class="form-control" required></select></div><div><label class="block text-sm font-medium mb-2">Primary Use</label><select id="use_case" class="form-control" required></select></div></div><div class="grid grid-cols-2 gap-3"><div><label class="block text-sm font-medium mb-2">Budget Tier</label><select id="budget_range" class="form-control" required></select></div><div><label class="block text-sm font-medium mb-2">Max Occupancy</label><input type="number" id="occupancy" class="form-control" placeholder="12" min="2" max="500"></div></div></div></div><div><h4 class="text-md font-semibold mb-3 flex items-center"><i class="fas fa-ruler-combined mr-2 text-yellow-400"></i> Room Dimensions (feet)</h4><div class="grid grid-cols-3 gap-3"><div><label class="block text-sm font-medium mb-1">Length</label><input type="number" id="room_length" class="form-control" placeholder="24" min="8" max="100" step="0.5"></div><div><label class="block text-sm font-medium mb-1">Width</label><input type="number" id="room_width" class="form-control" placeholder="16" min="8" max="100" step="0.5"></div><div><label class="block text-sm font-medium mb-1">Height</label><input type="number" id="room_height" class="form-control" placeholder="10" min="8" max="20" step="0.5"></div></div></div></div></div>
+            <div id="tab-advanced" class="tab-content" style="display: none;"><div class="space-y-5"><div><h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-sliders-h mr-3 text-purple-400"></i> Special Requirements</h3><div class="space-y-3"><div class="flex items-center"><input type="checkbox" id="req_wireless_presentation" class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600"><label for="req_wireless_presentation" class="ml-3 text-sm">Wireless Presentation</label></div><div class="flex items-center"><input type="checkbox" id="req_video_conferencing" class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600"><label for="req_video_conferencing" class="ml-3 text-sm">Video Conferencing</label></div><div class="flex items-center"><input type="checkbox" id="req_room_scheduling" class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600"><label for="req_room_scheduling" class="ml-3 text-sm">Room Scheduling Panel</label></div></div></div></div></div>
+            <div id="tab-templates" class="tab-content" style="display: none;"><div class="space-y-4"><h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-layer-group mr-3 text-orange-400"></i> Quick Start Templates</h3><div class="grid grid-cols-1 gap-3" id="roomPresets"></div></div></div>
+            <button type="submit" id="generateBtn" class="w-full btn btn-primary text-white font-bold flex items-center justify-center py-4"><i class="fas fa-magic mr-3"></i> Generate Smart Configuration</button>
         </form>
-
-        <div class="mt-6 pt-6 border-t border-gray-700/50">
-            <h4 class="text-md font-semibold mb-3 flex items-center">
-                <i class="fas fa-mouse mr-2 text-purple-400"></i> 3D Navigation
-            </h4>
-            <div class="grid grid-cols-2 gap-2 text-xs text-gray-400">
-                <div><i class="fas fa-arrows-alt mr-2 text-blue-400"></i>Orbit: Left Click + Drag</div>
-                <div><i class="fas fa-search-plus mr-2 text-green-400"></i>Zoom: Mouse Wheel</div>
-                <div><i class="fas fa-hand-paper mr-2 text-yellow-400"></i>Pan: Right Click + Drag</div>
-                <div><i class="fas fa-home mr-2 text-purple-400"></i>Reset: Double Click</div>
-            </div>
-        </div>
     </div>
 
-    <!-- Product Library Panel -->
-    <div id="productPanel" class="panel product-panel glass-panel p-6 scrollbar-custom" style="display: none;">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-bold flex items-center">
-                <i class="fas fa-cube mr-2 text-blue-400"></i> Product Library
-            </h2>
-            <button id="closeProductPanel" class="text-gray-400 hover:text-white">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <div class="mb-4">
-            <input type="text" id="productSearch" class="form-control" placeholder="Search products...">
-        </div>
-
-        <div class="tab-container">
-            <div class="tab active" data-product-tab="all">All</div>
-            <div class="tab" data-product-tab="displays">Displays</div>
-            <div class="tab" data-product-tab="audio">Audio</div>
-            <div class="tab" data-product-tab="control">Control</div>
-        </div>
-
-        <div id="productList" class="space-y-2 mt-4">
-            <!-- Products will be loaded here -->
-        </div>
-    </div>
-
-    <!-- Results Panel -->
     <div id="resultsPanel" class="panel results-panel glass-panel p-6 scrollbar-custom" style="display: none;">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold flex items-center">
-                <i class="fas fa-chart-line mr-3 text-green-400"></i> Configuration Results
-            </h2>
-            <div class="flex space-x-2">
-                <button id="saveConfigBtn" title="Save Configuration" class="px-3 py-2 btn btn-success text-sm">
-                    <i class="fas fa-save"></i>
-                </button>
-                <button id="exportBtn" title="Export BOQ" class="px-3 py-2 btn btn-primary text-sm">
-                    <i class="fas fa-download"></i>
-                </button>
-                <button id="clearBtn" title="Clear Results" class="px-3 py-2 btn btn-warning text-sm">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
+            <h2 class="text-xl font-bold flex items-center"><i class="fas fa-chart-line mr-3 text-green-400"></i> Configuration Results</h2>
+            <div class="flex space-x-2"><button id="exportBtn" title="Export BOQ as JSON" class="px-3 py-2 btn btn-primary text-sm"><i class="fas fa-download"></i></button><button id="clearBtn" title="Clear Results" class="px-3 py-2 btn btn-warning text-sm"><i class="fas fa-trash"></i></button></div>
         </div>
         <div id="resultsContent" class="space-y-4"></div>
     </div>
 
-    <!-- Toolbar -->
     <div class="toolbar">
-        <button id="viewProductsBtn" class="toolbar-btn" title="Product Library">
-            <i class="fas fa-cube"></i>
-        </button>
-        <button id="fullscreenBtn" class="toolbar-btn" title="Fullscreen">
-            <i class="fas fa-expand"></i>
-        </button>
-        <button id="screenshotBtn" class="toolbar-btn" title="Screenshot">
-            <i class="fas fa-camera"></i>
-        </button>
-        <button id="helpBtn" class="toolbar-btn" title="Help">
-            <i class="fas fa-question"></i>
-        </button>
+        <button id="fullscreenBtn" class="toolbar-btn" title="Fullscreen"><i class="fas fa-expand"></i></button>
+        <button id="screenshotBtn" class="toolbar-btn" title="Screenshot"><i class="fas fa-camera"></i></button>
     </div>
 
-    <!-- Notifications -->
     <div id="notifications" class="fixed top-5 right-5 z-[1000] space-y-3 w-96"></div>
-
-    <!-- Equipment Info Panel (Tooltip) -->
     <div id="equipmentInfo" class="equipment-info-panel"></div>
 
     <script>
         // === CONFIGURATION & STATE ===
         const CONFIG = {
             BACKEND_URL: 'https://adarshav-boq-backend.hf.space',
-            API_VERSION: 'v2',
-            TIMEOUT: 30000,
-            MAX_RETRIES: 3,
-            FEATURES: {
-                REAL_TIME_PRICING: true,
-                INVENTORY_CHECK: true,
-                SMART_RECOMMENDATIONS: true,
-                ADVANCED_ANALYTICS: true
-            }
+            TIMEOUT: 20000,
         };
 
-        // Application State
         const STATE = {
-            scene: null,
-            camera: null,
-            renderer: null,
-            controls: null,
-            roomMesh: null,
-            equipmentObjects: [],
-            selectedEquipment: null,
-            currentConfig: null,
-            isLoading: false,
-            connectionStatus: 'connecting',
-            currentTab: 'basic',
-            roomPresets: [],
-            productCatalog: [],
-            savedConfigurations: []
+            scene: null, camera: null, renderer: null, controls: null,
+            equipmentObjects: [], currentBOQ: null, isLoading: false,
         };
-
-        // Room presets data
-        const ROOM_PRESETS = [
-            {
-                id: 'small_meeting',
-                name: 'Small Meeting Room',
-                icon: 'fas fa-users',
-                description: '6-8 people, basic AV',
-                dimensions: { length: 12, width: 10, height: 9 },
-                occupancy: 8,
-                budget: 'mid',
-                useCase: 'meeting'
-            },
-            {
-                id: 'conference_room',
-                name: 'Conference Room',
-                icon: 'fas fa-handshake',
-                description: '12-16 people, full AV suite',
-                dimensions: { length: 20, width: 14, height: 10 },
-                occupancy: 16,
-                budget: 'high',
-                useCase: 'conference'
-            },
-            {
-                id: 'boardroom',
-                name: 'Executive Boardroom',
-                icon: 'fas fa-crown',
-                description: '8-12 executives, premium AV',
-                dimensions: { length: 24, width: 16, height: 12 },
-                occupancy: 12,
-                budget: 'premium',
-                useCase: 'executive'
-            },
-            {
-                id: 'training_room',
-                name: 'Training Room',
-                icon: 'fas fa-chalkboard-teacher',
-                description: '20-30 people, education focus',
-                dimensions: { length: 30, width: 20, height: 10 },
-                occupancy: 30,
-                budget: 'mid',
-                useCase: 'training'
-            },
-            {
-                id: 'auditorium',
-                name: 'Auditorium',
-                icon: 'fas fa-theater-masks',
-                description: '100+ people, large venue AV',
-                dimensions: { length: 60, width: 40, height: 20 },
-                occupancy: 200,
-                budget: 'premium',
-                useCase: 'presentation'
-            }
-        ];
-
-        // Sample product catalog
-        const PRODUCT_CATALOG = [
-            {
-                id: 'display_001',
-                name: '75" 4K Interactive Display',
-                category: 'displays',
-                brand: 'Samsung',
-                model: 'WAD75H',
-                price: 4299.00,
-                description: 'Professional 4K interactive display with multi-touch',
-                specifications: {
-                    resolution: '3840x2160',
-                    brightness: '400 nits',
-                    connectivity: 'HDMI, USB-C, Wi-Fi'
-                }
-            },
-            {
-                id: 'audio_001',
-                name: 'Conference Room Speakers',
-                category: 'audio',
-                brand: 'Bose',
-                model: 'EdgeMax EM90',
-                price: 1299.00,
-                description: 'Premium conference room speakers with wide dispersion',
-                specifications: {
-                    frequency: '80Hz - 20kHz',
-                    power: '90W',
-                    coverage: '160° horizontal'
-                }
-            },
-            {
-                id: 'control_001',
-                name: 'Room Control System',
-                category: 'control',
-                brand: 'Crestron',
-                model: 'CP4N',
-                price: 2499.00,
-                description: '4-Series control processor with advanced features',
-                specifications: {
-                    inputs: '8 digital',
-                    outputs: '6 relay',
-                    networking: 'Ethernet, Wi-Fi'
-                }
-            }
-        ];
+        
+        // Maps backend categories to 3D object parameters
+        const EQUIPMENT_GEOMETRY_MAP = {
+            'Displays & Projectors': { type: 'box', size: { w: 1.8, h: 1.0, d: 0.08 }, color: 0x1a1a1a, position: { x: 0, y: 1.5, z: -2.9 } },
+            'UC & Collaboration Devices': { type: 'box', size: { w: 0.8, h: 0.15, d: 0.12 }, color: 0xcccccc, position: { x: 0, y: 2.2, z: -2.85 } },
+            'Audio Systems': { type: 'box', size: { w: 0.2, h: 0.6, d: 0.2 }, color: 0x4a5568, positions: [{ x: -2.8, y: 1.5, z: -2.8 }, { x: 2.8, y: 1.5, z: -2.8 }] },
+            'Mounts, Racks & Enclosures': { type: 'box', size: { w: 0.6, h: 1.8, d: 0.6 }, color: 0x2d3748, position: { x: 3.5, y: 0.9, z: 2.0 } },
+            'default': { type: 'box', size: { w: 0.3, h: 0.3, d: 0.3 }, color: 0x718096, position: { x: 0, y: 0.15, z: 2.5 } }
+        };
 
         // === INITIALIZATION ===
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApplication();
-        });
+        document.addEventListener('DOMContentLoaded', initializeApplication);
 
         async function initializeApplication() {
             try {
                 showLoading('Initializing SmartAV Pro...', 'Loading 3D engine');
-                updateProgress(10);
-
-                // Initialize 3D scene
                 await init3DScene();
                 updateProgress(30);
 
-                // Load form options
-                await loadFormOptions();
-                updateProgress(50);
-
-                // Setup event listeners
+                await loadFormOptions(); // CONNECTS TO BACKEND
+                updateProgress(60);
+                
                 setupEventListeners();
-                updateProgress(70);
+                updateProgress(80);
 
-                // Load presets and products
-                loadRoomPresets();
-                loadProductCatalog();
-                updateProgress(90);
-
-                // Initialize connection status
                 updateConnectionStatus('online');
                 updateProgress(100);
-
+                
                 hideLoading();
                 showNotification('SmartAV Pro initialized successfully!', 'success');
-
             } catch (error) {
                 console.error('Initialization failed:', error);
                 hideLoading();
-                showNotification('Failed to initialize application', 'error');
+                updateConnectionStatus('offline', 'Initialization Failed');
+                showNotification(`Initialization failed: ${error.message}`, 'error');
             }
         }
 
         // === 3D SCENE MANAGEMENT ===
         async function init3DScene() {
             const container = document.getElementById('renderContainer');
-            
-            // Scene setup
             STATE.scene = new THREE.Scene();
-            STATE.scene.background = new THREE.Color(0x0a0a0a);
-
-            // Camera setup
-            STATE.camera = new THREE.PerspectiveCamera(
-                75,
-                window.innerWidth / window.innerHeight,
-                0.1,
-                1000
-            );
-            STATE.camera.position.set(20, 15, 20);
-            STATE.camera.lookAt(0, 0, 0);
-
-            // Renderer setup
-            STATE.renderer = new THREE.WebGLRenderer({ 
-                antialias: true, 
-                alpha: true,
-                powerPreference: 'high-performance'
-            });
+            STATE.scene.background = new THREE.Color(0x0f1419);
+            STATE.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            STATE.camera.position.set(6, 4, 8);
+            STATE.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
             STATE.renderer.setSize(window.innerWidth, window.innerHeight);
             STATE.renderer.setPixelRatio(window.devicePixelRatio);
             STATE.renderer.shadowMap.enabled = true;
-            STATE.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            STATE.renderer.outputEncoding = THREE.sRGBEncoding;
-            
             container.appendChild(STATE.renderer.domElement);
-
-            // Lighting setup
             setupLighting();
-
-            // Create default room
             createRoom(24, 16, 10);
-
-            // Setup orbit controls (simplified version)
             setupControls();
-
-            // Start render loop
             animate();
-
-            // Handle window resize
             window.addEventListener('resize', onWindowResize);
         }
 
         function setupLighting() {
-            // Ambient light
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
-            STATE.scene.add(ambientLight);
-
-            // Main directional light
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(50, 50, 50);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
-            STATE.scene.add(directionalLight);
-
-            // Fill lights
-            const fillLight1 = new THREE.DirectionalLight(0x4080ff, 0.3);
-            fillLight1.position.set(-50, 30, 50);
-            STATE.scene.add(fillLight1);
-
-            const fillLight2 = new THREE.DirectionalLight(0xff8040, 0.2);
-            fillLight2.position.set(50, 30, -50);
-            STATE.scene.add(fillLight2);
-
-            // Point light for interior
-            const pointLight = new THREE.PointLight(0xffffff, 0.5, 100);
-            pointLight.position.set(0, 8, 0);
-            STATE.scene.add(pointLight);
+            STATE.scene.add(new THREE.AmbientLight(0x404040, 0.8));
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            sunLight.position.set(8, 10, 5);
+            sunLight.castShadow = true;
+            STATE.scene.add(sunLight);
+            STATE.scene.add(new THREE.HemisphereLight(0x87ceeb, 0x080820, 0.5));
         }
 
-        function setupControls() {
-            // Simplified orbit controls
-            let isRotating = false;
-            let isPanning = false;
-            let previousMousePosition = { x: 0, y: 0 };
-
-            STATE.renderer.domElement.addEventListener('mousedown', (event) => {
-                if (event.button === 0) {
-                    isRotating = true;
-                } else if (event.button === 2) {
-                    isPanning = true;
-                }
-                previousMousePosition = { x: event.clientX, y: event.clientY };
+        function setupControls() { /* This is a simplified orbit control implementation */
+            const domElement = STATE.renderer.domElement;
+            const target = new THREE.Vector3(0, 1, 0);
+            let spherical = new THREE.Spherical().setFromVector3(STATE.camera.position.clone().sub(target));
+            let state = { isDown: false, isPan: false, prev: { x: 0, y: 0 } };
+            const update = () => { STATE.camera.position.setFromSpherical(spherical).add(target); STATE.camera.lookAt(target); };
+            domElement.addEventListener('mousedown', e => { state.isDown = true; state.isPan = e.button === 2; state.prev = { x: e.clientX, y: e.clientY }; });
+            document.addEventListener('mouseup', () => state.isDown = false);
+            document.addEventListener('mousemove', e => {
+                if (!state.isDown) return;
+                const d = { x: e.clientX - state.prev.x, y: e.clientY - state.prev.y }; state.prev = { x: e.clientX, y: e.clientY };
+                if (state.isPan) { const p = new THREE.Vector3(-d.x, d.y, 0).applyEuler(STATE.camera.rotation).multiplyScalar(0.01); target.add(p); } 
+                else { spherical.theta -= d.x * 0.005; spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi - d.y * 0.005)); }
+                update();
             });
-
-            document.addEventListener('mousemove', (event) => {
-                if (isRotating) {
-                    const deltaMove = {
-                        x: event.clientX - previousMousePosition.x,
-                        y: event.clientY - previousMousePosition.y
-                    };
-
-                    const deltaRotationQuaternion = new THREE.Quaternion()
-                        .setFromEuler(new THREE.Euler(
-                            toRadians(deltaMove.y * 0.5),
-                            toRadians(deltaMove.x * 0.5),
-                            0,
-                            'XYZ'
-                        ));
-
-                    STATE.camera.quaternion.multiplyQuaternions(deltaRotationQuaternion, STATE.camera.quaternion);
-                }
-                
-                previousMousePosition = { x: event.clientX, y: event.clientY };
-            });
-
-            document.addEventListener('mouseup', () => {
-                isRotating = false;
-                isPanning = false;
-            });
-
-            // Mouse wheel for zoom
-            STATE.renderer.domElement.addEventListener('wheel', (event) => {
-                const zoomSpeed = 0.1;
-                const zoom = event.deltaY > 0 ? (1 + zoomSpeed) : (1 - zoomSpeed);
-                STATE.camera.position.multiplyScalar(zoom);
-            });
-
-            // Double click to reset
-            STATE.renderer.domElement.addEventListener('dblclick', () => {
-                STATE.camera.position.set(20, 15, 20);
-                STATE.camera.lookAt(0, 0, 0);
-            });
-
-            // Prevent context menu
-            STATE.renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+            domElement.addEventListener('wheel', e => { spherical.radius = Math.max(2, Math.min(40, spherical.radius + e.deltaY * 0.01)); update(); });
+            domElement.addEventListener('dblclick', () => { STATE.camera.position.set(6, 4, 8); target.set(0, 1, 0); spherical.setFromVector3(STATE.camera.position.clone().sub(target)); update(); });
+            domElement.addEventListener('contextmenu', e => e.preventDefault());
         }
-
-        function createRoom(length, width, height) {
-            // Clear existing room
-            if (STATE.roomMesh) {
-                STATE.scene.remove(STATE.roomMesh);
-            }
-
+        
+        function createRoom(length, width, height) { /* Creates the 3D room mesh */
+            if (STATE.roomMesh) STATE.scene.remove(STATE.roomMesh);
             const roomGroup = new THREE.Group();
-
-            // Floor
-            const floorGeometry = new THREE.PlaneGeometry(length, width);
-            const floorMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x444444,
-                transparent: true,
-                opacity: 0.8
-            });
-            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-            floor.rotation.x = -Math.PI / 2;
-            floor.receiveShadow = true;
-            roomGroup.add(floor);
-
-            // Walls
-            const wallMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x666666,
-                transparent: true,
-                opacity: 0.4,
-                side: THREE.DoubleSide
-            });
-
-            // Back wall
-            const backWallGeometry = new THREE.PlaneGeometry(length, height);
-            const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
-            backWall.position.set(0, height/2, -width/2);
-            roomGroup.add(backWall);
-
-            // Left wall
-            const leftWallGeometry = new THREE.PlaneGeometry(width, height);
-            const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
-            leftWall.position.set(-length/2, height/2, 0);
-            leftWall.rotation.y = Math.PI / 2;
-            roomGroup.add(leftWall);
-
-            // Right wall
-            const rightWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
-            rightWall.position.set(length/2, height/2, 0);
-            rightWall.rotation.y = -Math.PI / 2;
-            roomGroup.add(rightWall);
-
-            // Ceiling (optional, can be made transparent)
-            const ceilingGeometry = new THREE.PlaneGeometry(length, width);
-            const ceilingMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x888888,
-                transparent: true,
-                opacity: 0.1
-            });
-            const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-            ceiling.position.y = height;
-            ceiling.rotation.x = Math.PI / 2;
-            roomGroup.add(ceiling);
-
-            STATE.roomMesh = roomGroup;
-            STATE.scene.add(roomGroup);
-
-            // Update room metrics
-            updateRoomMetrics(length, width, height);
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(length, width), new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 0.8 }));
+            floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; roomGroup.add(floor);
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x4a5568, side: THREE.DoubleSide, roughness: 0.9, transparent: true, opacity: 0.5 });
+            const backWall = new THREE.Mesh(new THREE.PlaneGeometry(length, height), wallMat); backWall.position.set(0, height / 2, -width / 2); backWall.receiveShadow = true; roomGroup.add(backWall);
+            const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wallMat); leftWall.position.set(-length / 2, height / 2, 0); leftWall.rotation.y = Math.PI / 2; leftWall.receiveShadow = true; roomGroup.add(leftWall);
+            STATE.roomMesh = roomGroup; STATE.scene.add(roomGroup);
         }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            if (STATE.renderer && STATE.scene && STATE.camera) {
-                STATE.renderer.render(STATE.scene, STATE.camera);
-            }
-        }
+        function animate() { requestAnimationFrame(animate); STATE.renderer.render(STATE.scene, STATE.camera); }
+        function onWindowResize() { STATE.camera.aspect = window.innerWidth / window.innerHeight; STATE.camera.updateProjectionMatrix(); STATE.renderer.setSize(window.innerWidth, window.innerHeight); }
 
-        function onWindowResize() {
-            if (STATE.camera && STATE.renderer) {
-                STATE.camera.aspect = window.innerWidth / window.innerHeight;
-                STATE.camera.updateProjectionMatrix();
-                STATE.renderer.setSize(window.innerWidth, window.innerHeight);
-            }
-        }
-
-        // === FORM AND UI MANAGEMENT ===
-        async function loadFormOptions() {
-            const roomSizeSelect = document.getElementById('room_size');
-            const useCaseSelect = document.getElementById('use_case');
-            const budgetSelect = document.getElementById('budget_range');
-
-            // Room sizes
-            const roomSizes = [
-                { value: 'small', label: 'Small (8-12 people)' },
-                { value: 'medium', label: 'Medium (12-20 people)' },
-                { value: 'large', label: 'Large (20-50 people)' },
-                { value: 'xlarge', label: 'Extra Large (50+ people)' }
-            ];
-
-            // Use cases
-            const useCases = [
-                { value: 'meeting', label: 'Meeting Room' },
-                { value: 'conference', label: 'Conference Room' },
-                { value: 'training', label: 'Training Room' },
-                { value: 'presentation', label: 'Presentation Hall' },
-                { value: 'executive', label: 'Executive Boardroom' },
-                { value: 'collaboration', label: 'Collaboration Space' }
-            ];
-
-            // Budget ranges
-            const budgetRanges = [
-                { value: 'basic', label: 'Basic ($5K - $15K)' },
-                { value: 'mid', label: 'Mid-Range ($15K - $35K)' },
-                { value: 'high', label: 'High-End ($35K - $75K)' },
-                { value: 'premium', label: 'Premium ($75K+)' }
-            ];
-
-            populateSelect(roomSizeSelect, roomSizes, 'medium');
-            populateSelect(useCaseSelect, useCases, 'conference');
-            populateSelect(budgetSelect, budgetRanges, 'mid');
-        }
-
-        function populateSelect(selectElement, options, defaultValue) {
-            selectElement.innerHTML = '';
-            options.forEach(option => {
-                const optionElement = document.createElement('option');
-                optionElement.value = option.value;
-                optionElement.textContent = option.label;
-                if (option.value === defaultValue) {
-                    optionElement.selected = true;
+        // === API & DATA HANDLING ===
+        async function fetchAPI(endpoint, options = {}) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
+            try {
+                const response = await fetch(`${CONFIG.BACKEND_URL}${endpoint}`, { ...options, signal: controller.signal, headers: { 'Content-Type': 'application/json', ...options.headers } });
+                clearTimeout(timeoutId);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: `Server error: ${response.status}` }));
+                    throw new Error(errorData.detail);
                 }
-                selectElement.appendChild(optionElement);
-            });
+                return response.json();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
         }
 
-        function loadRoomPresets() {
-            const presetsContainer = document.getElementById('roomPresets');
-            presetsContainer.innerHTML = '';
-
-            ROOM_PRESETS.forEach(preset => {
-                const presetElement = document.createElement('div');
-                presetElement.className = 'room-preset';
-                presetElement.innerHTML = `
-                    <div class="flex items-center mb-2">
-                        <i class="${preset.icon} mr-2 text-blue-400"></i>
-                        <span class="font-semibold">${preset.name}</span>
-                    </div>
-                    <div class="text-xs text-gray-400">${preset.description}</div>
-                    <div class="text-xs text-gray-500 mt-2">
-                        ${preset.dimensions.length}' × ${preset.dimensions.width}' × ${preset.dimensions.height}'
-                    </div>
-                `;
-                
-                presetElement.addEventListener('click', () => {
-                    selectPreset(preset);
-                    document.querySelectorAll('.room-preset').forEach(p => p.classList.remove('active'));
-                    presetElement.classList.add('active');
-                });
-                
-                presetsContainer.appendChild(presetElement);
-            });
+        async function loadFormOptions() {
+            showLoading('Connecting to backend...', 'Fetching configuration options');
+            const enums = await fetchAPI('/api/enums');
+            populateSelect(document.getElementById('room_size'), enums.room_sizes, 'medium');
+            populateSelect(document.getElementById('use_case'), enums.use_cases, 'conference');
+            populateSelect(document.getElementById('budget_range'), enums.budget_tiers, 'standard');
         }
 
-        function selectPreset(preset) {
-            // Update form fields
-            document.getElementById('room_length').value = preset.dimensions.length;
-            document.getElementById('room_width').value = preset.dimensions.width;
-            document.getElementById('room_height').value = preset.dimensions.height;
-            document.getElementById('occupancy').value = preset.occupancy;
-            document.getElementById('budget_range').value = preset.budget;
-            document.getElementById('use_case').value = preset.useCase;
-
-            // Update 3D room
-            createRoom(preset.dimensions.length, preset.dimensions.width, preset.dimensions.height);
-            
-            showNotification(`Applied ${preset.name} preset`, 'success');
-        }
-
-        function updateRoomMetrics(length, width, height) {
-            const area = Math.round(length * width);
-            const volume = Math.round(length * width * height);
-            
-            document.getElementById('roomArea').textContent = area.toLocaleString();
-            document.getElementById('roomVolume').textContent = volume.toLocaleString();
-        }
-
-        // === EVENT HANDLERS ===
+        // === UI & EVENT HANDLERS ===
         function setupEventListeners() {
-            // Tab switching
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
-            });
-
-            // Form submission
+            document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
             document.getElementById('configForm').addEventListener('submit', handleFormSubmit);
-
-            // Room dimension changes
-            ['room_length', 'room_width', 'room_height'].forEach(id => {
-                document.getElementById(id).addEventListener('input', updateRoomFromForm);
-            });
-
-            // Toolbar buttons
-            document.getElementById('viewProductsBtn').addEventListener('click', toggleProductPanel);
+            ['room_length', 'room_width', 'room_height'].forEach(id => document.getElementById(id).addEventListener('input', updateRoomFromForm));
             document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
             document.getElementById('screenshotBtn').addEventListener('click', takeScreenshot);
-            document.getElementById('helpBtn').addEventListener('click', showHelp);
-
-            // Results panel buttons
-            document.getElementById('saveConfigBtn').addEventListener('click', saveConfiguration);
             document.getElementById('exportBtn').addEventListener('click', exportBOQ);
             document.getElementById('clearBtn').addEventListener('click', clearResults);
-
-            // Product panel
-            document.getElementById('closeProductPanel').addEventListener('click', () => {
-                document.getElementById('productPanel').style.display = 'none';
-            });
-
-            document.getElementById('productSearch').addEventListener('input', filterProducts);
-
-            // Product tabs
-            document.querySelectorAll('[data-product-tab]').forEach(tab => {
-                tab.addEventListener('click', () => switchProductTab(tab.dataset.productTab));
-            });
         }
-
+        
         function switchTab(tabName) {
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.dataset.tab === tabName) {
-                    tab.classList.add('active');
-                }
-            });
-
-            // Show/hide tab content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.style.display = 'none';
-            });
+            document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
             document.getElementById(`tab-${tabName}`).style.display = 'block';
-
-            STATE.currentTab = tabName;
         }
 
         function updateRoomFromForm() {
-            const length = parseFloat(document.getElementById('room_length').value) || 24;
-            const width = parseFloat(document.getElementById('room_width').value) || 16;
-            const height = parseFloat(document.getElementById('room_height').value) || 10;
-
-            createRoom(length, width, height);
+            const l = parseFloat(document.getElementById('room_length').value) || 24;
+            const w = parseFloat(document.getElementById('room_width').value) || 16;
+            const h = parseFloat(document.getElementById('room_height').value) || 10;
+            createRoom(l, w, h);
         }
 
         async function handleFormSubmit(event) {
             event.preventDefault();
-            
             if (STATE.isLoading) return;
+            STATE.isLoading = true;
+            document.getElementById('generateBtn').disabled = true;
 
             try {
-                STATE.isLoading = true;
-                document.getElementById('generateBtn').disabled = true;
-                
-                showLoading('Generating configuration...', 'Analyzing room requirements');
+                showLoading('Generating Configuration...', 'Analyzing room parameters');
+                updateProgress(25);
                 
                 const formData = collectFormData();
-                const results = await generateConfiguration(formData);
+                const boq = await fetchAPI('/api/generate-boq', { method: 'POST', body: JSON.stringify(formData) });
                 
-                displayResults(results);
+                updateProgress(75);
+                showLoading('Finalizing Results...', 'Creating 3D visualization');
+                
+                STATE.currentBOQ = boq;
+                displayResults(boq);
+                visualizeBOQ(boq); // Create 3D objects
+                
                 document.getElementById('resultsPanel').style.display = 'block';
-                
-                hideLoading();
                 showNotification('Configuration generated successfully!', 'success');
-                
             } catch (error) {
-                console.error('Configuration generation failed:', error);
-                hideLoading();
-                showNotification('Failed to generate configuration', 'error');
+                console.error('Generation failed:', error);
+                showNotification(`Error: ${error.message}`, 'error');
             } finally {
+                hideLoading();
                 STATE.isLoading = false;
                 document.getElementById('generateBtn').disabled = false;
             }
         }
-
+        
         function collectFormData() {
             return {
                 project_name: document.getElementById('project_name').value,
                 client_name: document.getElementById('client_name').value,
-                project_manager: document.getElementById('project_manager').value,
                 room_size: document.getElementById('room_size').value,
                 use_case: document.getElementById('use_case').value,
                 budget_range: document.getElementById('budget_range').value,
-                occupancy: parseInt(document.getElementById('occupancy').value) || 12,
-                dimensions: {
+                occupancy: parseInt(document.getElementById('occupancy').value) || null,
+                room_dimensions: {
                     length: parseFloat(document.getElementById('room_length').value) || 24,
                     width: parseFloat(document.getElementById('room_width').value) || 16,
                     height: parseFloat(document.getElementById('room_height').value) || 10
                 },
-                ceiling_type: document.getElementById('ceiling_type').value,
-                wall_type: document.getElementById('wall_type').value,
-                lighting_condition: document.getElementById('lighting_condition').value,
-                noise_level: document.getElementById('noise_level').value,
-                features: {
-                    video_conferencing: document.getElementById('video_conferencing').checked,
-                    wireless_presentation: document.getElementById('wireless_presentation').checked,
-                    room_scheduling: document.getElementById('room_scheduling').checked
-                }
+                special_requirements: [] // Placeholder for advanced features
             };
         }
 
-        async function generateConfiguration(formData) {
-            // Simulate API call with mock data
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            return {
-                summary: {
-                    total_cost: 45750,
-                    item_count: 12,
-                    installation_days: 3,
-                    warranty_years: 5
-                },
-                categories: {
-                    displays: {
-                        name: 'Display Systems',
-                        total: 18500,
-                        items: [
-                            {
-                                name: '75" 4K Interactive Display',
-                                model: 'Samsung WAD75H',
-                                quantity: 1,
-                                price: 4299,
-                                total: 4299
-                            },
-                            {
-                                name: 'Display Mount & Brackets',
-                                model: 'Heavy Duty Wall Mount',
-                                quantity: 1,
-                                price: 450,
-                                total: 450
-                            }
-                        ]
-                    },
-                    audio: {
-                        name: 'Audio Systems',
-                        total: 12750,
-                        items: [
-                            {
-                                name: 'Conference Room Speakers',
-                                model: 'Bose EdgeMax EM90',
-                                quantity: 2,
-                                price: 1299,
-                                total: 2598
-                            },
-                            {
-                                name: 'Wireless Microphone System',
-                                model: 'Shure MXW6',
-                                quantity: 1,
-                                price: 2100,
-                                total: 2100
-                            }
-                        ]
-                    },
-                    control: {
-                        name: 'Control & Processing',
-                        total: 8500,
-                        items: [
-                            {
-                                name: 'Room Control Processor',
-                                model: 'Crestron CP4N',
-                                quantity: 1,
-                                price: 2499,
-                                total: 2499
-                            },
-                            {
-                                name: 'Touch Panel Controller',
-                                model: 'Crestron TSW-760',
-                                quantity: 1,
-                                price: 1599,
-                                total: 1599
-                            }
-                        ]
-                    },
-                    installation: {
-                        name: 'Installation & Setup',
-                        total: 6000,
-                        items: [
-                            {
-                                name: 'Professional Installation',
-                                model: 'Standard Installation',
-                                quantity: 1,
-                                price: 4500,
-                                total: 4500
-                            },
-                            {
-                                name: 'System Programming',
-                                model: 'Control System Setup',
-                                quantity: 1,
-                                price: 1500,
-                                total: 1500
-                            }
-                        ]
-                    }
-                }
-            };
-        }
-
-        function displayResults(results) {
+        function displayResults(boq) {
             const container = document.getElementById('resultsContent');
             container.innerHTML = '';
-
-            // Summary section
-            const summaryDiv = document.createElement('div');
-            summaryDiv.className = 'glass-panel p-4 mb-6';
-            summaryDiv.innerHTML = `
-                <h3 class="text-lg font-bold mb-4 flex items-center">
-                    <i class="fas fa-chart-bar mr-2 text-blue-400"></i> Project Summary
-                </h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-green-400">$${results.summary.total_cost.toLocaleString()}</div>
-                        <div class="text-sm text-gray-400">Total Investment</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-blue-400">${results.summary.item_count}</div>
-                        <div class="text-sm text-gray-400">Components</div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 mt-4">
-                    <div class="text-center">
-                        <div class="text-xl font-bold text-purple-400">${results.summary.installation_days} Days</div>
-                        <div class="text-sm text-gray-400">Installation</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-xl font-bold text-orange-400">${results.summary.warranty_years} Years</div>
-                        <div class="text-sm text-gray-400">Warranty</div>
-                    </div>
-                </div>
-            `;
-            container.appendChild(summaryDiv);
-
-            // Categories
-            Object.entries(results.categories).forEach(([key, category]) => {
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'boq-section mb-6';
-                
-                let itemsHtml = '';
-                category.items.forEach(item => {
-                    itemsHtml += `
-                        <div class="boq-item">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="flex-1">
-                                    <h4 class="font-semibold text-white">${item.name}</h4>
-                                    <p class="text-sm text-gray-400">${item.model}</p>
-                                </div>
-                                <div class="text-right">
-                                    <div class="font-bold text-green-400">$${item.total.toLocaleString()}</div>
-                                    <div class="text-xs text-gray-400">${item.quantity} × $${item.price.toLocaleString()}</div>
-                                </div>
+            
+            // Summary
+            let summaryHtml = `<div class="boq-section"><h3 class="text-lg font-bold text-white mb-3">Project Summary</h3><div class="grid grid-cols-2 gap-4">`;
+            summaryHtml += `<div class="text-center"><div class="text-2xl font-bold text-green-400">$${boq.summary.total_cost.toLocaleString()}</div><div class="text-sm text-gray-400">Total Cost</div></div>`;
+            summaryHtml += `<div class="text-center"><div class="text-2xl font-bold text-blue-400">${boq.summary.total_items}</div><div class="text-sm text-gray-400">Total Items</div></div>`;
+            summaryHtml += `<div class="text-center col-span-2"><div class="text-xl font-bold text-purple-400">${boq.summary.estimated_installation_time}</div><div class="text-sm text-gray-400">Est. Install Time</div></div>`;
+            summaryHtml += `</div></div>`;
+            container.innerHTML += summaryHtml;
+            
+            // Sections and Items
+            boq.sections.forEach(section => {
+                let itemsHtml = section.items.map(item => `
+                    <div class="boq-item">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold text-white">${item.name}</h4>
+                                <p class="text-sm text-gray-400">${item.brand} ${item.part_number || ''}</p>
+                            </div>
+                            <div class="text-right ml-4">
+                                <div class="font-bold text-green-400">$${item.total_price.toLocaleString()}</div>
+                                <div class="text-xs text-gray-400">${item.quantity} × $${item.unit_price.toLocaleString()}</div>
                             </div>
                         </div>
-                    `;
-                });
-
-                categoryDiv.innerHTML = `
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-white">${category.name}</h3>
-                        <span class="text-lg font-bold text-blue-400">$${category.total.toLocaleString()}</span>
-                    </div>
-                    ${itemsHtml}
-                `;
-                
-                container.appendChild(categoryDiv);
+                    </div>`).join('');
+                container.innerHTML += `<div class="boq-section"><h3 class="text-lg font-bold text-white mb-3">${section.name}</h3>${itemsHtml}</div>`;
             });
+            
+            // Recommendations
+            if (boq.recommendations.length > 0) {
+                let recsHtml = boq.recommendations.map(r => `<li class="text-gray-300">${r}</li>`).join('');
+                container.innerHTML += `<div class="boq-section"><h3 class="text-lg font-bold text-white mb-3">Recommendations</h3><ul class="list-disc list-inside space-y-1">${recsHtml}</ul></div>`;
+            }
+        }
+        
+        function visualizeBOQ(boq) {
+            clearEquipment();
+            let audioCount = 0;
+            boq.sections.forEach(section => {
+                section.items.forEach(item => {
+                    const geo = EQUIPMENT_GEOMETRY_MAP[item.category] || EQUIPMENT_GEOMETRY_MAP['default'];
+                    let position = geo.position;
+                    if (item.category === 'Audio Systems' && geo.positions) {
+                        position = geo.positions[audioCount % geo.positions.length];
+                        audioCount++;
+                    }
+                    if (position) {
+                        const mesh = createEquipmentMesh(item, geo);
+                        mesh.position.set(position.x, position.y, position.z);
+                        STATE.scene.add(mesh);
+                        STATE.equipmentObjects.push(mesh);
+                    }
+                });
+            });
+        }
+        
+        function createEquipmentMesh(item, geo) {
+            const geometry = new THREE.BoxGeometry(geo.size.w, geo.size.h, geo.size.d);
+            const material = new THREE.MeshStandardMaterial({ color: geo.color, roughness: 0.5 });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.userData.info = `<strong>${item.name}</strong><br>${item.brand}`;
+            return mesh;
+        }
+
+        function clearEquipment() {
+            STATE.equipmentObjects.forEach(obj => STATE.scene.remove(obj));
+            STATE.equipmentObjects = [];
         }
 
         // === UTILITY FUNCTIONS ===
-        function showLoading(text = 'Loading...', subtext = '') {
-            const overlay = document.getElementById('loadingOverlay');
-            const textEl = document.getElementById('loadingText');
-            const subtextEl = document.getElementById('loadingSubtext');
-            
-            textEl.textContent = text;
-            subtextEl.textContent = subtext;
-            overlay.style.display = 'flex';
-        }
+        function populateSelect(el, opts, def) { el.innerHTML = ''; opts.forEach(o => { const opt = document.createElement('option'); opt.value = o.value; opt.textContent = o.name; if(o.value === def) opt.selected = true; el.appendChild(opt); }); }
+        function showLoading(text, subtext) { document.getElementById('loadingText').textContent = text; document.getElementById('loadingSubtext').textContent = subtext; document.getElementById('loadingOverlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; updateProgress(0); }
+        function updateProgress(p) { document.getElementById('progressFill').style.width = `${p}%`; }
+        function showNotification(msg, type) { const cont = document.getElementById('notifications'); const notif = document.createElement('div'); notif.className = `notification ${type}`; notif.innerHTML = `<div>${msg}</div>`; cont.appendChild(notif); setTimeout(() => notif.classList.add('show'), 10); setTimeout(() => { notif.classList.remove('show'); notif.addEventListener('transitionend', () => notif.remove()); }, 5000); }
+        function updateConnectionStatus(status, text) { const el = document.getElementById('connectionStatus'); const ind = el.querySelector('.status-indicator'); ind.className = `status-indicator status-${status}`; document.getElementById('statusText').textContent = text || `${status.charAt(0).toUpperCase() + status.slice(1)}`; }
+        function toggleFullscreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { document.exitFullscreen(); } }
+        function takeScreenshot() { const dataURL = STATE.renderer.domElement.toDataURL('image/png'); const link = document.createElement('a'); link.download = 'smartav-config.png'; link.href = dataURL; link.click(); }
+        function exportBOQ() { if(STATE.currentBOQ){ const d = JSON.stringify(STATE.currentBOQ, null, 2); const b = new Blob([d], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'boq.json'; a.click();} else { showNotification('No BOQ to export', 'warning');} }
+        function clearResults() { document.getElementById('resultsContent').innerHTML = ''; document.getElementById('resultsPanel').style.display = 'none'; STATE.currentBOQ = null; clearEquipment(); showNotification('Results cleared', 'success'); }
 
-        function hideLoading() {
-            document.getElementById('loadingOverlay').style.display = 'none';
-            document.getElementById('progressFill').style.width = '0%';
-        }
-
-        function updateProgress(percent) {
-            document.getElementById('progressFill').style.width = percent + '%';
-        }
-
-        function showNotification(message, type = 'success') {
-            const container = document.getElementById('notifications');
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <span>${message}</span>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-current opacity-70 hover:opacity-100">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-            
-            container.appendChild(notification);
-            
-            // Animate in
-            setTimeout(() => notification.classList.add('show'), 100);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 400);
-            }, 5000);
-        }
-
-        function updateConnectionStatus(status) {
-            const statusEl = document.getElementById('connectionStatus');
-            const statusText = document.getElementById('statusText');
-            const indicator = statusEl.querySelector('.status-indicator');
-            
-            indicator.className = `status-indicator status-${status}`;
-            
-            switch (status) {
-                case 'online':
-                    statusText.textContent = 'Connected';
-                    break;
-                case 'offline':
-                    statusText.textContent = 'Disconnected';
-                    break;
-                case 'loading':
-                    statusText.textContent = 'Connecting...';
-                    break;
-                default:
-                    statusText.textContent = 'Unknown';
-            }
-            
-            STATE.connectionStatus = status;
-        }
-
-        function toggleProductPanel() {
-            const panel = document.getElementById('productPanel');
-            const isVisible = panel.style.display !== 'none';
-            panel.style.display = isVisible ? 'none' : 'block';
-            
-            if (!isVisible) {
-                loadProductCatalog();
-            }
-        }
-
-        function loadProductCatalog() {
-            const productList = document.getElementById('productList');
-            productList.innerHTML = '';
-
-            PRODUCT_CATALOG.forEach(product => {
-                const productDiv = document.createElement('div');
-                productDiv.className = 'product-card';
-                productDiv.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex-1">
-                            <h4 class="font-semibold text-sm text-white">${product.name}</h4>
-                            <p class="text-xs text-gray-400">${product.brand} ${product.model}</p>
-                        </div>
-                        <div class="text-right">
-                            <div class="font-bold text-green-400 text-sm">$${product.price.toLocaleString()}</div>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-500 mb-2">${product.description}</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs px-2 py-1 bg-blue-600 rounded">${product.category}</span>
-                        <button class="text-xs px-2 py-1 bg-green-600 rounded hover:bg-green-700 transition-colors">
-                            Add to Room
-                        </button>
-                    </div>
-                `;
-                
-                productDiv.addEventListener('click', () => selectProduct(product));
-                productList.appendChild(productDiv);
-            });
-        }
-
-        function selectProduct(product) {
-            showNotification(`${product.name} selected`, 'success');
-            // Add product to 3D scene logic would go here
-        }
-
-        function filterProducts() {
-            const searchTerm = document.getElementById('productSearch').value.toLowerCase();
-            const productCards = document.querySelectorAll('.product-card');
-            
-            productCards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                card.style.display = text.includes(searchTerm) ? 'block' : 'none';
-            });
-        }
-
-        function switchProductTab(category) {
-            document.querySelectorAll('[data-product-tab]').forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.dataset.productTab === category) {
-                    tab.classList.add('active');
-                }
-            });
-
-            const productCards = document.querySelectorAll('.product-card');
-            productCards.forEach(card => {
-                if (category === 'all') {
-                    card.style.display = 'block';
-                } else {
-                    const productCategory = card.querySelector('.bg-blue-600').textContent;
-                    card.style.display = productCategory === category ? 'block' : 'none';
-                }
-            });
-        }
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    showNotification('Error entering fullscreen', 'error');
-                });
-            } else {
-                document.exitFullscreen();
-            }
-        }
-
-        function takeScreenshot() {
-            if (STATE.renderer) {
-                const dataURL = STATE.renderer.domElement.toDataURL('image/png');
-                const link = document.createElement('a');
-                link.download = `smartav-config-${Date.now()}.png`;
-                link.href = dataURL;
-                link.click();
-                showNotification('Screenshot saved!', 'success');
-            }
-        }
-
-        function showHelp() {
-            showNotification('Help documentation coming soon!', 'warning');
-        }
-
-        function saveConfiguration() {
-            if (STATE.currentConfig) {
-                const config = {
-                    id: Date.now(),
-                    timestamp: new Date().toISOString(),
-                    data: STATE.currentConfig
-                };
-                
-                STATE.savedConfigurations.push(config);
-                showNotification('Configuration saved successfully!', 'success');
-            } else {
-                showNotification('No configuration to save', 'warning');
-            }
-        }
-
-        function exportBOQ() {
-            if (STATE.currentConfig) {
-                const dataStr = JSON.stringify(STATE.currentConfig, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(dataBlob);
-                link.download = `boq-${Date.now()}.json`;
-                link.click();
-                
-                showNotification('BOQ exported successfully!', 'success');
-            } else {
-                showNotification('No configuration to export', 'warning');
-            }
-        }
-
-        function clearResults() {
-            document.getElementById('resultsContent').innerHTML = '';
-            document.getElementById('resultsPanel').style.display = 'none';
-            STATE.currentConfig = null;
-            showNotification('Results cleared', 'success');
-        }
-
-        // Helper function for angle conversion
-        function toRadians(degrees) {
-            return degrees * (Math.PI / 180);
-        }
-
-        // Error handling for missing elements
-        function safeGetElement(id) {
-            const element = document.getElementById(id);
-            if (!element) {
-                console.warn(`Element with ID '${id}' not found`);
-            }
-            return element;
-        }
-
-        // Initialize tooltips and hover effects
-        function initializeTooltips() {
-            const equipmentInfo = document.getElementById('equipmentInfo');
-            
-            document.addEventListener('mousemove', (event) => {
-                const target = event.target.closest('.equipment-item');
-                if (target && target.dataset.info) {
-                    equipmentInfo.innerHTML = target.dataset.info;
-                    equipmentInfo.style.left = event.pageX + 10 + 'px';
-                    equipmentInfo.style.top = event.pageY - 10 + 'px';
-                    equipmentInfo.style.opacity = '1';
-                } else {
-                    equipmentInfo.style.opacity = '0';
-                }
-            });
-        }
-
-        // Performance monitoring
-        function monitorPerformance() {
-            let frameCount = 0;
-            let lastTime = performance.now();
-            
-            function checkFPS() {
-                frameCount++;
-                const currentTime = performance.now();
-                
-                if (currentTime >= lastTime + 1000) {
-                    const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
-                    
-                    if (fps < 30) {
-                        console.warn(`Low FPS detected: ${fps}`);
-                    }
-                    
-                    frameCount = 0;
-                    lastTime = currentTime;
-                }
-                
-                requestAnimationFrame(checkFPS);
-            }
-            
-            checkFPS();
-        }
-
-        // Initialize performance monitoring
-        monitorPerformance();
-        initializeTooltips();
-
-        // Export functions for debugging
-        window.SmartAVPro = {
-            STATE,
-            CONFIG,
-            createRoom,
-            showNotification,
-            updateConnectionStatus
-        };
     </script>
 </body>
 </html>
-            BACKEND
+what seems to be the issue in this?
