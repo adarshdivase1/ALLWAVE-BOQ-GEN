@@ -444,9 +444,9 @@
     </div>
     
     <div class="view-controls">
-        <button class="view-btn" id="topView" title="Top View">🔍</button>
-        <button class="view-btn" id="frontView" title="Front View">👁️</button>
-        <button class="view-btn" id="isoView" title="Isometric View">🎯</button>
+        <button class="view-btn" id="topView" title="Top View">🔝</button>
+        <button class="view-btn" id="frontView" title="Front View">🏢</button>
+        <button class="view-btn" id="isoView" title="Isometric View">🧊</button>
         <button class="view-btn" id="resetView" title="Reset View">🔄</button>
     </div>
     
@@ -572,7 +572,6 @@
                 Drag and drop equipment into the room to create your design
             </div>
             
-            <!-- Search Input -->
             <div class="relative">
                 <div class="search-icon">🔍</div>
                 <input type="text" id="equipmentSearch" class="search-input" placeholder="Search equipment (e.g., camera, display, microphone...)">
@@ -641,11 +640,11 @@
         let scene, camera, renderer, controls;
         let room = { width: 8, depth: 6, height: 3 };
         let placedEquipment = [];
-        let equipmentData = [];
         let raycaster, mouse;
         let panelsVisible = true;
         let selectedObject = null;
         let allEquipmentData = []; // Store all equipment for search
+        const TABLE_HEIGHT = 0.75; // Conference table height in meters
         
         // Realistic Equipment Database with proper dimensions and pricing
         const equipmentDatabase = {
@@ -691,8 +690,8 @@
                     subcategory: 'Projectors', 
                     installTime: 4, 
                     quality: 'enterprise', 
-                    color: 0xf5f5f5,
-                    size: { width: 0.4, height: 0.3, depth: 0.25 }, 
+                    color: 0xf0f0f0,
+                    size: { width: 0.55, height: 0.2, depth: 0.45 }, 
                     recommended: true,
                     brand: 'Epson',
                     description: 'High-brightness laser projector for large venues',
@@ -710,7 +709,7 @@
                     installTime: 2.5, 
                     quality: 'premium', 
                     color: 0x2a2a2a, 
-                    size: { width: 0.2, height: 0.15, depth: 0.2 }, 
+                    size: { width: 0.2, height: 0.25, depth: 0.2 }, 
                     recommended: true,
                     brand: 'Sony',
                     description: 'Professional 4K PTZ camera with 30x zoom',
@@ -726,7 +725,7 @@
                     installTime: 1.5, 
                     quality: 'standard', 
                     color: 0x333333, 
-                    size: { width: 0.75, height: 0.1, depth: 0.12 }, 
+                    size: { width: 0.9, height: 0.16, depth: 0.12 }, 
                     recommended: true,
                     brand: 'Logitech',
                     description: 'All-in-one conference camera and soundbar',
@@ -760,7 +759,7 @@
                     installTime: 3, 
                     quality: 'standard', 
                     color: 0xffffff, 
-                    size: { width: 0.3, height: 0.08, depth: 0.3 }, 
+                    size: { width: 0.3, height: 0.15, depth: 0.3 }, 
                     recommended: true,
                     brand: 'Bose',
                     description: 'Ceiling-mounted speakers with EdgeMax technology',
@@ -778,7 +777,7 @@
                     installTime: 1.5, 
                     quality: 'premium', 
                     color: 0x1a1a1a, 
-                    size: { width: 0.25, height: 0.15, depth: 0.03 }, 
+                    size: { width: 0.25, height: 0.15, depth: 0.05 }, 
                     recommended: true,
                     brand: 'Crestron',
                     description: '10.1" wall-mount touch panel with PoE',
@@ -794,7 +793,7 @@
                     installTime: 4, 
                     quality: 'enterprise', 
                     color: 0x333333, 
-                    size: { width: 0.43, height: 0.04, depth: 0.25 }, 
+                    size: { width: 0.43, height: 0.044, depth: 0.25 }, 
                     recommended: true,
                     brand: 'Crestron',
                     description: '4-Series control processor with secure networking',
@@ -820,7 +819,7 @@
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
-            controls.maxPolarAngle = Math.PI / 2;
+            controls.maxPolarAngle = Math.PI / 1.5;
             controls.minDistance = 2;
             controls.maxDistance = 50;
             
@@ -843,7 +842,7 @@
 
         function setupLighting() {
             // Ambient light
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            const ambientLight = new THREE.AmbientLight(0xcccccc, 0.5);
             scene.add(ambientLight);
             
             // Main directional light
@@ -852,15 +851,17 @@
             directionalLight.castShadow = true;
             directionalLight.shadow.mapSize.width = 2048;
             directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 50;
             scene.add(directionalLight);
             
             // Additional point lights for better illumination
-            const pointLight1 = new THREE.PointLight(0x3b82f6, 0.3, 20);
-            pointLight1.position.set(-5, 5, 5);
+            const pointLight1 = new THREE.PointLight(0x3b82f6, 0.3, 30);
+            pointLight1.position.set(-8, 5, 8);
             scene.add(pointLight1);
             
-            const pointLight2 = new THREE.PointLight(0x8b5cf6, 0.3, 20);
-            pointLight2.position.set(5, 5, -5);
+            const pointLight2 = new THREE.PointLight(0x8b5cf6, 0.3, 30);
+            pointLight2.position.set(8, 5, -8);
             scene.add(pointLight2);
         }
 
@@ -874,13 +875,28 @@
             const roomGroup = new THREE.Group();
             roomGroup.name = 'room';
             
-            // Floor
+            // Floor with texture
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#4a4a4a';
+            context.fillRect(0, 0, 64, 64);
+            context.strokeStyle = '#5a5a5a';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(0, 32);
+            context.lineTo(64, 32);
+            context.moveTo(32, 0);
+            context.lineTo(32, 64);
+            context.stroke();
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(room.width * 2, room.depth * 2);
+
+            const floorMaterial = new THREE.MeshLambertMaterial({ map: texture });
             const floorGeometry = new THREE.PlaneGeometry(room.width, room.depth);
-            const floorMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x444444,
-                transparent: true,
-                opacity: 0.8
-            });
             const floor = new THREE.Mesh(floorGeometry, floorMaterial);
             floor.rotation.x = -Math.PI / 2;
             floor.receiveShadow = true;
@@ -888,9 +904,7 @@
             
             // Walls
             const wallMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x666666, 
-                transparent: true, 
-                opacity: 0.3, 
+                color: 0x2d3748, 
                 side: THREE.DoubleSide 
             });
             
@@ -898,74 +912,199 @@
             const backWallGeometry = new THREE.PlaneGeometry(room.width, room.height);
             const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
             backWall.position.set(0, room.height/2, -room.depth/2);
+            backWall.receiveShadow = true;
             roomGroup.add(backWall);
-            
-            // Front wall
-            const frontWall = new THREE.Mesh(backWallGeometry, wallMaterial);
-            frontWall.position.set(0, room.height/2, room.depth/2);
-            frontWall.rotation.y = Math.PI;
-            roomGroup.add(frontWall);
             
             // Left wall
             const sideWallGeometry = new THREE.PlaneGeometry(room.depth, room.height);
             const leftWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
             leftWall.position.set(-room.width/2, room.height/2, 0);
             leftWall.rotation.y = Math.PI/2;
+            leftWall.receiveShadow = true;
             roomGroup.add(leftWall);
             
-            // Right wall
-            const rightWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
-            rightWall.position.set(room.width/2, room.height/2, 0);
-            rightWall.rotation.y = -Math.PI/2;
-            roomGroup.add(rightWall);
+            // Conference Table
+            if(room.width > 3.5 && room.depth > 2.5) {
+                const table = createConferenceTable(room);
+                roomGroup.add(table);
+            }
             
             scene.add(roomGroup);
             updateAnalytics();
         }
 
-        function createEquipment(data, position = { x: 0, y: 0, z: 0 }) {
-            const geometry = new THREE.BoxGeometry(
-                data.size.width, 
-                data.size.height, 
-                data.size.depth
-            );
+        function createConferenceTable(room) {
+            const tableGroup = new THREE.Group();
+            tableGroup.name = 'conferenceTable';
+
+            const tableWidth = Math.max(1.2, room.width * 0.5);
+            const tableDepth = Math.max(2.4, room.depth * 0.6);
             
-            const material = new THREE.MeshLambertMaterial({ 
-                color: data.color || 0x666666,
-                transparent: true,
-                opacity: 0.9
+            // Tabletop
+            const tabletopGeo = new THREE.BoxGeometry(tableDepth, 0.05, tableWidth);
+            const tabletopMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.4, metalness: 0.1 });
+            const tabletop = new THREE.Mesh(tabletopGeo, tabletopMat);
+            tabletop.position.y = TABLE_HEIGHT - 0.025;
+            tabletop.castShadow = true;
+            tabletop.receiveShadow = true;
+            tableGroup.add(tabletop);
+            
+            // Legs
+            const legGeo = new THREE.BoxGeometry(0.1, TABLE_HEIGHT - 0.05, 0.1);
+            const legMat = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.2, metalness: 0.8 });
+
+            const legPositions = [
+                { x: tableDepth/2 * 0.8, z: tableWidth/2 * 0.8 },
+                { x: -tableDepth/2 * 0.8, z: tableWidth/2 * 0.8 },
+                { x: tableDepth/2 * 0.8, z: -tableWidth/2 * 0.8 },
+                { x: -tableDepth/2 * 0.8, z: -tableWidth/2 * 0.8 },
+            ];
+            
+            legPositions.forEach(pos => {
+                const leg = new THREE.Mesh(legGeo, legMat);
+                leg.position.set(pos.x, (TABLE_HEIGHT - 0.05) / 2, pos.z);
+                leg.castShadow = true;
+                tableGroup.add(leg);
             });
             
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(position.x, data.size.height/2 + position.y, position.z);
-            mesh.castShadow = true;
-            mesh.userData = { ...data, placed: true };
-            mesh.name = `equipment_${data.id}_${Date.now()}`;
+            return tableGroup;
+        }
+
+        // *** NEW: Create more realistic meshes for different equipment types ***
+        function createDisplayMesh(data) {
+            const group = new THREE.Group();
+            const screenGeom = new THREE.BoxGeometry(data.size.width, data.size.height, 0.01);
+            const screenMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const screen = new THREE.Mesh(screenGeom, screenMat);
+
+            const bezelGeom = new THREE.BoxGeometry(data.size.width, data.size.height, data.size.depth);
+            const bezelMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.3, metalness: 0.2 });
+            const bezel = new THREE.Mesh(bezelGeom, bezelMat);
+
+            screen.position.z = data.size.depth / 2 + 0.005;
+            group.add(screen);
+            group.add(bezel);
+            return group;
+        }
+
+        function createPtzCameraMesh(data) {
+            const group = new THREE.Group();
+            const baseGeom = new THREE.CylinderGeometry(data.size.width / 2, data.size.width / 2, data.size.height * 0.4, 32);
+            const baseMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.4 });
+            const base = new THREE.Mesh(baseGeom, baseMat);
+            
+            const headGeom = new THREE.SphereGeometry(data.size.width / 2.5, 32, 32);
+            const head = new THREE.Mesh(headGeom, baseMat);
+            head.position.y = data.size.height * 0.4;
+            
+            const lensGeom = new THREE.CylinderGeometry(data.size.width/6, data.size.width/6, 0.1, 32);
+            const lensMat = new THREE.MeshBasicMaterial({ color: 0x050522 });
+            const lens = new THREE.Mesh(lensGeom, lensMat);
+            lens.position.y = data.size.height * 0.4;
+            lens.position.z = data.size.width / 2.5;
+            lens.rotation.x = Math.PI / 2;
+
+            group.add(base);
+            group.add(head);
+            group.add(lens);
+            return group;
+        }
+        
+        function createSoundbarMesh(data) {
+             const group = new THREE.Group();
+             const bodyGeom = new THREE.BoxGeometry(data.size.width, data.size.height, data.size.depth);
+             const bodyMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.6 });
+             const body = new THREE.Mesh(bodyGeom, bodyMat);
+             group.add(body);
+             return group;
+        }
+        
+        function createCeilingDeviceMesh(data) {
+            const group = new THREE.Group();
+            const panelGeom = new THREE.BoxGeometry(data.size.width, data.size.height, data.size.depth);
+            const panelMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.8 });
+            const panel = new THREE.Mesh(panelGeom, panelMat);
+            group.add(panel);
+            return group;
+        }
+        
+        function createTouchPanelMesh(data) {
+             const group = new THREE.Group();
+             const panelGeom = new THREE.BoxGeometry(data.size.width, data.size.height, data.size.depth);
+             const panelMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.5 });
+             const panel = new THREE.Mesh(panelGeom, panelMat);
+             
+             const screenGeom = new THREE.BoxGeometry(data.size.width * 0.9, data.size.height * 0.85, 0.005);
+             const screenMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+             const screen = new THREE.Mesh(screenGeom, screenMat);
+             screen.position.z = data.size.depth / 2 + 0.001;
+             
+             group.add(panel);
+             group.add(screen);
+             group.rotation.x = -Math.PI / 6; // Angle it slightly
+             return group;
+        }
+        
+        function createProcessorMesh(data) {
+            const group = new THREE.Group();
+            const bodyGeom = new THREE.BoxGeometry(data.size.width, data.size.height, data.size.depth);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.2, metalness: 0.5 });
+            const body = new THREE.Mesh(bodyGeom, bodyMat);
+            group.add(body);
+            return group;
+        }
+
+        function createEquipment(data, position = { x: 0, y: 0, z: 0 }) {
+            let equipmentGroup;
+            
+            // Dispatcher to create the correct mesh based on ID or category
+            switch(data.id) {
+                case 'ptz_4k':
+                    equipmentGroup = createPtzCameraMesh(data);
+                    break;
+                case 'fixed_4k':
+                     equipmentGroup = createSoundbarMesh(data);
+                     break;
+                case 'ceiling_mic':
+                case 'speakers_ceiling':
+                    equipmentGroup = createCeilingDeviceMesh(data);
+                    break;
+                case 'touch_panel':
+                    equipmentGroup = createTouchPanelMesh(data);
+                    break;
+                case 'processor':
+                    equipmentGroup = createProcessorMesh(data);
+                    break;
+                case 'led_55':
+                case 'led_65':
+                case 'projector_laser':
+                default: // Default to display or a simple box
+                    equipmentGroup = createDisplayMesh(data);
+                    break;
+            }
+
+            equipmentGroup.position.set(position.x, position.y, position.z);
+            equipmentGroup.castShadow = true;
+            equipmentGroup.userData = { ...data, placed: true };
+            equipmentGroup.name = `equipment_${data.id}_${Date.now()}`;
             
             // Add selection outline
-            const outlineGeometry = new THREE.BoxGeometry(
-                data.size.width * 1.05, 
-                data.size.height * 1.05, 
-                data.size.depth * 1.05
-            );
-            const outlineMaterial = new THREE.MeshBasicMaterial({ 
-                color: 0x3b82f6, 
-                wireframe: true,
-                visible: false
-            });
+            const box = new THREE.Box3().setFromObject(equipmentGroup);
+            const size = box.getSize(new THREE.Vector3());
+            const outlineGeometry = new THREE.BoxGeometry(size.x * 1.05, size.y * 1.05, size.z * 1.05);
+            const outlineMaterial = new THREE.MeshBasicMaterial({ color: 0x3b82f6, wireframe: true, visible: false });
             const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
-            outline.position.copy(mesh.position);
             outline.name = 'outline';
-            mesh.add(outline);
+            equipmentGroup.add(outline);
             
-            scene.add(mesh);
-            placedEquipment.push(mesh);
+            scene.add(equipmentGroup);
+            placedEquipment.push(equipmentGroup);
             
             updateBOQ();
             updateAnalytics();
             showToast(`Added ${data.name}`, 'success');
             
-            return mesh;
+            return equipmentGroup;
         }
 
         function populateEquipmentLibrary() {
@@ -1086,18 +1225,21 @@
                     
                     // Calculate drop position in 3D space
                     const rect = renderContainer.getBoundingClientRect();
-                    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-                    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-                    
-                    mouse.x = x;
-                    mouse.y = y;
+                    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
                     
                     raycaster.setFromCamera(mouse, camera);
-                    const intersects = raycaster.intersectObjects([scene.getObjectByName('room').children[0]]);
+                    // Intersect with the floor
+                    const floor = scene.getObjectByName('room').children.find(c => c.geometry.type === 'PlaneGeometry');
+                    const intersects = raycaster.intersectObject(floor);
                     
                     if (intersects.length > 0) {
                         const position = intersects[0].point;
-                        createEquipment(data, { x: position.x, y: 0, z: position.z });
+                        // Adjust Y position based on equipment type
+                        let yPos = data.size.height / 2;
+                        if(data.category === 'Audio') yPos = room.height - data.size.height / 2; // ceiling mount
+                        
+                        createEquipment(data, { x: position.x, y: yPos, z: position.z });
                     }
                 } catch (error) {
                     console.error('Error dropping equipment:', error);
@@ -1135,7 +1277,7 @@
             
             let html = '';
             
-            Object.keys(categories).forEach(categoryName => {
+            Object.keys(categories).sort().forEach(categoryName => {
                 const items = categories[categoryName];
                 const categoryTotal = items.reduce((sum, item) => sum + item.price, 0);
                 
@@ -1150,8 +1292,7 @@
                 // Count identical items
                 const itemCounts = {};
                 items.forEach(item => {
-                    const key = item.id;
-                    itemCounts[key] = (itemCounts[key] || 0) + 1;
+                    itemCounts[item.id] = (itemCounts[item.id] || 0) + 1;
                 });
                 
                 Object.keys(itemCounts).forEach(itemId => {
@@ -1170,7 +1311,7 @@
                                     </div>
                                 </div>
                                 <button onclick="removeEquipmentType('${itemId}')" 
-                                        class="text-red-400 hover:text-red-300 ml-2">🗑️</button>
+                                        class="text-red-400 hover:text-red-300 ml-2 p-1">🗑️</button>
                             </div>
                         </div>
                     `;
@@ -1200,7 +1341,7 @@
             const totalPower = placedEquipment.reduce((sum, item) => sum + item.userData.power, 0);
             const totalInstallTime = placedEquipment.reduce((sum, item) => sum + item.userData.installTime, 0);
             
-            document.getElementById('coverageArea').textContent = `${coverageArea} m²`;
+            document.getElementById('coverageArea').textContent = `${coverageArea.toFixed(1)} m²`;
             document.getElementById('equipmentCount').textContent = `${equipmentCount} items`;
             document.getElementById('installTime').textContent = `${totalInstallTime.toFixed(1)} hours`;
             document.getElementById('powerRequired').textContent = `${totalPower}W`;
@@ -1215,9 +1356,7 @@
 
         function updateRecommendations() {
             const recommendationsContent = document.getElementById('recommendationsContent');
-            const roomSize = document.getElementById('roomSize').value;
             const useCase = document.getElementById('useCase').value;
-            const qualityLevel = document.getElementById('qualityLevel').value;
             
             let recommendations = [];
             
@@ -1228,26 +1367,21 @@
             const hasControl = placedEquipment.some(item => item.userData.category === 'Control');
             
             if (!hasDisplay) {
-                recommendations.push("📺 Add a display system for presentations");
+                recommendations.push("📺 Add a display system for presentations.");
             }
-            if (!hasCamera && useCase !== 'auditorium') {
-                recommendations.push("📹 Consider a camera for video conferencing");
+            if (!hasCamera && useCase !== 'presentation' && useCase !== 'auditorium') {
+                recommendations.push("📹 Consider a camera for video conferencing.");
             }
             if (!hasAudio) {
-                recommendations.push("🎵 Add audio system for clear communication");
+                recommendations.push("🎵 Add an audio system for clear communication.");
             }
             if (!hasControl && placedEquipment.length > 2) {
-                recommendations.push("🎛️ Add control system for easy management");
-            }
-            
-            // Room-specific recommendations
-            if (roomSize === 'large' || roomSize === 'xlarge') {
-                recommendations.push("🔊 Consider multiple speakers for even coverage");
+                recommendations.push("🎛️ Add a control system for easy management.");
             }
             
             if (recommendations.length === 0) {
-                recommendations.push("✅ Your setup looks complete for the selected room type");
-                recommendations.push("💡 Consider upgrading to premium equipment for better quality");
+                recommendations.push("✅ Your setup looks complete for the selected room type.");
+                recommendations.push("💡 Consider upgrading to premium equipment for better quality.");
             }
             
             recommendationsContent.innerHTML = recommendations.map(rec => 
@@ -1321,8 +1455,8 @@
                     const description = item.querySelector('.text-white\\/70').textContent.toLowerCase();
                     
                     const visible = name.includes(searchTerm) || 
-                                   brand.includes(searchTerm) || 
-                                   description.includes(searchTerm);
+                                    brand.includes(searchTerm) || 
+                                    description.includes(searchTerm);
                     
                     item.style.display = visible ? 'block' : 'none';
                     if (visible) visibleCount++;
@@ -1354,11 +1488,11 @@
                 
                 recommendations.forEach((rec, index) => {
                     setTimeout(() => {
-                        const equipment = allEquipmentData.find(item => item.id === rec.id);
-                        if (equipment) {
-                            createEquipment(equipment, rec.position);
+                        const equipmentData = allEquipmentData.find(item => item.id === rec.id);
+                        if (equipmentData) {
+                            createEquipment(equipmentData, rec.position);
                         }
-                    }, index * 500);
+                    }, index * 100);
                 });
                 
                 showLoading(false);
@@ -1367,71 +1501,58 @@
         }
 
         function getAIRecommendations(roomSize, useCase, qualityLevel) {
-            const recommendations = [];
-            
-            // Position calculations based on room size
-            const centerX = 0;
-            const centerZ = 0;
-            const frontWall = -room.depth/2 + 0.5;
-            const backWall = room.depth/2 - 0.5;
-            
-            // Always add a display at the front
-            recommendations.push({
-                id: qualityLevel === 'enterprise' ? 'projector_laser' : 'led_65',
-                position: { x: centerX, y: 0, z: frontWall }
-            });
-            
-            // Add camera for video conferencing
-            if (useCase !== 'auditorium') {
-                recommendations.push({
-                    id: 'ptz_4k',
-                    position: { x: centerX, y: 2, z: backWall }
-                });
+            // This is a simplified logic engine. A real one would be more complex.
+            let recs = [];
+            const frontWallZ = -room.depth / 2 + 0.1;
+            const backWallZ = room.depth / 2 - 0.1;
+
+            // Display
+            if (room.width > 10 || qualityLevel === 'enterprise') {
+                recs.push({ id: 'projector_laser', position: { x: 0, y: room.height - 0.4, z: frontWallZ }});
+            } else {
+                 recs.push({ id: 'led_65', position: { x: 0, y: 1.5, z: frontWallZ }});
             }
-            
-            // Add audio system
-            recommendations.push({
-                id: 'ceiling_mic',
-                position: { x: centerX, y: 2.5, z: centerZ }
-            });
-            
-            recommendations.push({
-                id: 'speakers_ceiling',
-                position: { x: centerX, y: 2.5, z: centerZ + 1 }
-            });
-            
-            // Add control system
-            recommendations.push({
-                id: 'touch_panel',
-                position: { x: -room.width/2 + 0.5, y: 1.2, z: frontWall + 1 }
-            });
-            
-            recommendations.push({
-                id: 'processor',
-                position: { x: -room.width/2 + 1, y: 0.1, z: frontWall + 1 }
-            });
-            
-            return recommendations;
+
+            // Camera
+            if (useCase !== 'presentation') {
+                recs.push({ id: 'ptz_4k', position: { x: 0, y: room.height - 0.3, z: backWallZ }});
+            }
+
+            // Audio
+            recs.push({ id: 'ceiling_mic', position: { x: 0, y: room.height - 0.1, z: 0 }});
+            recs.push({ id: 'speakers_ceiling', position: { x: room.width/4, y: room.height - 0.1, z: 0 }});
+            recs.push({ id: 'speakers_ceiling', position: { x: -room.width/4, y: room.height - 0.1, z: 0 }});
+
+            // Control
+            recs.push({ id: 'touch_panel', position: { x: 0.5, y: TABLE_HEIGHT + 0.05, z: 0 }});
+            recs.push({ id: 'processor', position: { x: -room.width/2 + 0.3, y: 0.1, z: -room.depth/2 + 0.3 }});
+
+            return recs;
         }
 
+        // *** UPDATED: Logical placement for Smart Load ***
         function loadRecommendedEquipment() {
-            const recommendedItems = allEquipmentData.filter(item => item.recommended);
+            clearAllEquipment(false);
+            const smartLayout = [
+                { id: 'led_65', position: { x: 0, y: 1.5, z: -room.depth / 2 + 0.1 } }, // Display on front wall
+                { id: 'ptz_4k', position: { x: 0, y: room.height - 0.3, z: room.depth / 2 - 0.2 } }, // Camera on back wall
+                { id: 'ceiling_mic', position: { x: 0, y: room.height - 0.1, z: 0 } }, // Mic on ceiling center
+                { id: 'speakers_ceiling', position: { x: room.width / 4, y: room.height - 0.1, z: 0 } }, // Speaker 1
+                { id: 'speakers_ceiling', position: { x: -room.width / 4, y: room.height - 0.1, z: 0 } }, // Speaker 2
+                { id: 'touch_panel', position: { x: 0.5, y: TABLE_HEIGHT + 0.05, z: 0 } }, // Touch panel on table
+                { id: 'processor', position: { x: -room.width/2 + 0.3, y: 0.1, z: -room.depth/2 + 0.3 } }, // Processor in corner
+            ];
             
-            recommendedItems.forEach((item, index) => {
-                setTimeout(() => {
-                    const angle = (index * 2 * Math.PI) / recommendedItems.length;
-                    const radius = Math.min(room.width, room.depth) * 0.3;
-                    const position = {
-                        x: Math.cos(angle) * radius,
-                        y: 0,
-                        z: Math.sin(angle) * radius
-                    };
-                    
-                    createEquipment(item,position);
-                }, index * 200);
+            smartLayout.forEach((item, index) => {
+                 const equipmentData = allEquipmentData.find(e => e.id === item.id);
+                 if(equipmentData) {
+                    setTimeout(() => {
+                        createEquipment(equipmentData, item.position);
+                    }, index * 100);
+                 }
             });
             
-            showToast('Recommended equipment loaded', 'success');
+            showToast('Smart Load layout applied', 'success');
         }
 
         function togglePanels() {
@@ -1441,13 +1562,14 @@
             panelsVisible = !panelsVisible;
             
             if (panelsVisible) {
-                controlPanel.style.display = 'block';
-                boqPanel.style.display = 'block';
-                document.getElementById('togglePanels').innerHTML = '📊 Hide Panels';
+                controlPanel.style.transform = 'translateX(0)';
+                boqPanel.style.transform = 'translateX(0)';
+                document.getElementById('togglePanels').innerHTML = '📊 Toggle Panels';
+
             } else {
-                controlPanel.style.display = 'none';
-                boqPanel.style.display = 'none';
-                document.getElementById('togglePanels').innerHTML = '📊 Show Panels';
+                controlPanel.style.transform = 'translateX(-110%)';
+                boqPanel.style.transform = 'translateX(110%)';
+                document.getElementById('togglePanels').innerHTML = '📊 Toggle Panels';
             }
         }
 
@@ -1476,15 +1598,13 @@
             
             itemsToRemove.forEach(item => {
                 scene.remove(item);
-                const index = placedEquipment.indexOf(item);
-                if (index > -1) {
-                    placedEquipment.splice(index, 1);
-                }
             });
+            
+            placedEquipment = placedEquipment.filter(item => item.userData.id !== equipmentId);
             
             updateBOQ();
             updateAnalytics();
-            showToast(`Removed ${itemsToRemove.length} item(s)`, 'success');
+            showToast(`Removed all ${itemsToRemove[0].userData.name}`, 'success');
         }
 
         function exportBOQ() {
@@ -1495,7 +1615,6 @@
             
             const projectName = document.getElementById('projectName').value;
             const clientName = document.getElementById('clientName').value;
-            const roomSize = document.getElementById('roomSize').value;
             const useCase = document.getElementById('useCase').value;
             
             // Generate CSV content
@@ -1504,8 +1623,7 @@
             const itemCounts = {};
             placedEquipment.forEach(item => {
                 const data = item.userData;
-                const key = data.id;
-                itemCounts[key] = (itemCounts[key] || 0) + 1;
+                itemCounts[data.id] = (itemCounts[data.id] || 0) + 1;
             });
             
             let grandTotal = 0;
@@ -1540,12 +1658,7 @@
         }
 
         function applyRoomPreset(preset) {
-            // Remove active class from all preset buttons
-            document.querySelectorAll('.room-preset-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Add active class to clicked button
+            document.querySelectorAll('.room-preset-btn').forEach(btn => btn.classList.remove('active'));
             event.currentTarget.classList.add('active');
             
             const presets = {
@@ -1578,23 +1691,22 @@
             
             switch(viewType) {
                 case 'top':
-                    camera.position.set(0, distance, 0);
-                    camera.lookAt(0, 0, 0);
+                    camera.position.set(0, distance, 0.01);
+                    controls.target.set(0,0,0);
                     break;
                 case 'front':
-                    camera.position.set(0, room.height, distance);
-                    camera.lookAt(0, room.height/2, 0);
+                    camera.position.set(0, room.height/2, distance);
+                    controls.target.set(0, room.height/2, 0);
                     break;
                 case 'iso':
                     camera.position.set(distance * 0.8, distance * 0.6, distance * 0.8);
-                    camera.lookAt(0, 0, 0);
+                    controls.target.set(0,0,0);
                     break;
                 case 'reset':
                     camera.position.set(12, 8, 12);
-                    camera.lookAt(0, 0, 0);
+                    controls.target.set(0,0,0);
                     break;
             }
-            
             controls.update();
         }
 
@@ -1604,7 +1716,7 @@
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
             
             raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(placedEquipment);
+            const intersects = raycaster.intersectObjects(placedEquipment, true);
             
             // Clear previous selection
             if (selectedObject) {
@@ -1613,7 +1725,13 @@
             }
             
             if (intersects.length > 0) {
-                selectedObject = intersects[0].object;
+                // Find the top-level group object
+                let intersectedObject = intersects[0].object;
+                while(intersectedObject.parent && !intersectedObject.userData.placed) {
+                    intersectedObject = intersectedObject.parent;
+                }
+                selectedObject = intersectedObject;
+
                 const outline = selectedObject.getObjectByName('outline');
                 if (outline) outline.visible = true;
                 
@@ -1621,11 +1739,9 @@
                 
                 // Double-click to remove
                 if (event.detail === 2) {
-                    scene.remove(selectedObject);
-                    const index = placedEquipment.indexOf(selectedObject);
-                    if (index > -1) {
-                        placedEquipment.splice(index, 1);
-                    }
+                    const objectToRemove = selectedObject; // capture it
+                    scene.remove(objectToRemove);
+                    placedEquipment = placedEquipment.filter(item => item !== objectToRemove);
                     selectedObject = null;
                     updateBOQ();
                     updateAnalytics();
@@ -1644,7 +1760,7 @@
 
         function showToast(message, type = 'info') {
             const toast = document.createElement('div');
-            toast.className = `toast premium-glass rounded-lg p-4 max-w-sm`;
+            toast.className = `toast premium-glass rounded-lg p-4 max-w-sm border-l-4`;
             
             const colors = {
                 success: 'border-green-500 text-green-300',
@@ -1653,21 +1769,13 @@
                 warning: 'border-yellow-500 text-yellow-300'
             };
             
-            toast.classList.add(colors[type] || colors.info);
-            toast.innerHTML = `
-                <div class="flex items-center space-x-2">
-                    <div class="font-semibold">${message}</div>
-                </div>
-            `;
+            toast.classList.add(...(colors[type] || colors.info).split(' '));
+            toast.innerHTML = `<div class="font-semibold">${message}</div>`;
             
             document.getElementById('toastContainer').appendChild(toast);
             
-            // Show toast
-            requestAnimationFrame(() => {
-                toast.classList.add('show');
-            });
+            requestAnimationFrame(() => toast.classList.add('show'));
             
-            // Remove toast after 3 seconds
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => {
@@ -1680,39 +1788,23 @@
 
         function showLoading(show) {
             const overlay = document.getElementById('loadingOverlay');
-            if (show) {
-                overlay.classList.remove('hidden');
-            } else {
-                overlay.classList.add('hidden');
-            }
+            overlay.style.display = show ? 'flex' : 'none';
         }
 
         function checkBackendConnection() {
-            // Simulate backend connection check
             setTimeout(() => {
                 const status = document.getElementById('connectionStatus');
                 status.className = 'connection-status status-online';
                 status.textContent = '✅ Backend Connected';
                 
-                setTimeout(() => {
-                    status.style.display = 'none';
-                }, 2000);
+                setTimeout(() => status.style.opacity = '0', 2000);
             }, 1500);
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            
             controls.update();
             renderer.render(scene, camera);
-            
-            // Rotate selected object outline
-            if (selectedObject) {
-                const outline = selectedObject.getObjectByName('outline');
-                if (outline && outline.visible) {
-                    outline.rotation.y += 0.02;
-                }
-            }
         }
 
         // Initialize application
@@ -1722,7 +1814,6 @@
             populateEquipmentLibrary();
             setupDragAndDrop();
             setupEventListeners();
-            
             showToast('AV Room Designer Pro loaded successfully', 'success');
         }
 
