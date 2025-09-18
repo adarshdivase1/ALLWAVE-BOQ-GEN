@@ -35,25 +35,16 @@
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
         }
         
-        .control-panel {
+        .control-panel, .boq-panel {
             position: fixed;
             top: 20px;
-            left: 20px;
             z-index: 100;
-            max-width: 420px;
-            max-height: 95vh;
+            max-width: 450px;
+            max-height: calc(100vh - 40px);
             overflow-y: auto;
         }
-        
-        .boq-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            max-width: 480px;
-            max-height: 95vh;
-            overflow-y: auto;
-        }
+        .control-panel { left: 20px; }
+        .boq-panel { right: 20px; }
         
         .equipment-item {
             cursor: grab;
@@ -70,15 +61,7 @@
             box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
         }
         
-        .equipment-item:active {
-            cursor: grabbing;
-            transform: scale(0.98);
-        }
-        
-        @keyframes selectedPulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-            50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
-        }
+        .equipment-item:active { cursor: grabbing; transform: scale(0.98); }
         
         .form-input, .form-select {
             width: 100%;
@@ -97,14 +80,7 @@
             outline: none !important;
         }
         
-        .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.5) !important;
-        }
-        
-        .form-select option {
-            background: #1a1a2e;
-            color: white;
-        }
+        .form-select option { background: #1a1a2e; color: white; }
         
         .toast {
             position: fixed;
@@ -116,24 +92,12 @@
             opacity: 0;
         }
         
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         
         .virtual-scroll::-webkit-scrollbar { width: 8px; }
         .virtual-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 8px; }
         .virtual-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 8px; }
-        
-        #renderContainer canvas {
-            cursor: grab;
-            width: 100vw;
-            height: 100vh;
-            display: block;
-        }
-        
-        #renderContainer canvas:active { cursor: grabbing; }
-        
+
         .loading-spinner {
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
@@ -143,16 +107,9 @@
             animation: spin 1s linear infinite;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .boq-section {
-            border-left: 4px solid var(--accent-blue);
-            padding-left: 16px;
-            margin-bottom: 20px;
-        }
+        .boq-section { border-left: 4px solid var(--accent-blue); padding-left: 16px; margin-bottom: 20px; }
         
         .boq-item {
             background: rgba(255, 255, 255, 0.08);
@@ -164,146 +121,27 @@
             position: relative;
         }
         
-        .boq-item:hover {
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateX(4px);
-        }
+        .boq-item:hover { background: rgba(255, 255, 255, 0.12); transform: translateX(4px); }
         
-        .edit-controls {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .boq-item:hover .edit-controls { opacity: 1; }
-        
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
+        #renderContainer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #renderContainer canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+        #renderContainer canvas:active { cursor: grabbing; }
 
-        .particle {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        #renderContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        
-        .room-preset-btn {
-            background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 8px;
-            padding: 12px;
-            color: white;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .room-preset-btn:hover {
-            background: linear-gradient(45deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3));
-            border-color: rgba(59, 130, 246, 0.5);
-            transform: translateY(-2px);
-        }
-        
-        .room-preset-btn.active {
-            background: linear-gradient(45deg, rgba(16, 185, 129, 0.3), rgba(59, 130, 246, 0.3));
-            border-color: rgba(16, 185, 129, 0.5);
-        }
-        
-        .context-menu {
-            position: fixed;
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 8px;
-            z-index: 1000;
-            min-width: 150px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-        }
-        
-        .context-menu-item {
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s ease;
-            font-size: 14px;
-        }
-        
-        .context-menu-item:hover {
-            background: rgba(59, 130, 246, 0.2);
-        }
-        
-        .context-menu-item.danger:hover {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-        }
-
-        .interactive-hint {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 24px;
-            font-size: 14px;
-            z-index: 200;
-            animation: hintFade 4s ease-in-out infinite;
-        }
-        
-        @keyframes hintFade {
-            0%, 80%, 100% { opacity: 0.7; }
-            40% { opacity: 1; }
-        }
     </style>
 </head>
 <body>
-    <div class="particles" id="particles"></div>
     <div id="toastContainer"></div>
-    <div id="contextMenu" class="context-menu hidden"></div>
-    
-    <div id="interactiveHint" class="interactive-hint">
-        Drag equipment to room • Right-click canvas for options
-    </div>
     
     <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50 hidden">
         <div class="loading-spinner mb-4"></div>
-        <div class="text-white text-lg font-semibold">Generating AI-Powered BOQ...</div>
-        <div class="text-white/70 text-sm mt-2">Analyzing room dimensions and requirements</div>
+        <div class="text-white text-lg font-semibold">Contacting AI Backend...</div>
+        <div class="text-white/70 text-sm mt-2">Analyzing room requirements</div>
     </div>
     
     <div id="renderContainer"></div>
     
     <div class="control-panel premium-glass rounded-2xl p-6 virtual-scroll">
-        <h2 class="text-xl font-bold mb-4 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            🏗️ Room Designer Pro
-        </h2>
+        <h2 class="text-xl font-bold mb-4 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">🏗️ Room Designer Pro</h2>
         
         <div class="space-y-4 mb-6">
             <h3 class="text-lg font-semibold text-white/90">Project Details</h3>
@@ -319,28 +157,6 @@
             </div>
         </div>
 
-        <div class="space-y-4 mb-6">
-            <h3 class="text-lg font-semibold text-white/90">Quick Room Presets</h3>
-            <div class="grid grid-cols-2 gap-3">
-                <button class="room-preset-btn" data-preset="meeting">
-                    <div class="text-sm font-semibold">Meeting Room</div>
-                    <div class="text-xs opacity-75">Standard setup</div>
-                </button>
-                <button class="room-preset-btn" data-preset="boardroom">
-                    <div class="text-sm font-semibold">Boardroom</div>
-                    <div class="text-xs opacity-75">Executive style</div>
-                </button>
-                <button class="room-preset-btn" data-preset="auditorium">
-                    <div class="text-sm font-semibold">Auditorium</div>
-                    <div class="text-xs opacity-75">Large venue</div>
-                </button>
-                <button class="room-preset-btn" data-preset="huddle">
-                    <div class="text-sm font-semibold">Huddle Space</div>
-                    <div class="text-xs opacity-75">Informal setup</div>
-                </button>
-            </div>
-        </div>
-        
         <div class="space-y-4 mb-6">
             <h3 class="text-lg font-semibold text-white/90">Room Configuration</h3>
             <div class="grid grid-cols-2 gap-4">
@@ -361,7 +177,6 @@
                         <option value="small">Small (2-6 people)</option>
                         <option value="medium" selected>Medium (6-12 people)</option>
                         <option value="large">Large (12-20 people)</option>
-                        <option value="xlarge">Extra Large (20-50 people)</option>
                     </select>
                 </div>
                 
@@ -371,119 +186,41 @@
                         <option value="meeting_room">Meeting Room</option>
                         <option value="boardroom" selected>Executive Boardroom</option>
                         <option value="huddle_room">Huddle Space</option>
-                        <option value="training">Training Room</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1">Brand Ecosystem</label>
-                    <select id="brandPreference" class="form-select">
-                        <option value="">Multi-Brand Best-of-Breed</option>
-                        <option value="logitech" selected>Logitech Complete</option>
-                        <option value="poly">Poly Professional</option>
                     </select>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium mb-1">Quality Tier</label>
                     <select id="budgetRange" class="form-select">
-                        <option value="economy">Economy Tier</option>
+                        <option value="economy">Economy</option>
                         <option value="standard" selected>Standard Professional</option>
                         <option value="premium">Premium Enterprise</option>
                     </select>
                 </div>
             </div>
             
-            <div class="grid grid-cols-2 gap-3">
-                <button id="updateRoom" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105">
-                    Update Room
-                </button>
-                <button id="generateFullBoq" class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105">
-                    🤖 AI Generate
-                </button>
+            <div class="grid grid-cols-2 gap-3 mt-4">
+                <button id="updateRoom" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-80 text-white font-semibold py-3 px-4 rounded-lg transition-opacity">Update Room</button>
+                <button id="generateFullBoq" class="bg-gradient-to-r from-green-600 to-blue-600 hover:opacity-80 text-white font-semibold py-3 px-4 rounded-lg transition-opacity">🤖 AI Generate</button>
             </div>
         </div>
         
         <div class="space-y-4 mb-6">
             <h3 class="text-lg font-semibold text-white/90">Special Requirements</h3>
-            <textarea id="requirements" class="form-input h-24 resize-none" placeholder="Describe special requirements...">Seamless hybrid meeting experience with wireless presentation, 4K displays, advanced audio processing, and intuitive room controls</textarea>
-        </div>
-        
-        <div>
-            <h3 class="text-lg font-semibold mb-3 text-white/90">Equipment Library</h3>
-            <div class="mb-3">
-                <input type="text" id="equipmentSearch" class="form-input" placeholder="Search equipment..." />
-            </div>
-            
-            <div class="space-y-2 max-h-64 overflow-y-auto virtual-scroll">
-                <div class="text-sm font-semibold text-blue-300 mb-2">📺 Displays & Visual</div>
-                <div class="equipment-item premium-glass rounded-lg p-3" draggable="true" data-type="display" data-name="Interactive 86&quot; 4K Display" data-price="4500" data-category="Displays & Projectors">
-                    <div class="font-semibold text-sm">Interactive 86" 4K Display</div>
-                    <div class="text-xs text-blue-300">Touch-enabled, Wall Mount - $4,500</div>
-                </div>
-                
-                <div class="equipment-item premium-glass rounded-lg p-3" draggable="true" data-type="projector" data-name="4K Laser Projector" data-price="8500" data-category="Displays & Projectors">
-                    <div class="font-semibold text-sm">4K Laser Projector</div>
-                    <div class="text-xs text-blue-300">6000 Lumens, Ceiling Mount - $8,500</div>
-                </div>
-                
-                <div class="text-sm font-semibold text-green-300 mb-2 mt-4">🎥 UC & Collaboration</div>
-                <div class="equipment-item premium-glass rounded-lg p-3" draggable="true" data-type="videobar" data-name="Logitech Rally Bar" data-price="2700" data-category="UC & Collaboration Devices">
-                    <div class="font-semibold text-sm">Logitech Rally Bar</div>
-                    <div class="text-xs text-green-300">AI-Powered All-in-One - $2,700</div>
-                </div>
-                
-                <div class="equipment-item premium-glass rounded-lg p-3" draggable="true" data-type="camera" data-name="PTZ 4K Conference Camera" data-price="2200" data-category="UC & Collaboration Devices">
-                    <div class="font-semibold text-sm">PTZ 4K Conference Camera</div>
-                    <div class="text-xs text-green-300">AI Tracking, Ceiling Mount - $2,200</div>
-                </div>
-                
-                <div class="equipment-item premium-glass rounded-lg p-3" draggable="true" data-type="controller" data-name="Logitech Tap IP" data-price="1200" data-category="UC & Collaboration Devices">
-                    <div class="font-semibold text-sm">Logitech Tap IP</div>
-                    <div class="text-xs text-green-300">Touch Room Controller - $1,200</div>
-                </div>
-                
-                <div class="text-sm font-semibold text-yellow-300 mb-2 mt-4">🔊 Audio Systems</div>
-                <div class="equipment-item premium-glass rounded-lg p-3" draggable="true" data-type="speaker" data-name="Premium Ceiling Speaker" data-price="850" data-category="Audio: Speakers & Amplifiers">
-                    <div class="font-semibold text-sm">Premium Ceiling Speaker</div>
-                    <div class="text-xs text-yellow-300">Spatial Audio, Per Unit - $850</div>
-                </div>
-                
-                <div class="equipment-item premium-glass rounded-lg p-3" draggable="true" data-type="microphone" data-name="AI Microphone Array" data-price="1400" data-category="Audio: Microphones & Conferencing">
-                    <div class="font-semibold text-sm">AI Microphone Array</div>
-                    <div class="text-xs text-yellow-300">Beamforming, Noise Cancellation - $1,400</div>
-                </div>
-                
-                <div class="text-sm font-semibold text-purple-300 mb-2 mt-4">⚙️ Control & Infrastructure</div>
-                <div class="equipment-item premium-glass rounded-lg p-3" draggable="true" data-type="processor" data-name="AV Control Processor" data-price="3200" data-category="Control & Processing">
-                    <div class="font-semibold text-sm">AV Control Processor</div>
-                    <div class="text-xs text-purple-300">Enterprise Grade, Rack Mount - $3,200</div>
-                </div>
-                
-                <div class="equipment-item premium-glass rounded-lg p-3" draggable="true" data-type="network" data-name="Managed Network Switch" data-price="800" data-category="Network & Infrastructure">
-                    <div class="font-semibold text-sm">Managed Network Switch</div>
-                    <div class="text-xs text-purple-300">24-Port PoE+, Rack Mount - $800</div>
-                </div>
-            </div>
+            <textarea id="requirements" class="form-input h-24 resize-none" placeholder="e.g., wireless presentation, specific brand...">Seamless hybrid meeting experience with 4K displays and intuitive room controls.</textarea>
         </div>
     </div>
     
     <div class="boq-panel premium-glass rounded-2xl p-6 virtual-scroll">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-                📋 Bill of Quantities
-            </h2>
+            <h2 class="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">📋 Bill of Quantities</h2>
             <div class="flex space-x-2">
-                <button id="exportBoq" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-all">
-                    Export
-                </button>
-                <button id="clearBoq" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-all">
-                    Clear
-                </button>
+                <button id="exportBoq" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-all">Export</button>
+                <button id="clearBoq" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-all">Clear</button>
             </div>
         </div>
         
-        <div class="mb-6 p-4 bg-gradient-to-r from-blue-500/20 to-green-500/20 rounded-lg border border-blue-500/30">
+        <div class="mb-6 p-4 bg-black/20 rounded-lg border border-white/10">
             <div class="text-sm font-semibold text-blue-200 mb-2">Project Summary</div>
             <div id="projectSummary" class="text-xs text-white/80 space-y-1">
                 <div>Room: <span id="summaryDimensions">8m × 6m</span></div>
@@ -494,21 +231,9 @@
         </div>
         
         <div id="boqContainer" class="space-y-4">
-            <div class="boq-section">
-                <h3 class="text-lg font-semibold text-white/90 mb-3">Getting Started</h3>
-                <div class="text-sm text-white/70 p-4 bg-white/5 rounded-lg border border-white/10">
-                    <p class="mb-2">🚀 <strong>Quick Setup:</strong></p>
-                    <ul class="text-xs space-y-1 text-white/60">
-                        <li>1. Configure room dimensions and requirements.</li>
-                        <li>2. Use a preset or drag equipment to the room.</li>
-                        <li>3. Click "AI Generate" for an intelligent system design.</li>
-                        <li>4. Review, customize, and export your BOQ.</li>
-                    </ul>
-                </div>
             </div>
-        </div>
         
-        <div id="totalSummary" class="mt-6 p-4 bg-gradient-to-r from-green-600/20 to-blue-600/20 rounded-lg border border-green-500/30">
+        <div id="totalSummary" class="mt-6 p-4 bg-black/20 rounded-lg border border-green-500/30">
             <div class="flex justify-between items-center">
                 <span class="text-lg font-bold text-green-300">Total Project Value:</span>
                 <span id="totalCost" class="text-xl font-bold text-white">$0.00</span>
@@ -524,447 +249,280 @@
                 </div>
             </div>
         </div>
-        
-        <div id="recommendations" class="mt-4 p-4 bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-lg border border-green-500/30 hidden">
-            <div class="text-sm font-semibold text-green-300 mb-2">🤖 AI Recommendations</div>
-            <div id="recommendationText" class="text-xs text-white/80"></div>
-        </div>
     </div>
     
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                const roomDesigner = new Enhanced3DRoomDesigner();
-                
-                // --- Additional Setup ---
-                setupEquipmentSearch();
-                setupExportFeatures(roomDesigner);
-                setupInteractiveElements(roomDesigner);
+        // Main application instance
+        let designer;
 
-            } catch (error) {
-                console.error("Failed to initialize the Room Designer application:", error);
-                // Optionally display a user-friendly error message on the page
-                document.body.innerHTML = `<div style="color: red; text-align: center; padding-top: 50px;">
-                    <h1>Application Error</h1>
-                    <p>Could not load the 3D Room Designer. Please check the console for details.</p>
-                </div>`;
-            }
-        });
-
-        // --- Core Application Class ---
         class Enhanced3DRoomDesigner {
             constructor() {
                 this.scene = null;
                 this.camera = null;
                 this.renderer = null;
                 this.room = null;
-                this.equipment = [];
                 this.boqData = {};
-                this.draggedElement = null;
                 this.roomDimensions = { width: 8, depth: 6, height: 3 };
                 
+                // --- BACKEND CONNECTION ---
+                this.backendUrl = 'https://adarshav-boq-backend.hf.space';
+
                 this.init();
                 this.setupEventListeners();
-                this.createParticles();
                 this.updateProjectSummary();
+                this.updateBOQDisplay(); // Initial render
             }
             
             init() {
-                // Scene
-                this.scene = new THREE.Scene();
-                this.scene.background = new THREE.Color(0x0a0a1a);
-                
-                // Camera
-                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                this.camera.position.set(10, 8, 10);
-                this.camera.lookAt(0, 0, 0);
-                
-                // Renderer
-                const renderContainer = document.getElementById('renderContainer');
-                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.shadowMap.enabled = true;
-                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                this.renderer.toneMappingExposure = 1.2;
-                renderContainer.appendChild(this.renderer.domElement);
-                
-                // Lighting & Initial Scene
-                this.setupLighting();
-                this.createRoom();
-                this.setupControls();
-                
-                this.animate();
+                try {
+                    this.scene = new THREE.Scene();
+                    this.scene.background = new THREE.Color(0x0a0a1a);
+                    
+                    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                    this.camera.position.set(10, 8, 10);
+                    this.camera.lookAt(0, 0, 0);
+                    
+                    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                    this.renderer.shadowMap.enabled = true;
+                    this.renderer.setPixelRatio(window.devicePixelRatio);
+                    
+                    document.getElementById('renderContainer').appendChild(this.renderer.domElement);
+                    
+                    this.setupLighting();
+                    this.createRoom();
+                    this.setupControls();
+                    this.animate();
+                } catch (error) {
+                    console.error('Failed to initialize 3D scene:', error);
+                    this.showToast('Error loading 3D canvas', 'error');
+                }
             }
             
             setupLighting() {
-                this.scene.add(new THREE.AmbientLight(0x404040, 0.4));
-                
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-                directionalLight.position.set(10, 10, 5);
-                directionalLight.castShadow = true;
-                directionalLight.shadow.mapSize.width = 2048;
-                directionalLight.shadow.mapSize.height = 2048;
-                this.scene.add(directionalLight);
-                
-                const pointLight1 = new THREE.PointLight(0x3b82f6, 0.5, 20);
-                pointLight1.position.set(5, 6, 5);
-                this.scene.add(pointLight1);
+                this.scene.add(new THREE.AmbientLight(0x404040, 0.5));
+                const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                dirLight.position.set(10, 15, 5);
+                dirLight.castShadow = true;
+                this.scene.add(dirLight);
             }
-            
-            setupControls() {
-                let mouseDown = false, mouseX = 0, mouseY = 0;
-                const canvas = this.renderer.domElement;
-                
-                canvas.addEventListener('mousedown', (e) => { mouseDown = true; mouseX = e.clientX; mouseY = e.clientY; });
-                canvas.addEventListener('mouseup', () => { mouseDown = false; });
-                
-                canvas.addEventListener('mousemove', (e) => {
-                    if (!mouseDown) return;
-                    const deltaX = e.clientX - mouseX, deltaY = e.clientY - mouseY;
-                    
-                    const spherical = new THREE.Spherical().setFromVector3(this.camera.position);
-                    spherical.theta -= deltaX * 0.01;
-                    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + deltaY * 0.01));
-                    
-                    this.camera.position.setFromSpherical(spherical);
-                    this.camera.lookAt(0, 0, 0);
-                    
-                    mouseX = e.clientX;
-                    mouseY = e.clientY;
-                });
-                
-                canvas.addEventListener('wheel', (e) => {
-                    e.preventDefault();
-                    const scale = e.deltaY > 0 ? 1.1 : 0.9;
-                    this.camera.position.multiplyScalar(scale);
-                    
-                    const distance = this.camera.position.length();
-                    if (distance < 5) this.camera.position.normalize().multiplyScalar(5);
-                    if (distance > 50) this.camera.position.normalize().multiplyScalar(50);
-                });
-            }
-            
+
             createRoom() {
                 if (this.room) this.scene.remove(this.room);
-                const { width, depth, height } = this.roomDimensions;
                 this.room = new THREE.Group();
                 
                 const floor = new THREE.Mesh(
-                    new THREE.PlaneGeometry(width, depth),
-                    new THREE.MeshLambertMaterial({ color: 0x2a2a3a, transparent: true, opacity: 0.8 })
+                    new THREE.PlaneGeometry(this.roomDimensions.width, this.roomDimensions.depth),
+                    new THREE.MeshLambertMaterial({ color: 0x2a2a3a })
                 );
                 floor.rotation.x = -Math.PI / 2;
                 floor.receiveShadow = true;
                 this.room.add(floor);
-                
-                const wallMaterial = new THREE.MeshLambertMaterial({ color: 0x404050, transparent: true, opacity: 0.6 });
-                const backWall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wallMaterial);
-                backWall.position.set(0, height / 2, -depth / 2);
-                this.room.add(backWall);
-
-                const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(depth, height), wallMaterial);
-                leftWall.position.set(-width / 2, height / 2, 0);
-                leftWall.rotation.y = Math.PI / 2;
-                this.room.add(leftWall);
-                
-                const gridHelper = new THREE.GridHelper(Math.max(width, depth) * 1.2, 20, 0x444444, 0x333333);
-                gridHelper.position.y = 0.01;
-                this.room.add(gridHelper);
-                
                 this.scene.add(this.room);
             }
+
+            setupControls() {
+                // Simplified manual orbit controls
+                const canvas = this.renderer.domElement;
+                let isMouseDown = false, mouseX = 0, mouseY = 0;
+
+                const onPointerDown = (e) => { isMouseDown = true; mouseX = e.clientX; mouseY = e.clientY; };
+                const onPointerUp = () => { isMouseDown = false; };
+                const onPointerMove = (e) => {
+                    if (!isMouseDown) return;
+                    const deltaX = e.clientX - mouseX, deltaY = e.clientY - mouseY;
+                    const spherical = new THREE.Spherical().setFromVector3(this.camera.position);
+                    spherical.theta -= deltaX * 0.005;
+                    spherical.phi = Math.max(0.1, Math.min(Math.PI / 2, spherical.phi - deltaY * 0.005));
+                    this.camera.position.setFromSpherical(spherical);
+                    this.camera.lookAt(0, 0, 0);
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                };
+                const onWheel = (e) => {
+                    this.camera.position.multiplyScalar(e.deltaY > 0 ? 1.1 : 0.9);
+                };
+
+                canvas.addEventListener('pointerdown', onPointerDown);
+                canvas.addEventListener('pointerup', onPointerUp);
+                canvas.addEventListener('pointermove', onPointerMove);
+                canvas.addEventListener('wheel', onWheel);
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                this.renderer.render(this.scene, this.camera);
+            }
             
-            addEquipment(type, name, position) {
-                const equipment = this.createEquipmentMesh(type);
-                equipment.position.copy(position);
-                equipment.userData = { type, name, id: Date.now().toString() };
-                this.scene.add(equipment);
-                this.equipment.push(equipment);
-                return equipment;
-            }
-
-            createEquipmentMesh(type) {
-                let geometry, material, mesh;
-                const defaultMaterial = { color: 0x333333 };
-
-                switch(type) {
-                    case 'display':
-                        geometry = new THREE.BoxGeometry(2, 1.2, 0.1);
-                        material = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
-                        mesh = new THREE.Mesh(geometry, material);
-                        const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.0), new THREE.MeshLambertMaterial({ color: 0x2563eb }));
-                        screen.position.z = 0.06;
-                        mesh.add(screen);
-                        break;
-                    case 'videobar':
-                        geometry = new THREE.BoxGeometry(1.5, 0.15, 0.15);
-                        break;
-                    case 'camera':
-                        geometry = new THREE.SphereGeometry(0.15, 16, 16);
-                        break;
-                    case 'speaker':
-                        geometry = new THREE.CylinderGeometry(0.3, 0.3, 0.1, 12);
-                        break;
-                    case 'projector':
-                        geometry = new THREE.BoxGeometry(0.8, 0.3, 1.2);
-                        break;
-                    default:
-                        geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-                        defaultMaterial.color = 0x3b82f6;
-                        break;
-                }
-                if (!mesh) {
-                    mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial(defaultMaterial));
-                }
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                return mesh;
-            }
-
             setupEventListeners() {
-                // UI Controls
-                document.getElementById('updateRoom').addEventListener('click', () => this.updateRoom());
+                document.getElementById('updateRoom').addEventListener('click', () => this.updateRoomDimensions());
                 document.getElementById('generateFullBoq').addEventListener('click', () => this.generateAIBoq());
-                
-                // Room Presets
-                document.querySelectorAll('.room-preset-btn').forEach(btn => {
-                    btn.addEventListener('click', (event) => {
-                        this.applyRoomPreset(event.currentTarget.dataset.preset, event.currentTarget);
-                    });
-                });
+                document.getElementById('exportBoq').addEventListener('click', () => this.exportBoq());
+                document.getElementById('clearBoq').addEventListener('click', () => this.clearBoq());
 
-                // Project Info
-                document.getElementById('projectName').addEventListener('input', () => this.updateProjectSummary());
-
-                // Drag and Drop
-                this.setupDragAndDrop();
-
-                // Window Resize
                 window.addEventListener('resize', () => {
                     this.camera.aspect = window.innerWidth / window.innerHeight;
                     this.camera.updateProjectionMatrix();
                     this.renderer.setSize(window.innerWidth, window.innerHeight);
                 });
             }
-
-            setupDragAndDrop() {
-                const equipmentItems = document.querySelectorAll('.equipment-item');
-                const canvas = this.renderer.domElement;
-                
-                equipmentItems.forEach(item => {
-                    item.addEventListener('dragstart', (e) => {
-                        this.draggedElement = e.currentTarget;
-                        e.dataTransfer.effectAllowed = 'copy';
-                    });
-                });
-                
-                canvas.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
-                
-                canvas.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    if (!this.draggedElement) return;
-                    
-                    const rect = canvas.getBoundingClientRect();
-                    const mouse = new THREE.Vector2(
-                        ((e.clientX - rect.left) / rect.width) * 2 - 1,
-                        -((e.clientY - rect.top) / rect.height) * 2 + 1
-                    );
-
-                    // Create a ray from camera to mouse position
-                    const raycaster = new THREE.Raycaster();
-                    raycaster.setFromCamera(mouse, this.camera);
-                    
-                    // Calculate intersection point with the floor plane (y=0)
-                    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-                    const worldPosition = new THREE.Vector3();
-                    raycaster.ray.intersectPlane(plane, worldPosition);
-
-                    if (worldPosition) {
-                        const { type, name, price, category } = this.draggedElement.dataset;
-                        const equipment = this.addEquipment(type, name, worldPosition);
-                        this.addToBOQ(name, parseFloat(price), category, 1);
-                        this.showToast(`Added ${name}`, 'success');
-                        this.highlightEquipment(equipment);
-                    }
-                    this.draggedElement = null;
-                });
-            }
             
-            updateRoom() {
-                const width = parseFloat(document.getElementById('roomWidth').value);
-                const depth = parseFloat(document.getElementById('roomDepth').value);
-                
-                this.roomDimensions = { width, depth, height: 3 };
+            updateRoomDimensions() {
+                this.roomDimensions.width = parseFloat(document.getElementById('roomWidth').value);
+                this.roomDimensions.depth = parseFloat(document.getElementById('roomDepth').value);
                 this.createRoom();
                 this.updateProjectSummary();
-                this.showToast('Room updated successfully!', 'success');
+                this.showToast('Room dimensions updated!', 'success');
             }
-            
-            applyRoomPreset(preset, targetButton) {
-                document.querySelectorAll('.room-preset-btn').forEach(btn => btn.classList.remove('active'));
-                targetButton.classList.add('active');
 
-                const presets = {
-                    meeting: { width: 6, depth: 4, capacity: 'small', useCase: 'meeting_room' },
-                    boardroom: { width: 8, depth: 6, capacity: 'medium', useCase: 'boardroom' },
-                    auditorium: { width: 15, depth: 12, capacity: 'xlarge', useCase: 'auditorium' },
-                    huddle: { width: 4, depth: 3, capacity: 'small', useCase: 'huddle_room' }
+            async generateAIBoq() {
+                this.showLoadingOverlay(true);
+
+                const roomConfig = {
+                    width: this.roomDimensions.width,
+                    depth: this.roomDimensions.depth,
+                    height: this.roomDimensions.height,
+                    capacity: document.getElementById('roomSize').value,
+                    useCase: document.getElementById('useCase').value,
+                    budgetTier: document.getElementById('budgetRange').value,
+                    requirements: document.getElementById('requirements').value,
                 };
                 
-                const config = presets[preset];
-                if (config) {
-                    document.getElementById('roomWidth').value = config.width;
-                    document.getElementById('roomDepth').value = config.depth;
-                    document.getElementById('roomSize').value = config.capacity;
-                    document.getElementById('useCase').value = config.useCase;
+                try {
+                    // --- REAL BACKEND API CALL ---
+                    console.log('Sending data to backend:', roomConfig);
+                    const response = await fetch(`${this.backendUrl}/generate_boq`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(roomConfig)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Backend error: ${response.status} ${response.statusText}`);
+                    }
+
+                    const generatedBoq = await response.json();
+                    console.log('Received BOQ from backend:', generatedBoq);
                     
-                    this.updateRoom();
-                    this.showToast(`Applied ${preset} preset`, 'info');
-                }
-            }
-            
-            generateAIBoq() {
-                this.showLoadingOverlay(true);
-                setTimeout(() => {
-                    this.clearBOQ(false); // Clear BOQ without confirmation
-                    const { value: roomSize } = document.getElementById('roomSize');
-                    const { value: useCase } = document.getElementById('useCase');
-                    const { value: budget } = document.getElementById('budgetRange');
-                    const { value: brand } = document.getElementById('brandPreference');
+                    // Assuming the backend returns the BOQ in the correct format { "Category": [items] }
+                    this.boqData = generatedBoq.boq; 
+                    
+                    this.updateBOQDisplay();
+                    this.showToast('AI-powered BOQ generated successfully!', 'success');
 
-                    this.getAIRecommendations(roomSize, useCase, budget, brand)
-                        .forEach(item => this.addToBOQ(item.name, item.price, item.category, item.quantity));
-
-                    this.generateRecommendationsText(roomSize, useCase, budget);
+                } catch (error) {
+                    console.error('Error fetching from backend:', error);
+                    this.showToast('Backend connection failed. Using offline mode.', 'error');
+                    this.generateOfflineBoq(roomConfig); // Fallback to offline mode
+                } finally {
                     this.showLoadingOverlay(false);
-                    this.showToast('AI BOQ generated successfully!', 'success');
-                }, 2000);
-            }
-            
-            getAIRecommendations(roomSize, useCase, budget, brand) {
-                const recs = [];
-                // Base UC equipment
-                recs.push({ name: 'Logitech Rally Bar', price: 2700, category: 'UC & Collaboration Devices', quantity: 1 });
-                recs.push({ name: 'Logitech Tap IP', price: 1200, category: 'UC & Collaboration Devices', quantity: 1 });
-                
-                // Display
-                recs.push({ name: ['small', 'medium'].includes(roomSize) ? 'Interactive 86" 4K Display' : '4K Laser Projector', price: ['small', 'medium'].includes(roomSize) ? 4500 : 8500, category: 'Displays & Projectors', quantity: 1 });
-
-                // Audio
-                const speakerCount = { small: 2, medium: 4, large: 6, xlarge: 8 }[roomSize] || 2;
-                recs.push({ name: 'Premium Ceiling Speaker', price: 850, category: 'Audio: Speakers & Amplifiers', quantity: speakerCount });
-                recs.push({ name: 'AI Microphone Array', price: 1400, category: 'Audio: Microphones & Conferencing', quantity: 1 });
-
-                // Infrastructure
-                recs.push({ name: 'AV Control Processor', price: 3200, category: 'Control & Processing', quantity: 1 });
-                recs.push({ name: 'Managed Network Switch', price: 800, category: 'Network & Infrastructure', quantity: 1 });
-                
-                // Extra camera for large rooms
-                if (['large', 'xlarge'].includes(roomSize)) {
-                    recs.push({ name: 'PTZ 4K Conference Camera', price: 2200, category: 'UC & Collaboration Devices', quantity: 1 });
                 }
-                return recs;
             }
 
-            addToBOQ(name, price, category, quantity = 1) {
+            generateOfflineBoq(config) {
+                // This is a simple client-side fallback if the backend fails
+                this.boqData = {};
+                this.addItemToBOQ('Displays & Projectors', 'Interactive 86" 4K Display', 4500, 1);
+                this.addItemToBOQ('UC & Collaboration Devices', 'Logitech Rally Bar', 2700, 1);
+                this.addItemToBOQ('UC & Collaboration Devices', 'Logitech Tap IP', 1200, 1);
+                this.updateBOQDisplay();
+            }
+
+            addItemToBOQ(category, name, price, quantity) {
                 if (!this.boqData[category]) this.boqData[category] = [];
-                
                 const existingItem = this.boqData[category].find(item => item.name === name);
                 if (existingItem) {
                     existingItem.quantity += quantity;
                 } else {
-                    this.boqData[category].push({ name, price, quantity });
+                    this.boqData[category].push({ name, price, quantity, unitPrice: price });
                 }
-                this.renderBOQ();
             }
             
-            renderBOQ() {
+            updateBOQDisplay() {
                 const container = document.getElementById('boqContainer');
                 container.innerHTML = '';
-                
-                let equipmentCost = 0;
-                
+                let totalEquipmentCost = 0;
+
                 if (Object.keys(this.boqData).length === 0) {
-                     container.innerHTML = `<div class="text-sm text-white/70 text-center p-4">Your Bill of Quantities is empty.</div>`;
+                    container.innerHTML = `<div class="text-center text-sm text-white/60 p-4">Your BOQ is empty. Click "AI Generate" to start.</div>`;
                 }
 
                 Object.entries(this.boqData).forEach(([category, items]) => {
-                    if (items.length === 0) return;
+                    const categorySection = document.createElement('div');
+                    categorySection.className = 'boq-section';
+                    categorySection.innerHTML = `<h3 class="text-lg font-semibold text-white/90 mb-3">${category}</h3>`;
                     
-                    const section = document.createElement('div');
-                    section.className = 'boq-section';
-                    section.innerHTML = `<h3 class="text-lg font-semibold text-white/90 mb-3">${category}</h3>`;
-                    
-                    items.forEach(item => {
-                        const total = item.price * item.quantity;
-                        equipmentCost += total;
+                    items.forEach((item, index) => {
+                        const itemCost = item.price * item.quantity;
+                        totalEquipmentCost += itemCost;
                         
                         const itemDiv = document.createElement('div');
                         itemDiv.className = 'boq-item';
                         itemDiv.innerHTML = `
-                            <div class="flex justify-between items-start">
+                            <div class="flex justify-between items-center">
                                 <div class="flex-1">
-                                    <div class="font-semibold text-sm text-white">${item.name}</div>
-                                    <div class="text-xs text-white/60">
-                                        $${item.price.toLocaleString()} × ${item.quantity} = $${total.toLocaleString()}
+                                    <div class="font-semibold text-sm">${item.name}</div>
+                                    <div class="text-xs text-white/80 mt-1">
+                                        Qty: ${item.quantity} × $${item.unitPrice.toLocaleString()} = $${itemCost.toLocaleString()}
                                     </div>
                                 </div>
-                                <div class="edit-controls flex space-x-2">
-                                    <button class="text-blue-400 hover:text-blue-300 text-lg" data-action="edit" data-category="${category}" data-name="${item.name}">✏️</button>
-                                    <button class="text-red-400 hover:text-red-300 text-lg" data-action="delete" data-category="${category}" data-name="${item.name}">🗑️</button>
+                                <div class="flex items-center space-x-2 ml-4">
+                                    <button onclick="designer.adjustQuantity('${category}', ${index}, -1)" class="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-300 text-xs rounded">-</button>
+                                    <button onclick="designer.removeItem('${category}', ${index})" class="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-300 text-xs rounded">×</button>
                                 </div>
                             </div>`;
-                        section.appendChild(itemDiv);
+                        categorySection.appendChild(itemDiv);
                     });
-                    container.appendChild(section);
+                    container.appendChild(categorySection);
                 });
                 
-                const installationCost = equipmentCost * 0.20;
-                const totalCost = equipmentCost + installationCost;
-                
-                document.getElementById('equipmentCost').textContent = `$${equipmentCost.toLocaleString()}`;
+                const installationCost = totalEquipmentCost * 0.20;
+                document.getElementById('equipmentCost').textContent = `$${totalEquipmentCost.toLocaleString()}`;
                 document.getElementById('installationCost').textContent = `$${installationCost.toLocaleString()}`;
-                document.getElementById('totalCost').textContent = `$${totalCost.toLocaleString()}`;
+                document.getElementById('totalCost').textContent = `$${(totalEquipmentCost + installationCost).toLocaleString()}`;
             }
             
-            clearBOQ(confirmNeeded = true) {
-                if (confirmNeeded && !confirm('Are you sure you want to clear the entire BOQ?')) return;
-                this.boqData = {};
-                this.renderBOQ();
-                if(confirmNeeded) this.showToast('BOQ cleared', 'info');
-            }
-            
-            removeBOQItem(category, name) {
-                if (this.boqData[category]) {
-                    this.boqData[category] = this.boqData[category].filter(item => item.name !== name);
-                    if (this.boqData[category].length === 0) delete this.boqData[category];
-                }
-                this.renderBOQ();
-                this.showToast(`Removed ${name}`, 'info');
-            }
-            
-            editBOQItem(category, name) {
-                const item = this.boqData[category]?.find(i => i.name === name);
+            adjustQuantity(category, index, change) {
+                const item = this.boqData[category]?.[index];
                 if (item) {
-                    const newQuantity = prompt(`Enter new quantity for ${name}:`, item.quantity);
-                    const parsedQty = parseInt(newQuantity);
-                    if (!isNaN(parsedQty) && parsedQty > 0) {
-                        item.quantity = parsedQty;
-                        this.renderBOQ();
-                        this.showToast(`Updated ${name} quantity`, 'success');
-                    } else if (newQuantity !== null) {
-                         this.showToast(`Invalid quantity entered.`, 'error');
-                    }
+                    item.quantity += change;
+                    if (item.quantity <= 0) this.boqData[category].splice(index, 1);
+                    this.updateBOQDisplay();
+                }
+            }
+            
+            removeItem(category, index) {
+                if (this.boqData[category]?.[index]) {
+                    this.boqData[category].splice(index, 1);
+                    this.updateBOQDisplay();
+                    this.showToast('Item removed', 'success');
                 }
             }
 
-            generateRecommendationsText(roomSize, useCase, budget) {
-                const text = `For a ${roomSize} ${useCase.replace('_', ' ')} at the ${budget} tier, focus on robust collaboration tools. Consider a dual-display setup for enhanced visibility and ensure proper acoustic treatment for optimal audio quality.`;
-                document.getElementById('recommendationText').textContent = text;
-                document.getElementById('recommendations').classList.remove('hidden');
+            exportBoq() {
+                let csvContent = "Category,Item,Quantity,Unit Price,Total Price\n";
+                Object.entries(this.boqData).forEach(([category, items]) => {
+                    items.forEach(item => {
+                        csvContent += `"${category}","${item.name}",${item.quantity},${item.unitPrice},${item.price * item.quantity}\n`;
+                    });
+                });
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "BOQ_Export.csv";
+                link.click();
+                URL.revokeObjectURL(link.href);
+                this.showToast('BOQ exported as CSV!', 'success');
             }
             
+            clearBoq() {
+                if (confirm('Are you sure you want to clear the entire BOQ?')) {
+                    this.boqData = {};
+                    this.updateBOQDisplay();
+                    this.showToast('BOQ cleared!', 'success');
+                }
+            }
+
             updateProjectSummary() {
                 document.getElementById('summaryDimensions').textContent = `${document.getElementById('roomWidth').value}m × ${document.getElementById('roomDepth').value}m`;
                 document.getElementById('summaryCapacity').textContent = document.getElementById('roomSize').options[document.getElementById('roomSize').selectedIndex].text;
@@ -972,141 +530,32 @@
                 document.getElementById('summaryTier').textContent = document.getElementById('budgetRange').options[document.getElementById('budgetRange').selectedIndex].text;
             }
             
-            highlightEquipment(equipment) {
-                equipment.material.emissive.setHex(0x10b981);
-                setTimeout(() => equipment.material.emissive.setHex(0x000000), 1000);
+            showLoadingOverlay(show) {
+                document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
             }
             
-            showToast(message, type = 'info') {
+            showToast(message, type = 'success') {
+                const container = document.getElementById('toastContainer');
                 const toast = document.createElement('div');
-                const colors = { success: 'border-green-500', error: 'border-red-500', info: 'border-blue-500' };
-                toast.className = `toast premium-glass rounded-lg p-4 ${colors[type] || 'border-blue-500'} border`;
-                toast.innerHTML = `<div class="font-semibold">${message}</div>`;
-                document.getElementById('toastContainer').appendChild(toast);
+                const style = type === 'success' 
+                    ? 'from-green-500 to-blue-500' 
+                    : 'from-red-500 to-orange-500';
                 
-                setTimeout(() => toast.classList.add('show'), 100);
+                toast.className = `toast premium-glass p-4 bg-gradient-to-r ${style} text-white shadow-lg`;
+                toast.innerHTML = `<div class="font-medium">${message}</div>`;
+                
+                container.appendChild(toast);
+                setTimeout(() => toast.classList.add('show'), 10);
                 setTimeout(() => {
                     toast.classList.remove('show');
                     toast.addEventListener('transitionend', () => toast.remove());
                 }, 3000);
             }
-            
-            showLoadingOverlay(show) {
-                document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
-            }
-            
-            createParticles() {
-                const container = document.getElementById('particles');
-                for (let i = 0; i < 50; i++) {
-                    const p = document.createElement('div');
-                    p.className = 'particle';
-                    p.style.left = `${Math.random() * 100}%`;
-                    p.style.top = `${Math.random() * 100}%`;
-                    p.style.animationDelay = `${Math.random() * 6}s`;
-                    p.style.animationDuration = `${6 + Math.random() * 4}s`;
-                    container.appendChild(p);
-                }
-            }
-
-            // --- Context Menu Actions ---
-            resetCamera() { this.camera.position.set(10, 8, 10); this.camera.lookAt(0, 0, 0); this.showToast('Camera view reset', 'info'); }
-            centerView() { this.camera.lookAt(0, 0, 0); this.showToast('View centered on room', 'info'); }
-            clearAllEquipment() {
-                if (confirm('Remove all 3D equipment from the room? This will not clear the BOQ.')) {
-                    this.equipment.forEach(item => this.scene.remove(item));
-                    this.equipment = [];
-                    this.showToast('All 3D equipment removed', 'info');
-                }
-            }
-            
-            animate() {
-                requestAnimationFrame(() => this.animate());
-                this.renderer.render(this.scene, this.camera);
-            }
-        }
-
-        // --- Helper Setup Functions ---
-        function setupEquipmentSearch() {
-            document.getElementById('equipmentSearch').addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-                document.querySelectorAll('.equipment-item').forEach(item => {
-                    const name = item.dataset.name.toLowerCase();
-                    item.style.display = name.includes(searchTerm) ? 'block' : 'none';
-                });
-            });
         }
         
-        function setupExportFeatures(designer) {
-            document.getElementById('exportBoq').addEventListener('click', () => {
-                let csvContent = "Category,Item Name,Unit Price,Quantity,Total\n";
-                Object.entries(designer.boqData).forEach(([category, items]) => {
-                    items.forEach(item => {
-                        csvContent += `"${category}","${item.name}",${item.price},${item.quantity},${item.price * item.quantity}\n`;
-                    });
-                });
-                
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const a = document.createElement('a');
-                a.href = window.URL.createObjectURL(blob);
-                a.download = `${document.getElementById('projectName').value || 'AV_Room'}_BOQ.csv`;
-                a.click();
-                window.URL.revokeObjectURL(a.href);
-                designer.showToast('BOQ exported successfully!', 'success');
-            });
-            
-            document.getElementById('clearBoq').addEventListener('click', () => designer.clearBOQ());
-        }
-
-        function setupInteractiveElements(designer) {
-            // Hide hint after some time
-            setTimeout(() => {
-                const hint = document.getElementById('interactiveHint');
-                if (hint) {
-                    hint.style.opacity = '0';
-                    hint.addEventListener('transitionend', () => hint.remove());
-                }
-            }, 10000);
-
-            // Event Delegation for BOQ controls
-            document.getElementById('boqContainer').addEventListener('click', (e) => {
-                const button = e.target.closest('button[data-action]');
-                if (!button) return;
-                const { action, category, name } = button.dataset;
-                if (action === 'edit') designer.editBOQItem(category, name);
-                if (action === 'delete') designer.removeBOQItem(category, name);
-            });
-
-            // Context Menu Setup
-            const contextMenu = document.getElementById('contextMenu');
-            document.getElementById('renderContainer').addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                contextMenu.innerHTML = `
-                    <div class="context-menu-item" data-action="reset-view">Reset View</div>
-                    <div class="context-menu-item" data-action="center-view">Center Room</div>
-                    <div class="context-menu-item danger" data-action="clear-equipment">Clear 3D Equipment</div>
-                `;
-                contextMenu.style.left = `${e.clientX}px`;
-                contextMenu.style.top = `${e.clientY}px`;
-                contextMenu.classList.remove('hidden');
-            });
-
-            contextMenu.addEventListener('click', (e) => {
-                const item = e.target.closest('.context-menu-item');
-                if(!item) return;
-                const { action } = item.dataset;
-                if (action === 'reset-view') designer.resetCamera();
-                if (action === 'center-view') designer.centerView();
-                if (action === 'clear-equipment') designer.clearAllEquipment();
-                contextMenu.classList.add('hidden');
-            });
-
-            // Hide context menu on general click
-            document.addEventListener('click', (e) => {
-                if (!contextMenu.contains(e.target)) {
-                    contextMenu.classList.add('hidden');
-                }
-            });
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            designer = new Enhanced3DRoomDesigner();
+        });
     </script>
 </body>
 </html>
