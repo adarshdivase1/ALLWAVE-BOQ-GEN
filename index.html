@@ -3,559 +3,1016 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced 3D AV Room Designer Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Professional AV BOQ Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --success-green: #10b981;
-            --error-red: #ef4444;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
-        body {
+        * {
             font-family: 'Inter', sans-serif;
-            background: var(--primary-gradient);
-            min-height: 100vh;
-            color: white;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
         }
         
         .premium-glass {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
         
-        .control-panel, .boq-panel {
+        .virtual-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+        
+        .virtual-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .virtual-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .virtual-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        
+        .loading-overlay {
             position: fixed;
-            top: 20px;
-            z-index: 100;
-            max-width: 450px;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
-        }
-        .control-panel { left: 20px; }
-        .boq-panel { right: 20px; }
-        
-        .equipment-item {
-            cursor: grab;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .equipment-item:hover {
-            border-color: var(--accent-blue);
-            background: rgba(59, 130, 246, 0.1);
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-        }
-        
-        .equipment-item:active { cursor: grabbing; transform: scale(0.98); }
-        
-        .form-input, .form-select {
+            top: 0;
+            left: 0;
             width: 100%;
-            background: rgba(255, 255, 255, 0.1) !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            border-radius: 8px !important;
-            padding: 12px 16px !important;
-            color: white !important;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
         }
         
-        .form-input:focus, .form-select:focus {
-            border-color: var(--accent-blue) !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-            outline: none !important;
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #60a5fa;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
         
-        .form-select option { background: #1a1a2e; color: white; }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         
         .toast {
             position: fixed;
             top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            z-index: 1000;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            opacity: 0;
-        }
-        
-        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-        
-        .virtual-scroll::-webkit-scrollbar { width: 8px; }
-        .virtual-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.1); border-radius: 8px; }
-        .virtual-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 8px; }
-
-        .loading-spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 3px solid white;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .boq-section { border-left: 4px solid var(--accent-blue); padding-left: 16px; margin-bottom: 20px; }
-        
-        .boq-item {
-            background: rgba(255, 255, 255, 0.08);
+            right: 20px;
+            padding: 16px 24px;
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--success-green);
-            transition: all 0.3s ease;
-            position: relative;
+            color: white;
+            font-weight: 500;
+            z-index: 1001;
+            animation: slideIn 0.3s ease-out;
         }
         
-        .boq-item:hover { background: rgba(255, 255, 255, 0.12); transform: translateX(4px); }
+        .toast.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
         
-        #renderContainer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        #renderContainer canvas { display: block; width: 100%; height: 100%; cursor: grab; }
-        #renderContainer canvas:active { cursor: grabbing; }
-
+        .toast.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .toast.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-connected {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .status-disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-connected .status-dot {
+            background: #10b981;
+        }
+        
+        .status-disconnected .status-dot {
+            background: #ef4444;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
-<body>
-    <div id="toastContainer"></div>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white">
     
-    <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50 hidden">
-        <div class="loading-spinner mb-4"></div>
-        <div class="text-white text-lg font-semibold">Contacting AI Backend...</div>
-        <div class="text-white/70 text-sm mt-2">Analyzing room requirements</div>
-    </div>
-    
-    <div id="renderContainer"></div>
-    
-    <div class="control-panel premium-glass rounded-2xl p-6 virtual-scroll">
-        <h2 class="text-xl font-bold mb-4 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">🏗️ Room Designer Pro</h2>
-        
-        <div class="space-y-4 mb-6">
-            <h3 class="text-lg font-semibold text-white/90">Project Details</h3>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Project Name</label>
-                    <input type="text" id="projectName" class="form-input" placeholder="Conference Room Alpha" value="Enhanced AV Conference Room">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Client Name</label>
-                    <input type="text" id="clientName" class="form-input" placeholder="Acme Corporation" value="Premium Enterprise Client">
-                </div>
-            </div>
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="text-center">
+            <div class="loading-spinner mb-4"></div>
+            <p class="text-lg font-semibold">Generating Professional BOQ...</p>
+            <p class="text-sm text-gray-300 mt-2">Please wait while AI analyzes your requirements</p>
         </div>
+    </div>
 
-        <div class="space-y-4 mb-6">
-            <h3 class="text-lg font-semibold text-white/90">Room Configuration</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-center">Width (m)</label>
-                    <input type="number" id="roomWidth" class="form-input text-center" value="8" min="3" max="25" step="0.5">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-center">Depth (m)</label>
-                    <input type="number" id="roomDepth" class="form-input text-center" value="6" min="3" max="25" step="0.5">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
+                Professional AV BOQ Generator
+            </h1>
+            <p class="text-xl text-gray-300">AI-Powered Bill of Quantities for Audiovisual Systems</p>
+        </header>
+
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Configuration Panel -->
+            <div class="lg:col-span-1">
+                <div class="control-panel premium-glass rounded-2xl p-6 virtual-scroll">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Project Configuration</h2>
+                        <div id="apiStatus" class="status-indicator status-disconnected">
+                            <div class="status-dot"></div>
+                            <span>Checking API...</span>
+                        </div>
+                    </div>
+
+                    <!-- Project Details -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Project Name</label>
+                            <input type="text" id="projectName" placeholder="Enter project name" 
+                                   class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Client Name</label>
+                            <input type="text" id="clientName" placeholder="Enter client name" 
+                                   class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <!-- Room Configuration -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Width (m)</label>
+                                <input type="number" id="roomWidth" value="8" step="0.1" min="3" max="50"
+                                       class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-300 mb-2">Depth (m)</label>
+                                <input type="number" id="roomDepth" value="6" step="0.1" min="3" max="50"
+                                       class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Room Size Category</label>
+                            <select id="roomSize" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="small">Small (< 30 sqm)</option>
+                                <option value="medium" selected>Medium (30-80 sqm)</option>
+                                <option value="large">Large (80-150 sqm)</option>
+                                <option value="extra-large">Extra Large (> 150 sqm)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Use Case</label>
+                            <select id="useCase" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="meeting">Meeting Room</option>
+                                <option value="conference" selected>Conference Room</option>
+                                <option value="boardroom">Executive Boardroom</option>
+                                <option value="training">Training Room</option>
+                                <option value="presentation">Presentation Hall</option>
+                                <option value="hybrid">Hybrid Workspace</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Brand Preference</label>
+                            <select id="brandPreference" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">No Preference</option>
+                                <option value="premium">Premium Brands</option>
+                                <option value="enterprise">Enterprise Grade</option>
+                                <option value="budget">Cost Effective</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Budget Range</label>
+                            <select id="budgetRange" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="economy">Economy (< $50K)</option>
+                                <option value="standard" selected>Standard ($50K - $150K)</option>
+                                <option value="premium">Premium ($150K - $300K)</option>
+                                <option value="enterprise">Enterprise (> $300K)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Special Requirements</label>
+                            <textarea id="requirements" rows="3" placeholder="Any special requirements or preferences..." 
+                                      class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                        </div>
+
+                        <button onclick="boqGenerator.generateAIBoq()" 
+                                class="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                            🚀 Generate AI BOQ
+                        </button>
+
+                        <button onclick="boqGenerator.validateRoomConfiguration()" 
+                                class="w-full bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                            ✅ Validate Configuration
+                        </button>
+                    </div>
                 </div>
             </div>
-            
-            <div class="grid grid-cols-1 gap-3">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Room Capacity</label>
-                    <select id="roomSize" class="form-select">
-                        <option value="small">Small (2-6 people)</option>
-                        <option value="medium" selected>Medium (6-12 people)</option>
-                        <option value="large">Large (12-20 people)</option>
-                    </select>
+
+            <!-- 3D Visualization -->
+            <div class="lg:col-span-2">
+                <div class="premium-glass rounded-2xl p-6 mb-6">
+                    <h2 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
+                        3D Room Visualization
+                    </h2>
+                    <div id="roomVisualization" class="w-full h-96 bg-black/20 rounded-xl overflow-hidden border border-white/10"></div>
+                    <div class="flex gap-4 mt-4">
+                        <button onclick="boqGenerator.resetView()" 
+                                class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors">
+                            Reset View
+                        </button>
+                        <button onclick="boqGenerator.exportVisualization()" 
+                                class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors">
+                            Export Image
+                        </button>
+                    </div>
                 </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1">Primary Use Case</label>
-                    <select id="useCase" class="form-select">
-                        <option value="meeting_room">Meeting Room</option>
-                        <option value="boardroom" selected>Executive Boardroom</option>
-                        <option value="huddle_room">Huddle Space</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1">Quality Tier</label>
-                    <select id="budgetRange" class="form-select">
-                        <option value="economy">Economy</option>
-                        <option value="standard" selected>Standard Professional</option>
-                        <option value="premium">Premium Enterprise</option>
-                    </select>
+
+                <!-- BOQ Results -->
+                <div class="premium-glass rounded-2xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                            Bill of Quantities
+                        </h2>
+                        <div class="flex gap-3">
+                            <button onclick="boqGenerator.exportBOQ()" 
+                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                📄 Export PDF
+                            </button>
+                            <button onclick="boqGenerator.clearBOQ()" 
+                                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                🗑️ Clear BOQ
+                            </button>
+                        </div>
+                    </div>
+                    <div id="boqResults" class="virtual-scroll max-h-96 overflow-y-auto">
+                        <div class="text-center py-8 text-gray-400">
+                            <p class="text-lg">Generate a BOQ to see results here</p>
+                            <p class="text-sm mt-2">Configure your room parameters and click "Generate AI BOQ"</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <div class="grid grid-cols-2 gap-3 mt-4">
-                <button id="updateRoom" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-80 text-white font-semibold py-3 px-4 rounded-lg transition-opacity">Update Room</button>
-                <button id="generateFullBoq" class="bg-gradient-to-r from-green-600 to-blue-600 hover:opacity-80 text-white font-semibold py-3 px-4 rounded-lg transition-opacity">🤖 AI Generate</button>
-            </div>
-        </div>
-        
-        <div class="space-y-4 mb-6">
-            <h3 class="text-lg font-semibold text-white/90">Special Requirements</h3>
-            <textarea id="requirements" class="form-input h-24 resize-none" placeholder="e.g., wireless presentation, specific brand...">Seamless hybrid meeting experience with 4K displays and intuitive room controls.</textarea>
         </div>
     </div>
-    
-    <div class="boq-panel premium-glass rounded-2xl p-6 virtual-scroll">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">📋 Bill of Quantities</h2>
-            <div class="flex space-x-2">
-                <button id="exportBoq" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-all">Export</button>
-                <button id="clearBoq" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-all">Clear</button>
-            </div>
-        </div>
-        
-        <div class="mb-6 p-4 bg-black/20 rounded-lg border border-white/10">
-            <div class="text-sm font-semibold text-blue-200 mb-2">Project Summary</div>
-            <div id="projectSummary" class="text-xs text-white/80 space-y-1">
-                <div>Room: <span id="summaryDimensions">8m × 6m</span></div>
-                <div>Capacity: <span id="summaryCapacity">Medium (6-12 people)</span></div>
-                <div>Type: <span id="summaryType">Executive Boardroom</span></div>
-                <div>Tier: <span id="summaryTier">Standard Professional</span></div>
-            </div>
-        </div>
-        
-        <div id="boqContainer" class="space-y-4">
-            </div>
-        
-        <div id="totalSummary" class="mt-6 p-4 bg-black/20 rounded-lg border border-green-500/30">
-            <div class="flex justify-between items-center">
-                <span class="text-lg font-bold text-green-300">Total Project Value:</span>
-                <span id="totalCost" class="text-xl font-bold text-white">$0.00</span>
-            </div>
-            <div class="text-xs text-white/60 mt-2">
-                <div class="flex justify-between">
-                    <span>Equipment:</span>
-                    <span id="equipmentCost">$0.00</span>
-                </div>
-                <div class="flex justify-between">
-                    <span>Installation (Est. 20%):</span>
-                    <span id="installationCost">$0.00</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    
+
     <script>
-        // Main application instance
-        let designer;
-
-        class Enhanced3DRoomDesigner {
+        class BOQGenerator {
             constructor() {
                 this.scene = null;
                 this.camera = null;
                 this.renderer = null;
                 this.room = null;
+                this.equipment = [];
                 this.boqData = {};
-                this.roomDimensions = { width: 8, depth: 6, height: 3 };
+                this.apiBaseUrl = 'https://huggingface.co/spaces/adarshAV/boq_backend';
+                this.apiConnected = false;
                 
-                // --- BACKEND CONNECTION ---
-                this.backendUrl = 'https://adarshav-boq-backend.hf.space';
-
-                this.init();
-                this.setupEventListeners();
-                this.updateProjectSummary();
-                this.updateBOQDisplay(); // Initial render
+                this.initializeVisualization();
+                this.checkAPIConnection();
+                this.loadEquipmentFromAPI();
             }
-            
-            init() {
+
+            async checkAPIConnection() {
                 try {
-                    this.scene = new THREE.Scene();
-                    this.scene.background = new THREE.Color(0x0a0a1a);
-                    
-                    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                    this.camera.position.set(10, 8, 10);
-                    this.camera.lookAt(0, 0, 0);
-                    
-                    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                    this.renderer.setSize(window.innerWidth, window.innerHeight);
-                    this.renderer.shadowMap.enabled = true;
-                    this.renderer.setPixelRatio(window.devicePixelRatio);
-                    
-                    document.getElementById('renderContainer').appendChild(this.renderer.domElement);
-                    
-                    this.setupLighting();
-                    this.createRoom();
-                    this.setupControls();
-                    this.animate();
+                    const response = await fetch(`${this.apiBaseUrl}/api/health`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        },
+                        mode: 'cors'
+                    });
+
+                    if (response.ok) {
+                        this.apiConnected = true;
+                        this.updateApiStatus('connected', 'API Connected');
+                        console.log('Backend API is connected');
+                    } else {
+                        throw new Error('API health check failed');
+                    }
                 } catch (error) {
-                    console.error('Failed to initialize 3D scene:', error);
-                    this.showToast('Error loading 3D canvas', 'error');
+                    console.error('API connection failed:', error);
+                    this.apiConnected = false;
+                    this.updateApiStatus('disconnected', 'API Offline');
+                    this.showToast('Backend API is offline - using local data', 'warning');
                 }
             }
-            
+
+            updateApiStatus(status, message) {
+                const statusElement = document.getElementById('apiStatus');
+                if (statusElement) {
+                    statusElement.className = `status-indicator status-${status}`;
+                    statusElement.querySelector('span').textContent = message;
+                }
+            }
+
+            async loadEquipmentFromAPI() {
+                if (!this.apiConnected) {
+                    console.log('API not connected, keeping local equipment');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${this.apiBaseUrl}/api/products`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        },
+                        mode: 'cors'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const products = await response.json();
+                    if (Array.isArray(products) && products.length > 0) {
+                        this.updateEquipmentLibrary(products);
+                        this.showToast(`Loaded ${products.length} products from backend`, 'success');
+                    } else {
+                        throw new Error('No products received from API');
+                    }
+                } catch (error) {
+                    console.error('Error loading equipment from API:', error);
+                    this.apiConnected = false;
+                    this.updateApiStatus('disconnected', 'API Error');
+                    this.showToast('API connection failed - using local equipment', 'error');
+                }
+            }
+
+            updateEquipmentLibrary(products) {
+                this.equipment = products.map(product => ({
+                    id: product.id || product.product_id,
+                    name: product.name || product.product_name,
+                    brand: product.brand,
+                    model: product.model,
+                    category: product.category,
+                    price: parseFloat(product.price) || 0,
+                    description: product.description || '',
+                    specifications: product.specifications || {},
+                    inStock: product.in_stock !== false
+                }));
+                console.log(`Updated equipment library with ${this.equipment.length} products`);
+            }
+
+            async generateAIBoq() {
+                this.showLoadingOverlay(true);
+                
+                if (!this.apiConnected) {
+                    this.generateLocalFallbackBoq();
+                    this.showLoadingOverlay(false);
+                    return;
+                }
+
+                try {
+                    const config = {
+                        projectName: document.getElementById('projectName').value || 'Enhanced AV Conference Room',
+                        clientName: document.getElementById('clientName').value || 'Premium Enterprise Client',
+                        roomWidth: parseFloat(document.getElementById('roomWidth').value),
+                        roomDepth: parseFloat(document.getElementById('roomDepth').value),
+                        roomSize: document.getElementById('roomSize').value,
+                        useCase: document.getElementById('useCase').value,
+                        brandPreference: document.getElementById('brandPreference').value || null,
+                        requirements: document.getElementById('requirements').value,
+                        budgetRange: document.getElementById('budgetRange').value,
+                        priority: 'balanced',
+                        contingency: 10.0
+                    };
+
+                    const response = await fetch(`${this.apiBaseUrl}/api/generate-boq`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        mode: 'cors',
+                        body: JSON.stringify(config)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status} - ${response.statusText}`);
+                    }
+
+                    const boqData = await response.json();
+                    this.clearBOQ(false);
+                    this.processAPIResponse(boqData);
+                    this.showToast('AI BOQ generated successfully from backend!', 'success');
+                } catch (error) {
+                    console.error('Error generating BOQ:', error);
+                    this.showToast(`Failed to generate BOQ: ${error.message}`, 'error');
+                    this.generateLocalFallbackBoq();
+                } finally {
+                    this.showLoadingOverlay(false);
+                }
+            }
+
+            processAPIResponse(boqData) {
+                try {
+                    if (boqData.sections && Array.isArray(boqData.sections)) {
+                        boqData.sections.forEach(section => {
+                            if (section.items && Array.isArray(section.items)) {
+                                section.items.forEach(item => {
+                                    this.addToBOQ({
+                                        name: item.name,
+                                        brand: item.brand || 'Professional',
+                                        model: item.model || item.name,
+                                        quantity: item.quantity || 1,
+                                        unitPrice: item.unit_price || item.price || 0,
+                                        category: section.name || item.category || 'Equipment',
+                                        description: item.description || ''
+                                    });
+                                });
+                            }
+                        });
+                    } else if (boqData.items && Array.isArray(boqData.items)) {
+                        boqData.items.forEach(item => {
+                            this.addToBOQ({
+                                name: item.name,
+                                brand: item.brand || 'Professional',
+                                model: item.model || item.name,
+                                quantity: item.quantity || 1,
+                                unitPrice: item.unit_price || item.price || 0,
+                                category: item.category || 'Equipment',
+                                description: item.description || ''
+                            });
+                        });
+                    }
+
+                    this.updateBOQDisplay();
+                } catch (error) {
+                    console.error('Error processing API response:', error);
+                    this.showToast('Error processing BOQ data', 'error');
+                }
+            }
+
+            async validateRoomConfiguration() {
+                try {
+                    const config = {
+                        projectName: document.getElementById('projectName').value || 'Enhanced AV Conference Room',
+                        clientName: document.getElementById('clientName').value || 'Premium Enterprise Client',
+                        roomWidth: parseFloat(document.getElementById('roomWidth').value),
+                        roomDepth: parseFloat(document.getElementById('roomDepth').value),
+                        roomSize: document.getElementById('roomSize').value,
+                        useCase: document.getElementById('useCase').value,
+                        budgetRange: document.getElementById('budgetRange').value
+                    };
+
+                    if (!this.apiConnected) {
+                        this.showLocalValidation(config);
+                        return;
+                    }
+
+                    const response = await fetch(`${this.apiBaseUrl}/api/validate-room`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        mode: 'cors',
+                        body: JSON.stringify(config)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status}`);
+                    }
+
+                    const validation = await response.json();
+                    this.showValidationResults(validation);
+                } catch (error) {
+                    console.error('Error validating room:', error);
+                    this.showToast('Validation failed - using local validation', 'warning');
+                    this.showLocalValidation(config);
+                }
+            }
+
+            showValidationResults(validation) {
+                let message = `Room validation complete!\n`;
+                if (validation.recommendations && validation.recommendations.length > 0) {
+                    message += `Recommendations:\n${validation.recommendations.join('\n')}`;
+                } else {
+                    message += 'Configuration looks good!';
+                }
+                this.showToast(message, 'success');
+            }
+
+            showLocalValidation(config) {
+                const area = config.roomWidth * config.roomDepth;
+                let message = `Room Area: ${area.toFixed(1)} sqm\n`;
+                
+                if (area < 20) {
+                    message += 'Consider compact AV solutions for small space.';
+                } else if (area > 100) {
+                    message += 'Large room - consider multiple displays and audio zones.';
+                } else {
+                    message += 'Good room size for standard AV setup.';
+                }
+                
+                this.showToast(message, 'success');
+            }
+
+            generateLocalFallbackBoq() {
+                const roomWidth = parseFloat(document.getElementById('roomWidth').value);
+                const roomDepth = parseFloat(document.getElementById('roomDepth').value);
+                const useCase = document.getElementById('useCase').value;
+                const budgetRange = document.getElementById('budgetRange').value;
+
+                this.clearBOQ(false);
+
+                const localEquipment = this.getLocalEquipmentList(roomWidth * roomDepth, useCase, budgetRange);
+                
+                localEquipment.forEach(item => {
+                    this.addToBOQ(item);
+                });
+
+                this.updateBOQDisplay();
+                this.showToast('BOQ generated using local fallback data', 'warning');
+            }
+
+            getLocalEquipmentList(area, useCase, budgetRange) {
+                const baseMultiplier = budgetRange === 'premium' ? 1.5 : budgetRange === 'economy' ? 0.7 : 1.0;
+                
+                return [
+                    {
+                        name: '4K Display Monitor',
+                        brand: 'Samsung',
+                        model: 'QM75R',
+                        quantity: area > 50 ? 2 : 1,
+                        unitPrice: Math.round(3500 * baseMultiplier),
+                        category: 'Display Systems'
+                    },
+                    {
+                        name: 'Video Conferencing System',
+                        brand: 'Logitech',
+                        model: 'Rally Plus',
+                        quantity: 1,
+                        unitPrice: Math.round(2800 * baseMultiplier),
+                        category: 'Video Systems'
+                    },
+                    {
+                        name: 'Wireless Presentation System',
+                        brand: 'Barco',
+                        model: 'ClickShare CX-50',
+                        quantity: 1,
+                        unitPrice: Math.round(1200 * baseMultiplier),
+                        category: 'Presentation'
+                    },
+                    {
+                        name: 'Audio DSP',
+                        brand: 'QSC',
+                        model: 'Core 110f',
+                        quantity: 1,
+                        unitPrice: Math.round(2200 * baseMultiplier),
+                        category: 'Audio Processing'
+                    },
+                    {
+                        name: 'Ceiling Speakers',
+                        brand: 'Bose',
+                        model: 'EdgeMax EM90',
+                        quantity: area > 40 ? 6 : 4,
+                        unitPrice: Math.round(450 * baseMultiplier),
+                        category: 'Audio Systems'
+                    }
+                ];
+            }
+
+            initializeVisualization() {
+                const container = document.getElementById('roomVisualization');
+                
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                
+                this.renderer.setSize(container.clientWidth, container.clientHeight);
+                this.renderer.setClearColor(0x1a1a2e, 0.8);
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                
+                container.appendChild(this.renderer.domElement);
+                
+                this.setupLighting();
+                this.createRoom();
+                this.camera.position.set(10, 10, 10);
+                this.camera.lookAt(0, 0, 0);
+                
+                this.animate();
+                this.setupMouseControls();
+                
+                window.addEventListener('resize', () => this.handleResize());
+            }
+
             setupLighting() {
-                this.scene.add(new THREE.AmbientLight(0x404040, 0.5));
-                const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-                dirLight.position.set(10, 15, 5);
-                dirLight.castShadow = true;
-                this.scene.add(dirLight);
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 10, 5);
+                directionalLight.castShadow = true;
+                this.scene.add(directionalLight);
             }
 
             createRoom() {
-                if (this.room) this.scene.remove(this.room);
+                const width = parseFloat(document.getElementById('roomWidth').value) || 8;
+                const depth = parseFloat(document.getElementById('roomDepth').value) || 6;
+                const height = 3;
+
+                if (this.room) {
+                    this.scene.remove(this.room);
+                }
+
                 this.room = new THREE.Group();
-                
-                const floor = new THREE.Mesh(
-                    new THREE.PlaneGeometry(this.roomDimensions.width, this.roomDimensions.depth),
-                    new THREE.MeshLambertMaterial({ color: 0x2a2a3a })
-                );
+
+                const floorGeometry = new THREE.PlaneGeometry(width, depth);
+                const floorMaterial = new THREE.MeshLambertMaterial({ color: 0x404040 });
+                const floor = new THREE.Mesh(floorGeometry, floorMaterial);
                 floor.rotation.x = -Math.PI / 2;
                 floor.receiveShadow = true;
                 this.room.add(floor);
+
+                const wallMaterial = new THREE.MeshLambertMaterial({ color: 0x606060, transparent: true, opacity: 0.3 });
+
+                const walls = [
+                    { geometry: new THREE.PlaneGeometry(width, height), position: [0, height/2, -depth/2], rotation: [0, 0, 0] },
+                    rotation: [0, Math.PI, 0] },
+                    { geometry: new THREE.PlaneGeometry(depth, height), position: [-width/2, height/2, 0], rotation: [0, Math.PI/2, 0] },
+                    { geometry: new THREE.PlaneGeometry(depth, height), position: [width/2, height/2, 0], rotation: [0, -Math.PI/2, 0] }
+                ];
+
+                walls.forEach(wall => {
+                    const wallMesh = new THREE.Mesh(wall.geometry, wallMaterial);
+                    wallMesh.position.set(...wall.position);
+                    wallMesh.rotation.set(...wall.rotation);
+                    this.room.add(wallMesh);
+                });
+
+                // Add some basic equipment visualization
+                this.addEquipmentToRoom(width, depth);
+                
                 this.scene.add(this.room);
             }
 
-            setupControls() {
-                // Simplified manual orbit controls
-                const canvas = this.renderer.domElement;
-                let isMouseDown = false, mouseX = 0, mouseY = 0;
+            addEquipmentToRoom(width, depth) {
+                // Display on front wall
+                const displayGeometry = new THREE.BoxGeometry(2, 1.2, 0.1);
+                const displayMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+                const display = new THREE.Mesh(displayGeometry, displayMaterial);
+                display.position.set(0, 2, -depth/2 + 0.1);
+                display.castShadow = true;
+                this.room.add(display);
 
-                const onPointerDown = (e) => { isMouseDown = true; mouseX = e.clientX; mouseY = e.clientY; };
-                const onPointerUp = () => { isMouseDown = false; };
-                const onPointerMove = (e) => {
-                    if (!isMouseDown) return;
-                    const deltaX = e.clientX - mouseX, deltaY = e.clientY - mouseY;
-                    const spherical = new THREE.Spherical().setFromVector3(this.camera.position);
-                    spherical.theta -= deltaX * 0.005;
-                    spherical.phi = Math.max(0.1, Math.min(Math.PI / 2, spherical.phi - deltaY * 0.005));
-                    this.camera.position.setFromSpherical(spherical);
-                    this.camera.lookAt(0, 0, 0);
-                    mouseX = e.clientX;
-                    mouseY = e.clientY;
-                };
-                const onWheel = (e) => {
-                    this.camera.position.multiplyScalar(e.deltaY > 0 ? 1.1 : 0.9);
-                };
+                // Conference table
+                const tableGeometry = new THREE.BoxGeometry(width * 0.6, 0.1, depth * 0.4);
+                const tableMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                const table = new THREE.Mesh(tableGeometry, tableMaterial);
+                table.position.set(0, 0.8, 0);
+                table.castShadow = true;
+                this.room.add(table);
 
-                canvas.addEventListener('pointerdown', onPointerDown);
-                canvas.addEventListener('pointerup', onPointerUp);
-                canvas.addEventListener('pointermove', onPointerMove);
-                canvas.addEventListener('wheel', onWheel);
+                // Chairs around table
+                const chairGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                const chairMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+                
+                for (let i = 0; i < 8; i++) {
+                    const chair = new THREE.Mesh(chairGeometry, chairMaterial);
+                    const angle = (i / 8) * Math.PI * 2;
+                    chair.position.set(
+                        Math.cos(angle) * (width * 0.4),
+                        0.5,
+                        Math.sin(angle) * (depth * 0.3)
+                    );
+                    chair.castShadow = true;
+                    this.room.add(chair);
+                }
+
+                // Ceiling speakers
+                const speakerGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.1, 16);
+                const speakerMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+                
+                const speakerPositions = [
+                    [-width/3, 2.9, -depth/3],
+                    [width/3, 2.9, -depth/3],
+                    [-width/3, 2.9, depth/3],
+                    [width/3, 2.9, depth/3]
+                ];
+
+                speakerPositions.forEach(pos => {
+                    const speaker = new THREE.Mesh(speakerGeometry, speakerMaterial);
+                    speaker.position.set(...pos);
+                    speaker.castShadow = true;
+                    this.room.add(speaker);
+                });
+            }
+
+            setupMouseControls() {
+                let isDragging = false;
+                let previousMousePosition = { x: 0, y: 0 };
+
+                this.renderer.domElement.addEventListener('mousedown', (event) => {
+                    isDragging = true;
+                    previousMousePosition = { x: event.clientX, y: event.clientY };
+                });
+
+                this.renderer.domElement.addEventListener('mousemove', (event) => {
+                    if (isDragging) {
+                        const deltaMove = {
+                            x: event.clientX - previousMousePosition.x,
+                            y: event.clientY - previousMousePosition.y
+                        };
+
+                        const spherical = new THREE.Spherical();
+                        spherical.setFromVector3(this.camera.position);
+                        
+                        spherical.theta -= deltaMove.x * 0.01;
+                        spherical.phi += deltaMove.y * 0.01;
+                        spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+
+                        this.camera.position.setFromSpherical(spherical);
+                        this.camera.lookAt(0, 0, 0);
+
+                        previousMousePosition = { x: event.clientX, y: event.clientY };
+                    }
+                });
+
+                this.renderer.domElement.addEventListener('mouseup', () => {
+                    isDragging = false;
+                });
+
+                this.renderer.domElement.addEventListener('wheel', (event) => {
+                    const scale = event.deltaY > 0 ? 1.1 : 0.9;
+                    this.camera.position.multiplyScalar(scale);
+                    this.camera.position.clampLength(5, 50);
+                });
             }
 
             animate() {
                 requestAnimationFrame(() => this.animate());
                 this.renderer.render(this.scene, this.camera);
             }
-            
-            setupEventListeners() {
-                document.getElementById('updateRoom').addEventListener('click', () => this.updateRoomDimensions());
-                document.getElementById('generateFullBoq').addEventListener('click', () => this.generateAIBoq());
-                document.getElementById('exportBoq').addEventListener('click', () => this.exportBoq());
-                document.getElementById('clearBoq').addEventListener('click', () => this.clearBoq());
 
-                window.addEventListener('resize', () => {
-                    this.camera.aspect = window.innerWidth / window.innerHeight;
-                    this.camera.updateProjectionMatrix();
-                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+            resetView() {
+                this.camera.position.set(10, 10, 10);
+                this.camera.lookAt(0, 0, 0);
+                this.createRoom(); // Refresh room with current dimensions
+            }
+
+            handleResize() {
+                const container = document.getElementById('roomVisualization');
+                this.camera.aspect = container.clientWidth / container.clientHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+
+            addToBOQ(item) {
+                if (!this.boqData[item.category]) {
+                    this.boqData[item.category] = [];
+                }
+                
+                this.boqData[item.category].push({
+                    ...item,
+                    total: item.quantity * item.unitPrice,
+                    id: Date.now() + Math.random()
                 });
             }
-            
-            updateRoomDimensions() {
-                this.roomDimensions.width = parseFloat(document.getElementById('roomWidth').value);
-                this.roomDimensions.depth = parseFloat(document.getElementById('roomDepth').value);
-                this.createRoom();
-                this.updateProjectSummary();
-                this.showToast('Room dimensions updated!', 'success');
-            }
 
-            async generateAIBoq() {
-                this.showLoadingOverlay(true);
-
-                const roomConfig = {
-                    width: this.roomDimensions.width,
-                    depth: this.roomDimensions.depth,
-                    height: this.roomDimensions.height,
-                    capacity: document.getElementById('roomSize').value,
-                    useCase: document.getElementById('useCase').value,
-                    budgetTier: document.getElementById('budgetRange').value,
-                    requirements: document.getElementById('requirements').value,
-                };
-                
-                try {
-                    // --- REAL BACKEND API CALL ---
-                    console.log('Sending data to backend:', roomConfig);
-                    const response = await fetch(`${this.backendUrl}/generate_boq`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(roomConfig)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`Backend error: ${response.status} ${response.statusText}`);
-                    }
-
-                    const generatedBoq = await response.json();
-                    console.log('Received BOQ from backend:', generatedBoq);
-                    
-                    // Assuming the backend returns the BOQ in the correct format { "Category": [items] }
-                    this.boqData = generatedBoq.boq; 
-                    
-                    this.updateBOQDisplay();
-                    this.showToast('AI-powered BOQ generated successfully!', 'success');
-
-                } catch (error) {
-                    console.error('Error fetching from backend:', error);
-                    this.showToast('Backend connection failed. Using offline mode.', 'error');
-                    this.generateOfflineBoq(roomConfig); // Fallback to offline mode
-                } finally {
-                    this.showLoadingOverlay(false);
-                }
-            }
-
-            generateOfflineBoq(config) {
-                // This is a simple client-side fallback if the backend fails
-                this.boqData = {};
-                this.addItemToBOQ('Displays & Projectors', 'Interactive 86" 4K Display', 4500, 1);
-                this.addItemToBOQ('UC & Collaboration Devices', 'Logitech Rally Bar', 2700, 1);
-                this.addItemToBOQ('UC & Collaboration Devices', 'Logitech Tap IP', 1200, 1);
-                this.updateBOQDisplay();
-            }
-
-            addItemToBOQ(category, name, price, quantity) {
-                if (!this.boqData[category]) this.boqData[category] = [];
-                const existingItem = this.boqData[category].find(item => item.name === name);
-                if (existingItem) {
-                    existingItem.quantity += quantity;
-                } else {
-                    this.boqData[category].push({ name, price, quantity, unitPrice: price });
-                }
-            }
-            
             updateBOQDisplay() {
-                const container = document.getElementById('boqContainer');
-                container.innerHTML = '';
-                let totalEquipmentCost = 0;
+                const container = document.getElementById('boqResults');
+                let html = '';
+                let grandTotal = 0;
 
+                Object.keys(this.boqData).forEach(category => {
+                    let categoryTotal = 0;
+                    html += `
+                        <div class="mb-6">
+                            <h3 class="text-lg font-bold text-blue-400 mb-3 border-b border-blue-400/30 pb-2">
+                                ${category}
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="text-gray-300 border-b border-gray-600">
+                                            <th class="text-left py-2 px-3">Item</th>
+                                            <th class="text-left py-2 px-3">Brand/Model</th>
+                                            <th class="text-center py-2 px-3">Qty</th>
+                                            <th class="text-right py-2 px-3">Unit Price</th>
+                                            <th class="text-right py-2 px-3">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+
+                    this.boqData[category].forEach(item => {
+                        categoryTotal += item.total;
+                        html += `
+                            <tr class="border-b border-gray-700/50 hover:bg-white/5">
+                                <td class="py-3 px-3">
+                                    <div class="font-medium">${item.name}</div>
+                                    ${item.description ? `<div class="text-xs text-gray-400 mt-1">${item.description}</div>` : ''}
+                                </td>
+                                <td class="py-3 px-3 text-gray-300">${item.brand}<br><span class="text-xs">${item.model || ''}</span></td>
+                                <td class="py-3 px-3 text-center">${item.quantity}</td>
+                                <td class="py-3 px-3 text-right">$${item.unitPrice.toLocaleString()}</td>
+                                <td class="py-3 px-3 text-right font-bold text-green-400">$${item.total.toLocaleString()}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="text-right mt-3 pt-2 border-t border-gray-600">
+                                <span class="font-bold text-blue-400">${category} Subtotal: $${categoryTotal.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    grandTotal += categoryTotal;
+                });
+
+                // Add totals section
+                const contingency = grandTotal * 0.1;
+                const finalTotal = grandTotal + contingency;
+
+                html += `
+                    <div class="mt-6 p-4 premium-glass rounded-xl">
+                        <div class="space-y-2 text-right">
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">Subtotal:</span>
+                                <span class="font-bold">$${grandTotal.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">Contingency (10%):</span>
+                                <span class="font-bold">$${contingency.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between text-xl pt-2 border-t border-gray-600">
+                                <span class="text-blue-400 font-bold">Grand Total:</span>
+                                <span class="text-green-400 font-bold">$${finalTotal.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+            }
+
+            clearBOQ(showToast = true) {
+                this.boqData = {};
+                document.getElementById('boqResults').innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <p class="text-lg">Generate a BOQ to see results here</p>
+                        <p class="text-sm mt-2">Configure your room parameters and click "Generate AI BOQ"</p>
+                    </div>
+                `;
+                if (showToast) {
+                    this.showToast('BOQ cleared successfully', 'success');
+                }
+            }
+
+            exportBOQ() {
                 if (Object.keys(this.boqData).length === 0) {
-                    container.innerHTML = `<div class="text-center text-sm text-white/60 p-4">Your BOQ is empty. Click "AI Generate" to start.</div>`;
+                    this.showToast('No BOQ data to export', 'warning');
+                    return;
                 }
 
-                Object.entries(this.boqData).forEach(([category, items]) => {
-                    const categorySection = document.createElement('div');
-                    categorySection.className = 'boq-section';
-                    categorySection.innerHTML = `<h3 class="text-lg font-semibold text-white/90 mb-3">${category}</h3>`;
+                // Create a simple text export since we can't use jsPDF
+                let exportData = `Professional AV BOQ Export\n`;
+                exportData += `Project: ${document.getElementById('projectName').value || 'AV Conference Room'}\n`;
+                exportData += `Client: ${document.getElementById('clientName').value || 'Enterprise Client'}\n`;
+                exportData += `Generated: ${new Date().toLocaleString()}\n\n`;
+
+                let grandTotal = 0;
+
+                Object.keys(this.boqData).forEach(category => {
+                    let categoryTotal = 0;
+                    exportData += `\n${category.toUpperCase()}\n`;
+                    exportData += `${'='.repeat(50)}\n`;
                     
-                    items.forEach((item, index) => {
-                        const itemCost = item.price * item.quantity;
-                        totalEquipmentCost += itemCost;
-                        
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = 'boq-item';
-                        itemDiv.innerHTML = `
-                            <div class="flex justify-between items-center">
-                                <div class="flex-1">
-                                    <div class="font-semibold text-sm">${item.name}</div>
-                                    <div class="text-xs text-white/80 mt-1">
-                                        Qty: ${item.quantity} × $${item.unitPrice.toLocaleString()} = $${itemCost.toLocaleString()}
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-2 ml-4">
-                                    <button onclick="designer.adjustQuantity('${category}', ${index}, -1)" class="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-300 text-xs rounded">-</button>
-                                    <button onclick="designer.removeItem('${category}', ${index})" class="px-2 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-300 text-xs rounded">×</button>
-                                </div>
-                            </div>`;
-                        categorySection.appendChild(itemDiv);
+                    this.boqData[category].forEach(item => {
+                        categoryTotal += item.total;
+                        exportData += `${item.name} (${item.brand} ${item.model || ''})\n`;
+                        exportData += `  Qty: ${item.quantity} x $${item.unitPrice.toLocaleString()} = $${item.total.toLocaleString()}\n`;
+                        if (item.description) {
+                            exportData += `  Description: ${item.description}\n`;
+                        }
+                        exportData += `\n`;
                     });
-                    container.appendChild(categorySection);
+                    
+                    exportData += `${category} Subtotal: $${categoryTotal.toLocaleString()}\n`;
+                    grandTotal += categoryTotal;
                 });
-                
-                const installationCost = totalEquipmentCost * 0.20;
-                document.getElementById('equipmentCost').textContent = `$${totalEquipmentCost.toLocaleString()}`;
-                document.getElementById('installationCost').textContent = `$${installationCost.toLocaleString()}`;
-                document.getElementById('totalCost').textContent = `$${(totalEquipmentCost + installationCost).toLocaleString()}`;
-            }
-            
-            adjustQuantity(category, index, change) {
-                const item = this.boqData[category]?.[index];
-                if (item) {
-                    item.quantity += change;
-                    if (item.quantity <= 0) this.boqData[category].splice(index, 1);
-                    this.updateBOQDisplay();
-                }
-            }
-            
-            removeItem(category, index) {
-                if (this.boqData[category]?.[index]) {
-                    this.boqData[category].splice(index, 1);
-                    this.updateBOQDisplay();
-                    this.showToast('Item removed', 'success');
-                }
+
+                const contingency = grandTotal * 0.1;
+                const finalTotal = grandTotal + contingency;
+
+                exportData += `\nTOTALS\n`;
+                exportData += `${'='.repeat(30)}\n`;
+                exportData += `Subtotal: $${grandTotal.toLocaleString()}\n`;
+                exportData += `Contingency (10%): $${contingency.toLocaleString()}\n`;
+                exportData += `GRAND TOTAL: $${finalTotal.toLocaleString()}\n`;
+
+                // Create and download text file
+                const blob = new Blob([exportData], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `BOQ_${document.getElementById('projectName').value || 'AV_Conference_Room'}_${new Date().toISOString().split('T')[0]}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                this.showToast('BOQ exported successfully', 'success');
             }
 
-            exportBoq() {
-                let csvContent = "Category,Item,Quantity,Unit Price,Total Price\n";
-                Object.entries(this.boqData).forEach(([category, items]) => {
-                    items.forEach(item => {
-                        csvContent += `"${category}","${item.name}",${item.quantity},${item.unitPrice},${item.price * item.quantity}\n`;
-                    });
-                });
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = "BOQ_Export.csv";
+            exportVisualization() {
+                const canvas = this.renderer.domElement;
+                const link = document.createElement('a');
+                link.download = 'room_visualization.png';
+                link.href = canvas.toDataURL();
                 link.click();
-                URL.revokeObjectURL(link.href);
-                this.showToast('BOQ exported as CSV!', 'success');
-            }
-            
-            clearBoq() {
-                if (confirm('Are you sure you want to clear the entire BOQ?')) {
-                    this.boqData = {};
-                    this.updateBOQDisplay();
-                    this.showToast('BOQ cleared!', 'success');
-                }
+                this.showToast('Visualization exported successfully', 'success');
             }
 
-            updateProjectSummary() {
-                document.getElementById('summaryDimensions').textContent = `${document.getElementById('roomWidth').value}m × ${document.getElementById('roomDepth').value}m`;
-                document.getElementById('summaryCapacity').textContent = document.getElementById('roomSize').options[document.getElementById('roomSize').selectedIndex].text;
-                document.getElementById('summaryType').textContent = document.getElementById('useCase').options[document.getElementById('useCase').selectedIndex].text;
-                document.getElementById('summaryTier').textContent = document.getElementById('budgetRange').options[document.getElementById('budgetRange').selectedIndex].text;
-            }
-            
             showLoadingOverlay(show) {
-                document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+                const overlay = document.getElementById('loadingOverlay');
+                overlay.style.display = show ? 'flex' : 'none';
             }
-            
+
             showToast(message, type = 'success') {
-                const container = document.getElementById('toastContainer');
                 const toast = document.createElement('div');
-                const style = type === 'success' 
-                    ? 'from-green-500 to-blue-500' 
-                    : 'from-red-500 to-orange-500';
-                
-                toast.className = `toast premium-glass p-4 bg-gradient-to-r ${style} text-white shadow-lg`;
-                toast.innerHTML = `<div class="font-medium">${message}</div>`;
-                
-                container.appendChild(toast);
-                setTimeout(() => toast.classList.add('show'), 10);
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+
                 setTimeout(() => {
-                    toast.classList.remove('show');
-                    toast.addEventListener('transitionend', () => toast.remove());
-                }, 3000);
+                    toast.remove();
+                }, 5000);
             }
         }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            designer = new Enhanced3DRoomDesigner();
+
+        // Initialize the BOQ Generator
+        const boqGenerator = new BOQGenerator();
+
+        // Update room visualization when dimensions change
+        ['roomWidth', 'roomDepth'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                boqGenerator.createRoom();
+            });
         });
     </script>
 </body>
 </html>
+                    { geometry: new THREE.PlaneGeometry(width, height), position: [0, height/2, depth/2],
