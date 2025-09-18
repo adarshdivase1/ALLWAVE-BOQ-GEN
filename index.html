@@ -80,9 +80,8 @@
     </div>
 
     <script>
-        const BACKEND_URL = 'https://adarshav-boq-backend.hf.space';
+        const BACKEND_URL = 'https://adarshav-boq-backend.hf.space'; // Make sure this is your correct backend URL
         let scene, camera, renderer, controls;
-        let allEquipmentData = [];
         
         document.addEventListener('DOMContentLoaded', init);
 
@@ -97,9 +96,15 @@
             library.innerHTML = '<div class="loading-spinner mx-auto mt-4"></div>';
             try {
                 const response = await fetch(`${BACKEND_URL}/api/products/library`);
+                if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
                 const products = await response.json();
-                allEquipmentData = products;
+                
                 library.innerHTML = '';
+                if(products.length === 0) {
+                    library.innerHTML = '<div class="text-gray-400 p-2">No products found in the database.</div>';
+                    return;
+                }
+
                 const categories = {};
                 products.forEach(item => {
                     const categoryName = item.category || 'Uncategorized';
@@ -114,7 +119,7 @@
                     categories[categoryName].forEach(item => library.appendChild(createEquipmentItem(item)));
                 });
             } catch (error) {
-                library.innerHTML = '<div class="text-red-400 p-2">Error loading products.</div>';
+                library.innerHTML = '<div class="text-red-400 p-2">Error loading products. Check backend logs.</div>';
                 console.error("Failed to fetch library:", error);
             }
         }
@@ -149,11 +154,12 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config),
                 });
+                if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
                 const result = await response.json();
-                if (result.status !== 'success') throw new Error(result.message);
+                if (result.status !== 'success') throw new Error(result.message || 'Failed to generate list.');
                 renderBackendList(result.list);
             } catch (error) {
-                document.getElementById('boqContent').innerHTML = `<div class="text-red-400">Error: ${error.message}</div>`;
+                document.getElementById('boqContent').innerHTML = `<div class="text-red-400 p-4">Error: ${error.message}</div>`;
                 console.error('Error generating list:', error);
             } finally {
                 document.getElementById('loadingOverlay').style.display = 'none';
@@ -182,12 +188,11 @@
             });
         }
 
-        // --- Basic 3D Scene Setup ---
         function initThreeJS() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f0f23);
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('renderContainer').appendChild(renderer.domElement);
             controls = new THREE.OrbitControls(camera, renderer.domElement);
