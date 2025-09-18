@@ -1,1359 +1,567 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced 3D AV Room Designer Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DragControls.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --success-green: #10b981;
-            --error-red: #ef4444;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--primary-gradient);
-            min-height: 100vh;
-            color: white;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .premium-glass {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-        }
-        
-        .control-panel {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            max-width: 420px;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
-        }
-        
-        .boq-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            max-width: 480px;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
-        }
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field, validator
+from typing import List, Optional, Dict, Any, Union
+import sqlite3
+import uuid
+from datetime import datetime
+import logging
+from contextlib import contextmanager
+import math
+import re
+import functools
 
-        .mini-panel {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            max-width: 600px;
-        }
-        
-        .equipment-item {
-            cursor: grab;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .equipment-item:hover {
-            border-color: var(--accent-blue);
-            background: rgba(59, 130, 246, 0.1);
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-        }
-        
-        .equipment-item.recommended {
-            border-color: var(--success-green);
-            background: rgba(16, 185, 129, 0.1);
-        }
-        
-        .equipment-item:active {
-            cursor: grabbing;
-            transform: scale(0.98);
-        }
-        
-        .room-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        
-        .form-input, .form-select {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.1) !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            border-radius: 8px !important;
-            padding: 12px 16px !important;
-            color: white !important;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .form-input:focus, .form-select:focus {
-            border-color: var(--accent-blue) !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-            outline: none !important;
-        }
-        
-        .form-input::placeholder {
-            color: rgba(255, 255, 255, 0.5) !important;
-        }
-        
-        .form-select option {
-            background: #1a1a2e;
-            color: white;
-        }
-        
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            z-index: 1000;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            opacity: 0;
-        }
-        
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-        
-        .virtual-scroll::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .virtual-scroll::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-        }
-        
-        .virtual-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-        }
-        
-        .loading-spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 3px solid white;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
-        }
-        
-        .boq-section {
-            border-left: 4px solid var(--accent-blue);
-            padding-left: 16px;
-            margin-bottom: 20px;
-        }
-        
-        .boq-item {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--success-green);
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .boq-item:hover {
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateX(4px);
-        }
-        
-        #renderContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            cursor: grab;
-        }
+# --- Configuration ---
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-        #renderContainer:active {
-            cursor: grabbing;
-        }
-        
-        .room-preset-btn {
-            background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 8px;
-            padding: 12px;
-            color: white;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .room-preset-btn:hover {
-            background: linear-gradient(45deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3));
-            border-color: rgba(59, 130, 246, 0.5);
-            transform: translateY(-2px);
-        }
-        
-        .room-preset-btn.active {
-            background: linear-gradient(45deg, rgba(16, 185, 129, 0.3), rgba(59, 130, 246, 0.3));
-            border-color: rgba(16, 185, 129, 0.5);
-            animation: pulse-glow 2s infinite;
-        }
+app = FastAPI(
+    title="Professional BOQ Generator API v9.2 (Optimized)",
+    description="Enhanced AV Room Design and BOQ Generation System with Optimized Loading",
+    version="9.2.0"
+)
 
-        .quality-indicator {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .quality-economy { background: #f59e0b; }
-        .quality-standard { background: #3b82f6; }
-        .quality-premium { background: #8b5cf6; }
-        .quality-enterprise { background: #10b981; }
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
-        .recommendations {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 16px;
-        }
+DATABASE_FILE = 'products.db'
 
-        .connection-status {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+@contextmanager
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE_FILE)
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+    finally:
+        conn.close()
 
-        .status-online {
-            background: linear-gradient(45deg, rgba(16, 185, 129, 0.2), rgba(59, 130, 246, 0.2));
-            border: 1px solid rgba(16, 185, 129, 0.5);
-            color: #10b981;
-        }
+# --- Data Models ---
+class Product(BaseModel):
+    id: str
+    category: Optional[str] = None
+    brand: Optional[str] = None
+    name: str
+    price: float
+    features: Optional[str] = None
+    tier: Optional[str] = None
+    use_case_tags: Optional[str] = None
+    compatibility_tags: Optional[str] = None
+    # This field is added dynamically by the filter, so it needs to be optional
+    relevance_score: Optional[float] = None
 
-        .status-offline {
-            background: linear-gradient(45deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
-            border: 1px solid rgba(239, 68, 68, 0.5);
-            color: #ef4444;
-        }
 
-        .view-controls {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+# NEW: Lightweight model for the library list
+class ProductLibraryItem(BaseModel):
+    id: str
+    category: Optional[str] = None
+    brand: Optional[str] = None
+    name: str
+    price: float
+    tier: Optional[str] = None
+    model: Optional[str] = None # Added for display
 
-        .view-btn {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .view-btn:hover {
-            background: rgba(59, 130, 246, 0.2);
-            border-color: rgba(59, 130, 246, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .analytics-panel {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 16px;
-        }
-        
-        .category-header {
-            font-weight: 600;
-            margin: 16px 0 8px 0;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .load-more-btn {
-            background: rgba(59, 130, 246, 0.2);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 8px;
-            padding: 8px 16px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            margin: 10px 0;
-        }
-
-        .load-more-btn:hover {
-            background: rgba(59, 130, 246, 0.3);
-            border-color: rgba(59, 130, 246, 0.5);
-        }
-
-        .category-toggle {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 4px 8px;
-            font-size: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .category-toggle:hover {
-            background: rgba(59, 130, 246, 0.2);
-        }
-    </style>
-</head>
-<body>
-    <div id="toastContainer"></div>
+class EnhancedBoqConfig(BaseModel):
+    project_name: str = Field(alias="projectName", default="Default Project")
+    client_name: str = Field(alias="clientName", default="Default Client")
+    room_dimensions: List[float] = Field(min_items=3, max_items=3)
+    room_capacity: str = Field(alias="roomSize", default="medium")
+    use_case: str = Field(alias="useCase", default="meeting_room")
+    brand_preference: Optional[str] = Field(alias="brandPreference", default=None)
+    special_requirements: str = Field(alias="requirements", default="")
+    budget_range: str = Field(alias="budgetRange", default="standard")
     
-    <div id="connectionStatus" class="connection-status status-offline">
-        🔄 Checking Backend Connection...
-    </div>
+    @property
+    def roomWidth(self) -> float: return self.room_dimensions[0]
+    @property
+    def roomDepth(self) -> float: return self.room_dimensions[1]
     
-    <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50 hidden">
-        <div class="loading-spinner mb-4"></div>
-        <div class="text-white text-lg font-semibold">Generating AI-Powered BOQ...</div>
-        <div class="text-white/70 text-sm mt-2">Analyzing room dimensions and requirements</div>
-    </div>
-    
-    <div id="renderContainer"></div>
-    
-    <div class="view-controls">
-        <button class="view-btn" id="topView" title="Top View">🔍</button>
-        <button class="view-btn" id="frontView" title="Front View">👁️</button>
-        <button class="view-btn" id="isoView" title="Isometric View">🎯</button>
-        <button class="view-btn" id="resetView" title="Reset View">🔄</button>
-    </div>
-    
-    <div class="mini-panel premium-glass rounded-xl p-4">
-        <div class="flex items-center justify-between space-x-4">
-            <div class="flex items-center space-x-3">
-                <div class="text-sm font-semibold text-blue-300">Quick Actions:</div>
-                <button id="quickGenerate" class="px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white text-sm font-semibold rounded-lg transition-all duration-300">
-                    🤖 AI Generate
-                </button>
-                <button id="togglePanels" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-semibold rounded-lg transition-all duration-300">
-                    📊 Toggle Panels
-                </button>
-                <button id="loadRecommended" class="px-4 py-2 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white text-sm font-semibold rounded-lg transition-all duration-300">
-                    ⭐ Smart Load
-                </button>
-            </div>
-            <div class="text-xs text-white/60">
-                <span id="quickStats">Room: 8m×6m | Items: 0 | Total: $0</span>
-            </div>
-        </div>
-    </div>
-    
-    <div id="controlPanel" class="control-panel premium-glass rounded-2xl p-6 virtual-scroll">
-        <h2 class="text-xl font-bold mb-4 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            🏗️ Room Designer Pro
-        </h2>
-        
-        <div class="space-y-4 mb-6">
-            <h3 class="text-lg font-semibold text-white/90">Project Details</h3>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Project Name</label>
-                    <input type="text" id="projectName" class="form-input" placeholder="Conference Room Alpha" value="Enhanced AV Conference Room">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Client Name</label>
-                    <input type="text" id="clientName" class="form-input" placeholder="Acme Corporation" value="Premium Enterprise Client">
-                </div>
-            </div>
-        </div>
+    priority: str = Field(default="balanced", exclude=True)
+    contingency: float = Field(default=10.0, ge=5.0, le=25.0, exclude=True)
 
-        <div class="space-y-4 mb-6">
-            <h3 class="text-lg font-semibold text-white/90">Quick Room Presets</h3>
-            <div class="grid grid-cols-2 gap-3">
-                <button class="room-preset-btn" data-preset="meeting">
-                    <div class="text-sm font-semibold">Meeting Room</div>
-                    <div class="text-xs opacity-75">Standard setup</div>
-                </button>
-                <button class="room-preset-btn" data-preset="boardroom">
-                    <div class="text-sm font-semibold">Boardroom</div>
-                    <div class="text-xs opacity-75">Executive style</div>
-                </button>
-                <button class="room-preset-btn" data-preset="auditorium">
-                    <div class="text-sm font-semibold">Auditorium</div>
-                    <div class="text-xs opacity-75">Large venue</div>
-                </button>
-                <button class="room-preset-btn" data-preset="huddle">
-                    <div class="text-sm font-semibold">Huddle Space</div>
-                    <div class="text-xs opacity-75">Informal setup</div>
-                </button>
-            </div>
-        </div>
+    class Config:
+        allow_population_by_field_name = True
         
-        <div class="space-y-4 mb-6">
-            <h3 class="text-lg font-semibold text-white/90">Room Configuration</h3>
-            <div class="room-controls">
-                <div>
-                    <input type="number" id="roomWidth" class="form-input text-center" placeholder="Width (m)" value="8" min="3" max="25" step="0.5">
-                    <small class="text-xs text-white/60">Width (m)</small>
-                </div>
-                <div>
-                    <input type="number" id="roomDepth" class="form-input text-center" placeholder="Depth (m)" value="6" min="3" max="25" step="0.5">
-                    <small class="text-xs text-white/60">Depth (m)</small>
-                </div>
-            </div>
+# (All other Pydantic models like BoqItem, BoqSection, etc. remain unchanged)
+class BoqItem(BaseModel):
+    id: str
+    productId: str
+    name: str
+    brand: str
+    category: Optional[str]
+    quantity: int
+    unitPrice: float
+    totalPrice: float
+    description: str
+    features: Optional[str]
+    tier: Optional[str] = None
+
+class BoqSection(BaseModel):
+    name: str
+    items: List[BoqItem]
+    sectionTotal: float
+    description: Optional[str]
+
+class BoqSummary(BaseModel):
+    subtotal: float
+    contingencyAmount: float
+    installationCost: float
+    totalCost: float
+    itemCount: int
+    estimatedInstallDays: int
+
+class RoomAnalysis(BaseModel):
+    roomArea: float
+    roomPerimeter: float
+    recommendedCapacity: int
+    acousticRating: str
+    complexityScore: int
+
+class Boq(BaseModel):
+    id: str
+    projectName: str
+    clientName: str
+    generatedAt: str
+    sections: List[BoqSection]
+    summary: BoqSummary
+    metadata: Dict[str, Any]
+    recommendations: List[str]
+    terms_conditions: List[str]
+    assumptions: List[str]
+    roomAnalysis: RoomAnalysis
+
+# --- Cached Product Loading ---
+@functools.lru_cache(maxsize=None)
+def get_all_products_from_db() -> List[Product]:
+    """Cached function to load all products from the database."""
+    logger.info("Loading and caching all products from the database...")
+    with get_db_connection() as conn:
+        products_data = conn.execute('SELECT * FROM products').fetchall()
+        return [Product(**dict(row)) for row in products_data]
+
+# --- Business Logic Classes ---
+class EcosystemManager:
+    def __init__(self):
+        self.ecosystems = {'logitech': {'primary_keywords': ['logitech', 'rally bar', 'meetup', 'tap ip', 'brio'],'room_mapping': {'small': ['meetup', 'brio', 'tap'],'medium': ['rally bar', 'tap ip'],'large': ['rally bar', 'rally camera', 'tap ip'],'xlarge': ['rally camera', 'ptz pro', 'tap ip']}},'poly': {'primary_keywords': ['poly', 'polycom', 'studio x30', 'studio x50', 'tc8', 'tc10'],'room_mapping': {'small': ['studio x30', 'tc8'],'medium': ['studio x50', 'tc10'],'large': ['studio x70', 'tc10'],'xlarge': ['g7500', 'tc10']}},'cisco': {'primary_keywords': ['cisco', 'webex', 'room kit', 'room bar', 'touch 10'],'room_mapping': {'small': ['room kit mini', 'touch 10'],'medium': ['room bar', 'touch 10'],'large': ['room kit pro', 'navigator'],'xlarge': ['sx80', 'navigator']}},'microsoft': {'primary_keywords': ['microsoft', 'teams', 'surface hub'],'room_mapping': {'small': ['teams room', 'surface hub'],'medium': ['teams room pro', 'surface hub'],'large': ['teams room large', 'surface hub'],'xlarge': ['teams room xlarge', 'surface hub']}},'zoom': {'primary_keywords': ['zoom', 'zoom rooms'],'room_mapping': {'small': ['zoom rooms appliance'],'medium': ['zoom rooms pro'],'large': ['zoom rooms enterprise'],'xlarge': ['zoom rooms enterprise']}}}
+    def detect_primary_brand(self, requirements: str, brand_preference: Optional[str] = None) -> str:
+        if brand_preference and brand_preference.lower() in self.ecosystems: return brand_preference.lower()
+        req_lower = requirements.lower()
+        for brand, config in self.ecosystems.items():
+            if any(keyword in req_lower for keyword in config['primary_keywords']): return brand
+        return 'logitech'
+    def get_brand_keywords(self, brand: str, room_size: str) -> List[str]:
+        ecosystem = self.ecosystems.get(brand.lower(), {})
+        return ecosystem.get('room_mapping', {}).get(room_size, [])
+
+class IntelligentProductMatcher:
+    def __init__(self, products: List[Product]):
+        self.products = products
+        self.products_by_category = {}
+        self.products_by_tier = {}
+        for p in products:
+            cat = p.category or "Other"
+            self.products_by_category.setdefault(cat, []).append(p)
+            tier = p.tier or "standard"
+            self.products_by_tier.setdefault(tier, []).append(p)
             
-            <div class="grid grid-cols-1 gap-3">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Room Capacity</label>
-                    <select id="roomSize" class="form-select">
-                        <option value="small">Small (2-6 people)</option>
-                        <option value="medium" selected>Medium (6-12 people)</option>
-                        <option value="large">Large (12-20 people)</option>
-                        <option value="xlarge">Extra Large (20-50 people)</option>
-                        <option value="auditorium">Auditorium (50+ people)</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1">Primary Use Case</label>
-                    <select id="useCase" class="form-select">
-                        <option value="meeting_room">Meeting Room</option>
-                        <option value="boardroom" selected>Executive Boardroom</option>
-                        <option value="huddle_room">Huddle Space</option>
-                        <option value="training">Training Room</option>
-                        ="presentation">Presentation Room</option>
-                        <option value="auditorium">Auditorium</option>
-                        <option value="classroom">Classroom</option>
-                        <option value="webcast">Webcast Studio</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1">Quality Level</label>
-                    <select id="qualityLevel" class="form-select">
-                        <option value="economy">Economy</option>
-                        <option value="standard">Standard</option>
-                        <option value="premium" selected>Premium</option>
-                        <option value="enterprise">Enterprise</option>
-                    </select>
-                </div>
-            </div>
-            
-            <button id="updateRoom" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300">
-                🔄 Update Room
-            </button>
-        </div>
-        
-        <div class="space-y-4">
-            <h3 class="text-lg font-semibold text-white/90">AV Equipment Library</h3>
-            <div class="text-sm text-white/70 mb-3">
-                Drag and drop equipment into the room to create your design
-            </div>
-            
-            <div id="equipmentLibrary" class="space-y-2 max-h-96 overflow-y-auto virtual-scroll">
-                <!-- Equipment categories will be loaded here dynamically -->
-            </div>
-        </div>
-    </div>
-    
-    <div id="boqPanel" class="boq-panel premium-glass rounded-2xl p-6 virtual-scroll">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-                📊 Bill of Quantities
-            </h2>
-            <div class="flex space-x-2">
-                <button id="exportBOQ" class="px-3 py-2 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white text-sm font-semibold rounded-lg transition-all duration-300">
-                    📤 Export
-                </button>
-                <button id="clearAll" class="px-3 py-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white text-sm font-semibold rounded-lg transition-all duration-300">
-                    🗑️ Clear
-                </button>
-            </div>
-        </div>
-        
-        <div id="boqContent" class="space-y-4">
-            <div class="text-center text-white/60 py-8">
-                <div class="text-4xl mb-2">📦</div>
-                <div>No equipment added yet</div>
-                <div class="text-sm mt-1">Drag equipment from the library to get started</div>
-            </div>
-        </div>
-        
-        <div class="analytics-panel">
-            <h3 class="text-sm font-bold mb-3 text-purple-300">📈 Project Analytics</h3>
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                    <div class="text-white/60">Coverage Area</div>
-                    <div id="coverageArea" class="text-white font-semibold">48 m²</div>
-                </div>
-                <div>
-                    <div class="text-white/60">Equipment Count</div>
-                    <div id="equipmentCount" class="text-white font-semibold">0 items</div>
-                </div>
-                <div>
-                    <div class="text-white/60">Installation Time</div>
-                    <div id="installTime" class="text-white font-semibold">0 hours</div>
-                </div>
-                <div>
-                    <div class="text-white/60">Power Required</div>
-                    <div id="powerRequired" class="text-white font-semibold">0W</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="recommendations">
-            <h3 class="text-sm font-bold mb-3 text-green-300">💡 Smart Recommendations</h3>
-            <div id="recommendationsContent" class="text-sm text-white/80">
-                Configure your room to see intelligent equipment recommendations
-            </div>
-        </div>
-    </div>
+    def find_products_by_category(self, category: str) -> List[Product]:
+        """A simple helper to get all products in a category."""
+        return self.products_by_category.get(category, [])
 
-    <script>
-        // Global variables
-        let scene, camera, renderer, controls;
-        let room = { width: 8, depth: 6, height: 3 };
-        let placedEquipment = [];
-        let equipmentData = [];
-        let dragControls;
-        let raycaster, mouse;
-        let panelsVisible = true;
+    def find_best_product(self, category: str, keywords: List[str], brand: Optional[str] = None, tier: Optional[str] = None, use_case: Optional[str] = None) -> Optional[Product]:
+        candidates = self.products_by_category.get(category, [])
+        scored_products = []
+        if not candidates: return None
+        for product in candidates:
+            score = 0
+            if brand and product.brand and brand.lower() in product.brand.lower(): score += 50
+            for keyword in keywords:
+                if keyword.lower() in product.name.lower(): score += 30
+                if product.features and keyword.lower() in product.features.lower(): score += 10
+            if tier and product.tier and tier == product.tier: score += 20
+            if use_case and product.use_case_tags and use_case in product.use_case_tags.lower(): score += 25
+            if tier in ['premium', 'enterprise'] and product.tier in ['premium', 'enterprise']: score += 15
+            if score > 0: scored_products.append((score, product))
+        if scored_products: return sorted(scored_products, key=lambda x: x[0], reverse=True)[0][1]
+        return candidates[0] if candidates else None
+
+class RoomAnalyzer:
+    def __init__(self, config: EnhancedBoqConfig): self.config = config
+    def analyze_room(self) -> RoomAnalysis:
+        area, perimeter = self.config.roomWidth * self.config.roomDepth, 2 * (self.config.roomWidth + self.config.roomDepth)
+        capacity = 4 if area < 15 else 8 if area < 30 else 16 if area < 60 else 30 if area < 100 else 50
+        acoustic = "Good" if area < 20 else "Moderate" if area < 50 else "Challenging" if area < 100 else "Complex"
+        complexity = 3 + (2 if area > 50 else 0) + (3 if self.config.use_case in ['auditorium'] else 0) + (1 if self.config.budget_range == 'enterprise' else 0)
+        return RoomAnalysis(roomArea=area, roomPerimeter=perimeter, recommendedCapacity=capacity, acousticRating=acoustic, complexityScore=min(complexity, 10))
+
+class EnhancedLogicalSystemBuilder:
+    def __init__(self, matcher: IntelligentProductMatcher, config: EnhancedBoqConfig):
+        self.matcher = matcher
+        self.config = config
+        self.ecosystem_manager = EcosystemManager()
+        self.room_analyzer = RoomAnalyzer(config)
+        self.brand = self.ecosystem_manager.detect_primary_brand(config.special_requirements, config.brand_preference)
+        self.room_analysis = self.room_analyzer.analyze_room()
+        self.recommendations = []
+    def _create_boq_item(self, product: Product, quantity: int = 1) -> BoqItem:
+        return BoqItem(id=str(uuid.uuid4()), productId=product.id, name=product.name, brand=product.brand or "Unknown", category=product.category, quantity=quantity, unitPrice=product.price, totalPrice=product.price * quantity, description=product.features or "", features=product.features, tier=product.tier)
+    def _get_room_based_quantities(self) -> Dict[str, int]:
+        area = self.room_analysis.roomArea
+        q = {'displays': 1, 'cameras': 1, 'speakers': 2, 'microphones': 1, 'controllers': 1}
+        if area > 30: q['speakers'] = 4
+        if area > 60: q.update({'speakers': 6, 'microphones': 2})
+        if area > 100: q.update({'displays': 2, 'cameras': 2, 'speakers': 8, 'microphones': 3})
+        return q
+    def build_collaboration_section(self) -> Optional[BoqSection]:
+        items, q, keywords = [], self._get_room_based_quantities(), self.ecosystem_manager.get_brand_keywords(self.brand, self.config.room_capacity)
+        device = self.matcher.find_best_product("UC & Collaboration Devices", keywords + ['videobar'], brand=self.brand, tier=self.config.budget_range)
+        if device: items.append(self._create_boq_item(device, 1))
+        if items: return BoqSection(name="UC & Collaboration Devices", items=items, sectionTotal=sum(i.totalPrice for i in items), description=f"{self.brand.title()} collaboration system")
+        return None
+    def build_display_section(self) -> Optional[BoqSection]: return BoqSection(name="Displays & Projectors", items=[], sectionTotal=0.0) # Placeholder
+    def build_audio_section(self) -> Optional[BoqSection]: return BoqSection(name="Audio: Speakers & Amplifiers", items=[], sectionTotal=0.0) # Placeholder
+    def build_control_section(self) -> Optional[BoqSection]: return BoqSection(name="Control & Processing", items=[], sectionTotal=0.0) # Placeholder
+    def build_infrastructure_section(self) -> Optional[BoqSection]: return BoqSection(name="Network & Infrastructure", items=[], sectionTotal=0.0) # Placeholder
+    def build_cabling_section(self) -> Optional[BoqSection]: return BoqSection(name="Cables & Connectors", items=[], sectionTotal=0.0) # Placeholder
+    def build_services_section(self, total: float) -> BoqSection: return BoqSection(name="Professional Services", items=[], sectionTotal=0.0) # Placeholder
+    def build_complete_system(self) -> List[BoqSection]:
+        sections = [s for s in [self.build_collaboration_section(), self.build_display_section(), self.build_audio_section()] if s]
+        total = sum(s.sectionTotal for s in sections)
+        if total > 0: sections.append(self.build_services_section(total))
+        return sections
+    def _generate_additional_recommendations(self): pass
+
+# --- Helper Functions for New Endpoints ---
+
+def _apply_smart_filtering(products: List[Product], room_size: str, use_case: str,
+                           budget_range: str, brand_preference: Optional[str]) -> List[Product]:
+    """Apply intelligent filtering based on room requirements."""
+
+    # Define relevance scoring
+    relevant_products = []
+    ecosystem_manager = EcosystemManager()
+
+    for product in products:
+        score = 0
         
-        // Equipment database with enhanced properties
-        const equipmentDatabase = {
-            displays: [
-                { id: 'led_55', name: '55" 4K LED Display', price: 1200, power: 150, category: 'Display', subcategory: 'LED Displays', installTime: 2, quality: 'standard', color: 0x000000, size: { width: 1.2, height: 0.7, depth: 0.1 }, recommended: true },
-                { id: 'led_65', name: '65" 4K LED Display', price: 1800, power: 200, category: 'Display', subcategory: 'LED Displays', installTime: 2.5, quality: 'premium', color: 0x000000, size: { width: 1.4, height: 0.8, depth: 0.1 }, recommended: true },
-                { id: 'led_75', name: '75" 4K LED Display', price: 2500, power: 250, category: 'Display', subcategory: 'LED Displays', installTime: 3, quality: 'premium', color: 0x000000, size: { width: 1.7, height: 1.0, depth: 0.1 } },
-                { id: 'interactive_86', name: '86" Interactive Display', price: 4500, power: 300, category: 'Display', subcategory: 'Interactive Displays', installTime: 4, quality: 'enterprise', color: 0x222222, size: { width: 1.9, height: 1.1, depth: 0.15 } },
-                { id: 'projector_laser', name: 'Laser Projector 5000lm', price: 3200, power: 400, category: 'Display', subcategory: 'Projectors', installTime: 3, quality: 'premium', color: 0xffffff, size: { width: 0.5, height: 0.3, depth: 0.4 } }
-            ],
-            audio: [
-                { id: 'ceiling_speaker', name: 'Ceiling Speaker (Pair)', price: 300, power: 50, category: 'Audio', subcategory: 'Speakers', installTime: 2, quality: 'standard', color: 0xffffff, size: { width: 0.2, height: 0.1, depth: 0.2 }, recommended: true },
-                { id: 'soundbar_premium', name: 'Premium Soundbar', price: 800, power: 100, category: 'Audio', subcategory: 'Speakers', installTime: 1.5, quality: 'premium', color: 0x333333, size: { width: 1.0, height: 0.08, depth: 0.1 } },
-                { id: 'wireless_mic', name: 'Wireless Microphone System', price: 450, power: 20, category: 'Audio', subcategory: 'Microphones', installTime: 1, quality: 'standard', color: 0x666666, size: { width: 0.3, height: 0.2, depth: 0.2 } },
-                { id: 'conference_phone', name: 'Conference Phone', price: 600, power: 15, category: 'Audio', subcategory: 'Conference Systems', installTime: 0.5, quality: 'standard', color: 0x333333, size: { width: 0.3, height: 0.05, depth: 0.3 }, recommended: true }
-            ],
-            control: [
-                { id: 'touch_panel', name: '10" Touch Control Panel', price: 1200, power: 30, category: 'Control', subcategory: 'Touch Panels', installTime: 2, quality: 'premium', color: 0x000000, size: { width: 0.25, height: 0.15, depth: 0.05 }, recommended: true },
-                { id: 'av_processor', name: 'AV Matrix Processor', price: 2200, power: 80, category: 'Control', subcategory: 'Processing', installTime: 4, quality: 'enterprise', color: 0x333333, size: { width: 0.48, height: 0.09, depth: 0.35 } },
-                { id: 'wireless_present', name: 'Wireless Presentation Gateway', price: 800, power: 25, category: 'Control', subcategory: 'Wireless', installTime: 1, quality: 'standard', color: 0x666666, size: { width: 0.2, height: 0.04, depth: 0.15 } }
-            ],
-            camera: [
-                { id: 'ptz_camera', name: 'PTZ Conference Camera', price: 1800, power: 40, category: 'Camera', subcategory: 'PTZ Cameras', installTime: 3, quality: 'premium', color: 0x000000, size: { width: 0.2, height: 0.15, depth: 0.25 }, recommended: true },
-                { id: 'fixed_camera', name: 'Fixed 4K Conference Camera', price: 900, power: 25, category: 'Camera', subcategory: 'Fixed Cameras', installTime: 1.5, quality: 'standard', color: 0x333333, size: { width: 0.15, height: 0.08, depth: 0.12 } }
-            ],
-            furniture: [
-                { id: 'conference_table', name: 'Executive Conference Table', price: 2500, power: 0, category: 'Furniture', subcategory: 'Tables', installTime: 2, quality: 'premium', color: 0x8B4513, size: { width: 3.0, height: 0.75, depth: 1.2 } },
-                { id: 'media_cabinet', name: 'AV Equipment Cabinet', price: 800, power: 0, category: 'Furniture', subcategory: 'Storage', installTime: 1.5, quality: 'standard', color: 0x654321, size: { width: 1.2, height: 0.8, depth: 0.6 } },
-                { id: 'chairs_exec', name: 'Executive Chairs (Set of 8)', price: 1600, power: 0, category: 'Furniture', subcategory: 'Seating', installTime: 1, quality: 'premium', color: 0x2F4F4F, size: { width: 0.6, height: 1.1, depth: 0.6 } }
+        # Category relevance based on room size
+        category_scores = {
+            'small': {
+                'UC & Collaboration Devices': 10,
+                'Displays & Projectors': 8,
+                'Audio: Microphones & Conferencing': 6,
+                'Cables & Connectors': 5
+            },
+            'medium': {
+                'UC & Collaboration Devices': 10,
+                'Displays & Projectors': 9,
+                'Audio: Speakers & Amplifiers': 8,
+                'Audio: Microphones & Conferencing': 7,
+                'Control & Processing': 6,
+                'Network & Infrastructure': 5,
+                'Cables & Connectors': 5
+            },
+            'large': {
+                'Displays & Projectors': 10,
+                'Audio: Speakers & Amplifiers': 9,
+                'UC & Collaboration Devices': 9,
+                'Control & Processing': 8,
+                'Audio: Microphones & Conferencing': 7,
+                'Network & Infrastructure': 6,
+                'Cables & Connectors': 5
+            },
+            'xlarge': {
+                'Displays & Projectors': 10,
+                'Audio: Speakers & Amplifiers': 10,
+                'Control & Processing': 9,
+                'UC & Collaboration Devices': 8,
+                'Audio: Microphones & Conferencing': 8,
+                'Network & Infrastructure': 7,
+                'Cables & Connectors': 6
+            },
+            'auditorium': { # Added auditorium for completeness
+                'Displays & Projectors': 10,
+                'Audio: Speakers & Amplifiers': 10,
+                'Control & Processing': 9,
+                'Audio: Microphones & Conferencing': 9,
+                'Network & Infrastructure': 8,
+                'UC & Collaboration Devices': 7,
+                'Cables & Connectors': 6
+            }
+        }
+        
+        # Get category score
+        category_score = category_scores.get(room_size, {}).get(product.category, 3)
+        score += category_score
+        
+        # Brand preference
+        if brand_preference and product.brand:
+            if brand_preference.lower() in product.brand.lower():
+                score += 15
+        
+        # Budget tier matching
+        if product.tier:
+            if product.tier == budget_range:
+                score += 10
+            elif budget_range == 'premium' and product.tier in ['standard', 'premium']:
+                score += 5
+            elif budget_range == 'enterprise' and product.tier in ['premium', 'enterprise']:
+                score += 8
+        
+        # Use case relevance
+        if product.use_case_tags and use_case in product.use_case_tags.lower():
+            score += 12
+        
+        # Only include products with reasonable relevance
+        if score >= 8:  # Threshold for inclusion
+            product.relevance_score = score
+            relevant_products.append(product)
+    
+    # Sort by relevance score (highest first)
+    relevant_products.sort(key=lambda p: p.relevance_score, reverse=True)
+    
+    return relevant_products
+
+def _get_category_recommendations(builder: EnhancedLogicalSystemBuilder,
+                                  matcher: IntelligentProductMatcher) -> Dict[str, List[Dict]]:
+    """Get top recommended products by category."""
+    
+    recommendations = {}
+    
+    # Get room-specific quantities
+    quantities = builder._get_room_based_quantities()
+    brand_keywords = builder.ecosystem_manager.get_brand_keywords(
+        builder.brand, builder.config.room_capacity
+    )
+    
+    # Define category priorities and search criteria
+    category_configs = {
+        'UC & Collaboration Devices': {
+            'keywords': brand_keywords + ['videobar', 'all-in-one', 'camera', 'controller'],
+            'max_items': 3,
+            'priority': 1
+        },
+        'Displays & Projectors': {
+            'keywords': ['display', '4k', 'projector', 'interactive'],
+            'max_items': 2,
+            'priority': 2
+        },
+        'Audio: Speakers & Amplifiers': {
+            'keywords': ['speaker', 'amplifier', 'ceiling', 'array'],
+            'max_items': 3,
+            'priority': 3
+        },
+        'Audio: Microphones & Conferencing': {
+            'keywords': ['microphone', 'conferencing', 'array'],
+            'max_items': 2,
+            'priority': 4
+        },
+        'Control & Processing': {
+            'keywords': ['processor', 'control', 'matrix'],
+            'max_items': 2,
+            'priority': 5
+        }
+    }
+    
+    for category, config in category_configs.items():
+        # Use the matcher's find_products_by_category method
+        products = matcher.find_products_by_category(category)[:config['max_items']]
+        
+        if products:
+            recommendations[category] = [
+                {
+                    'id': p.id,
+                    'name': p.name,
+                    'brand': p.brand or 'Unknown',
+                    'price': p.price,
+                    'tier': p.tier,
+                    'features': p.features,
+                    'recommended_quantity': quantities.get(category.split(':')[0].lower().replace(' ', '_'), 1),
+                    'priority': config['priority']
+                }
+                for p in products
             ]
-        };
+    
+    return recommendations
 
-        // Initialize the application
-        function init() {
-            createScene();
-            createRoom();
-            populateEquipmentLibrary();
-            setupEventListeners();
-            updateQuickStats();
-            checkBackendConnection();
-            loadRecommendedEquipment();
-            
-            // Start render loop
-            animate();
-        }
 
-        // Create Three.js scene
-        function createScene() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a0a);
-            
-            // Camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(10, 8, 10);
-            
-            // Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
-            
-            document.getElementById('renderContainer').appendChild(renderer.domElement);
-            
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(10, 15, 5);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
-            scene.add(directionalLight);
-            
-            // Controls
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.minDistance = 3;
-            controls.maxDistance = 50;
-            
-            // Raycaster for mouse interaction
-            raycaster = new THREE.Raycaster();
-            mouse = new THREE.Vector2();
-        }
+# --- API Endpoints ---
+@app.get("/")
+def read_root():
+    return {"message": "Enhanced BOQ API v9.2", "status": "operational"}
 
-        // Create room geometry
-        function createRoom() {
-            // Remove existing room
-            const existingRoom = scene.getObjectByName('room');
-            if (existingRoom) {
-                scene.remove(existingRoom);
-            }
-            
-            const roomGroup = new THREE.Group();
-            roomGroup.name = 'room';
-            
-            // Floor
-            const floorGeometry = new THREE.PlaneGeometry(room.width, room.depth);
-            const floorMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x333333,
-                transparent: true,
-                opacity: 0.8
-            });
-            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-            floor.rotation.x = -Math.PI / 2;
-            floor.receiveShadow = true;
-            roomGroup.add(floor);
-            
-            // Walls
-            const wallMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x666666,
-                transparent: true,
-                opacity: 0.3,
-                side: THREE.DoubleSide
-            });
-            
-            // Back wall
-            const backWallGeometry = new THREE.PlaneGeometry(room.width, room.height);
-            const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
-            backWall.position.set(0, room.height / 2, -room.depth / 2);
-            roomGroup.add(backWall);
-            
-            // Side walls
-            const sideWallGeometry = new THREE.PlaneGeometry(room.depth, room.height);
-            
-            const leftWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
-            leftWall.rotation.y = Math.PI / 2;
-            leftWall.position.set(-room.width / 2, room.height / 2, 0);
-            roomGroup.add(leftWall);
-            
-            const rightWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
-            rightWall.rotation.y = -Math.PI / 2;
-            rightWall.position.set(room.width / 2, room.height / 2, 0);
-            roomGroup.add(rightWall);
-            
-            // Room outline
-            const outlineGeometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(room.width, room.height, room.depth));
-            const outlineMaterial = new THREE.LineBasicMaterial({ color: 0x00ffff, linewidth: 2 });
-            const outline = new THREE.LineSegments(outlineGeometry, outlineMaterial);
-            outline.position.y = room.height / 2;
-            roomGroup.add(outline);
-            
-            scene.add(roomGroup);
-            updateQuickStats();
-        }
+@app.get("/api/products", response_model=List[Product])
+def get_products():
+    # This endpoint remains for full data access if needed
+    return get_all_products_from_db()
 
-        // Populate equipment library
-        function populateEquipmentLibrary() {
-            const library = document.getElementById('equipmentLibrary');
-            library.innerHTML = '';
-            
-            Object.keys(equipmentDatabase).forEach(category => {
-                const categoryHeader = document.createElement('div');
-                categoryHeader.className = 'category-header bg-gradient-to-r from-blue-600/20 to-purple-600/20';
-                categoryHeader.innerHTML = `
-                    <span>${getCategoryIcon(category)} ${category.charAt(0).toUpperCase() + category.slice(1)}</span>
-                    <span class="category-toggle">▼</span>
-                `;
-                
-                const categoryContent = document.createElement('div');
-                categoryContent.className = 'category-content';
-                
-                const items = equipmentDatabase[category].slice(0, 3); // Show first 3 items initially
-                items.forEach(item => {
-                    const equipmentElement = createEquipmentElement(item);
-                    categoryContent.appendChild(equipmentElement);
-                });
-                
-                if (equipmentDatabase[category].length > 3) {
-                    const loadMore = document.createElement('div');
-                    loadMore.className = 'load-more-btn';
-                    loadMore.textContent = `Load ${equipmentDatabase[category].length - 3} more items...`;
-                    loadMore.onclick = () => loadMoreItems(category, categoryContent, loadMore);
-                    categoryContent.appendChild(loadMore);
-                }
-                
-                categoryHeader.onclick = () => toggleCategory(categoryContent, categoryHeader.querySelector('.category-toggle'));
-                
-                library.appendChild(categoryHeader);
-                library.appendChild(categoryContent);
-            });
-        }
+# NEW, OPTIMIZED ENDPOINT FOR THE LIBRARY
+@app.get("/api/products/library", response_model=List[ProductLibraryItem])
+def get_products_for_library():
+    """Get a lightweight list of products suitable for the UI library."""
+    logger.info("Fetching lightweight product list for UI library.")
+    with get_db_connection() as conn:
+        # Only select fields needed for the library view
+        products_data = conn.execute(
+            'SELECT id, category, brand, name, price, tier, model FROM products'
+        ).fetchall()
+        return [ProductLibraryItem(**dict(row)) for row in products_data]
 
-        function loadMoreItems(category, container, loadMoreBtn) {
-            const allItems = equipmentDatabase[category];
-            const currentItems = container.children.length - 1; // Exclude load more button
-            
-            for (let i = currentItems; i < allItems.length; i++) {
-                const equipmentElement = createEquipmentElement(allItems[i]);
-                container.insertBefore(equipmentElement, loadMoreBtn);
-            }
-            
-            loadMoreBtn.remove();
-        }
-
-        function toggleCategory(content, toggle) {
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                toggle.textContent = '▼';
-            } else {
-                content.style.display = 'none';
-                toggle.textContent = '▶';
-            }
-        }
-
-        function createEquipmentElement(item) {
-            const div = document.createElement('div');
-            div.className = `equipment-item premium-glass rounded-lg p-3 mb-2 cursor-grab ${item.recommended ? 'recommended' : ''}`;
-            div.draggable = true;
-            div.dataset.equipmentId = item.id;
-            
-            div.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                        <div class="font-semibold text-sm text-white">${item.name}</div>
-                        <div class="text-xs text-white/70 mt-1">${item.subcategory || item.category}</div>
-                        <div class="flex items-center space-x-3 mt-2 text-xs">
-                            <span class="text-green-400 font-semibold">$${item.price.toLocaleString()}</span>
-                            <span class="text-blue-400">${item.power}W</span>
-                            <span class="text-yellow-400">${item.installTime}h</span>
-                        </div>
-                    </div>
-                    <div class="quality-indicator quality-${item.quality}"></div>
-                </div>
-                ${item.recommended ? '<div class="absolute top-2 left-2 text-xs bg-green-500/80 text-white px-2 py-1 rounded">⭐ Recommended</div>' : ''}
-            `;
-            
-            // Drag events
-            div.addEventListener('dragstart', handleDragStart);
-            div.addEventListener('click', () => addEquipmentToRoom(item));
-            
-            return div;
-        }
-
-        function getCategoryIcon(category) {
-            const icons = {
-                displays: '🖥️',
-                audio: '🔊',
-                control: '🎛️',
-                camera: '📷',
-                furniture: '🪑'
-            };
-            return icons[category] || '📦';
-        }
-
-        // Equipment management
-        function addEquipmentToRoom(equipment, position = null) {
-            const id = Date.now() + Math.random();
-            
-            // Create 3D object
-            const geometry = new THREE.BoxGeometry(
-                equipment.size.width,
-                equipment.size.height,
-                equipment.size.depth
-            );
-            
-            const material = new THREE.MeshLambertMaterial({ color: equipment.color });
-            const mesh = new THREE.Mesh(geometry, material);
-            
-            // Position
-            if (position) {
-                mesh.position.copy(position);
-            } else {
-                mesh.position.set(
-                    (Math.random() - 0.5) * room.width * 0.8,
-                    equipment.size.height / 2,
-                    (Math.random() - 0.5) * room.depth * 0.8
-                );
-            }
-            
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            mesh.userData = { ...equipment, id };
-            
-            scene.add(mesh);
-            placedEquipment.push({ mesh, data: equipment, id });
-            
-            updateBOQ();
-            updateQuickStats();
-            generateRecommendations();
-            showToast(`Added ${equipment.name}`, 'success');
-        }
-
-        function removeEquipment(id) {
-            const index = placedEquipment.findIndex(item => item.id === id);
-            if (index !== -1) {
-                scene.remove(placedEquipment[index].mesh);
-                const removedItem = placedEquipment.splice(index, 1)[0];
-                updateBOQ();
-                updateQuickStats();
-                generateRecommendations();
-                showToast(`Removed ${removedItem.data.name}`, 'info');
-            }
-        }
-
-        // BOQ Management
-        function updateBOQ() {
-            const boqContent = document.getElementById('boqContent');
-            
-            if (placedEquipment.length === 0) {
-                boqContent.innerHTML = `
-                    <div class="text-center text-white/60 py-8">
-                        <div class="text-4xl mb-2">📦</div>
-                        <div>No equipment added yet</div>
-                        <div class="text-sm mt-1">Drag equipment from the library to get started</div>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Group by category
-            const grouped = {};
-            let totalCost = 0;
-            let totalPower = 0;
-            let totalInstallTime = 0;
-            
-            placedEquipment.forEach(item => {
-                const category = item.data.category;
-                if (!grouped[category]) {
-                    grouped[category] = [];
-                }
-                grouped[category].push(item);
-                totalCost += item.data.price;
-                totalPower += item.data.power;
-                totalInstallTime += item.data.installTime;
-            });
-            
-            let html = '';
-            Object.keys(grouped).forEach(category => {
-                const items = grouped[category];
-                const categoryTotal = items.reduce((sum, item) => sum + item.data.price, 0);
-                
-                html += `
-                    <div class="boq-section">
-                        <h3 class="text-sm font-bold text-blue-300 mb-3">
-                            ${getCategoryIcon(category)} ${category.charAt(0).toUpperCase() + category.slice(1)}
-                            <span class="float-right text-green-400">$${categoryTotal.toLocaleString()}</span>
-                        </h3>
-                        <div class="space-y-2">
-                `;
-                
-                items.forEach(item => {
-                    html += `
-                        <div class="boq-item">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="font-medium text-sm">${item.data.name}</div>
-                                    <div class="text-xs text-white/70 mt-1">
-                                        ${item.data.power}W • ${item.data.installTime}h install
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-green-400 font-semibold">$${item.data.price.toLocaleString()}</div>
-                                    <button onclick="removeEquipment(${item.id})" class="text-red-400 hover:text-red-300 text-xs mt-1">Remove</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                html += '</div></div>';
-            });
-            
-            // Summary
-            html += `
-                <div class="boq-section border-t border-white/20 pt-4 mt-6">
-                    <h3 class="text-lg font-bold text-white mb-3">Project Summary</h3>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div class="bg-gradient-to-r from-green-600/20 to-blue-600/20 p-3 rounded-lg">
-                            <div class="text-white/60">Total Investment</div>
-                            <div class="text-2xl font-bold text-green-400">$${totalCost.toLocaleString()}</div>
-                        </div>
-                        <div class="bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-3 rounded-lg">
-                            <div class="text-white/60">Equipment Count</div>
-                            <div class="text-2xl font-bold text-blue-400">${placedEquipment.length}</div>
-                        </div>
-                        <div class="bg-gradient-to-r from-purple-600/20 to-pink-600/20 p-3 rounded-lg">
-                            <div class="text-white/60">Total Power</div>
-                            <div class="text-xl font-bold text-purple-400">${totalPower}W</div>
-                        </div>
-                        <div class="bg-gradient-to-r from-yellow-600/20 to-orange-600/20 p-3 rounded-lg">
-                            <div class="text-white/60">Install Time</div>
-                            <div class="text-xl font-bold text-yellow-400">${totalInstallTime}h</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            boqContent.innerHTML = html;
-            
-            // Update analytics
-            document.getElementById('equipmentCount').textContent = `${placedEquipment.length} items`;
-            document.getElementById('installTime').textContent = `${totalInstallTime} hours`;
-            document.getElementById('powerRequired').textContent = `${totalPower}W`;
-        }
-
-        // Event Listeners
-        function setupEventListeners() {
-            // Room controls
-            document.getElementById('updateRoom').addEventListener('click', () => {
-                room.width = parseFloat(document.getElementById('roomWidth').value) || 8;
-                room.depth = parseFloat(document.getElementById('roomDepth').value) || 6;
-                createRoom();
-                generateRecommendations();
-                showToast('Room updated successfully', 'success');
-            });
-            
-            // Quick actions
-            document.getElementById('quickGenerate').addEventListener('click', generateAIRecommendations);
-            document.getElementById('togglePanels').addEventListener('click', togglePanels);
-            document.getElementById('loadRecommended').addEventListener('click', loadRecommendedEquipment);
-            document.getElementById('clearAll').addEventListener('click', clearAllEquipment);
-            document.getElementById('exportBOQ').addEventListener('click', exportBOQ);
-            
-            // View controls
-            document.getElementById('topView').addEventListener('click', () => setView('top'));
-            document.getElementById('frontView').addEventListener('click', () => setView('front'));
-            document.getElementById('isoView').addEventListener('click', () => setView('iso'));
-            document.getElementById('resetView').addEventListener('click', () => setView('reset'));
-            
-            // Room presets
-            document.querySelectorAll('[data-preset]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const preset = e.currentTarget.dataset.preset;
-                    applyRoomPreset(preset);
-                    
-                    // Visual feedback
-                    document.querySelectorAll('[data-preset]').forEach(b => b.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
-                });
-            });
-            
-            // Window resize
-            window.addEventListener('resize', onWindowResize);
-            
-            // Mouse events for 3D interaction
-            renderer.domElement.addEventListener('click', onMouseClick);
-            renderer.domElement.addEventListener('dblclick', onMouseDoubleClick);
-        }
-
-        // Drag and drop handlers
-        function handleDragStart(e) {
-            e.dataTransfer.setData('text/plain', e.target.dataset.equipmentId);
-            e.target.style.opacity = '0.5';
-        }
-
-        // Room presets
-        function applyRoomPreset(preset) {
-            const presets = {
-                meeting: { width: 6, depth: 4, size: 'small', useCase: 'meeting_room' },
-                boardroom: { width: 8, depth: 6, size: 'medium', useCase: 'boardroom' },
-                auditorium: { width: 15, depth: 12, size: 'auditorium', useCase: 'auditorium' },
-                huddle: { width: 4, depth: 3, size: 'small', useCase: 'huddle_room' }
-            };
-            
-            const config = presets[preset];
-            if (config) {
-                document.getElementById('roomWidth').value = config.width;
-                document.getElementById('roomDepth').value = config.depth;
-                document.getElementById('roomSize').value = config.size;
-                document.getElementById('useCase').value = config.useCase;
-                
-                room.width = config.width;
-                room.depth = config.depth;
-                createRoom();
-                generateRecommendations();
-                showToast(`Applied ${preset} preset`, 'success');
-            }
-        }
-
-        // View controls
-        function setView(type) {
-            const distance = Math.max(room.width, room.depth) * 1.5;
-            
-            switch(type) {
-                case 'top':
-                    camera.position.set(0, distance, 0);
-                    camera.lookAt(0, 0, 0);
-                    break;
-                case 'front':
-                    camera.position.set(0, room.height, distance);
-                    camera.lookAt(0, room.height / 2, 0);
-                    break;
-                case 'iso':
-                    camera.position.set(distance * 0.7, distance * 0.7, distance * 0.7);
-                    camera.lookAt(0, 0, 0);
-                    break;
-                case 'reset':
-                    camera.position.set(10, 8, 10);
-                    camera.lookAt(0, 0, 0);
-                    break;
-            }
-            controls.update();
-        }
-
-        // Mouse interaction handlers
-        function onMouseClick(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(placedEquipment.map(item => item.mesh));
-            
-            if (intersects.length > 0) {
-                const selectedObject = intersects[0].object;
-                highlightEquipment(selectedObject);
-            }
-        }
-
-        function onMouseDoubleClick(event) {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(placedEquipment.map(item => item.mesh));
-            
-            if (intersects.length > 0) {
-                const selectedObject = intersects[0].object;
-                const equipmentId = selectedObject.userData.id;
-                if (confirm(`Remove ${selectedObject.userData.name}?`)) {
-                    removeEquipment(equipmentId);
-                }
-            }
-        }
-
-        function highlightEquipment(mesh) {
-            // Remove previous highlights
-            scene.traverse(obj => {
-                if (obj.material && obj.material.emissive) {
-                    obj.material.emissive.setHex(0x000000);
-                }
-            });
-            
-            // Add highlight to selected object
-            if (mesh.material) {
-                mesh.material.emissive.setHex(0x444444);
-            }
-        }
-
-        // Utility functions
-        function togglePanels() {
-            panelsVisible = !panelsVisible;
-            const controlPanel = document.getElementById('controlPanel');
-            const boqPanel = document.getElementById('boqPanel');
-            
-            if (panelsVisible) {
-                controlPanel.style.display = 'block';
-                boqPanel.style.display = 'block';
-                showToast('Panels shown', 'info');
-            } else {
-                controlPanel.style.display = 'none';
-                boqPanel.style.display = 'none';
-                showToast('Panels hidden', 'info');
-            }
-        }
-
-        function updateQuickStats() {
-            const totalCost = placedEquipment.reduce((sum, item) => sum + item.data.price, 0);
-            const area = room.width * room.depth;
-            document.getElementById('quickStats').textContent = 
-                `Room: ${room.width}m×${room.depth}m | Items: ${placedEquipment.length} | Total: $${totalCost.toLocaleString()}`;
-            document.getElementById('coverageArea').textContent = `${area} m²`;
-        }
-
-        function loadRecommendedEquipment() {
-            clearAllEquipment();
-            
-            // Load recommended items based on room size and use case
-            const roomSize = document.getElementById('roomSize').value;
-            const useCase = document.getElementById('useCase').value;
-            const qualityLevel = document.getElementById('qualityLevel').value;
-            
-            const recommendations = getSmartRecommendations(roomSize, useCase, qualityLevel);
-            
-            recommendations.forEach((equipId, index) => {
-                const equipment = findEquipmentById(equipId);
-                if (equipment) {
-                    setTimeout(() => {
-                        addEquipmentToRoom(equipment);
-                    }, index * 200);
-                }
-            });
-            
-            showToast('Loaded smart recommendations', 'success');
-        }
-
-        function getSmartRecommendations(roomSize, useCase, qualityLevel) {
-            const recommendations = [];
-            
-            // Display recommendations
-            if (roomSize === 'small') {
-                recommendations.push('led_55');
-            } else if (roomSize === 'medium') {
-                recommendations.push('led_65');
-            } else {
-                recommendations.push('led_75');
-            }
-            
-            // Audio recommendations
-            recommendations.push('ceiling_speaker');
-            if (roomSize !== 'small') {
-                recommendations.push('conference_phone');
-            }
-            
-            // Control recommendations
-            recommendations.push('touch_panel');
-            if (qualityLevel === 'premium' || qualityLevel === 'enterprise') {
-                recommendations.push('wireless_present');
-            }
-            
-            // Camera for meeting rooms
-            if (useCase.includes('meeting') || useCase.includes('boardroom')) {
-                recommendations.push('ptz_camera');
-            }
-            
-            return recommendations;
-        }
-
-        function findEquipmentById(id) {
-            for (const category of Object.values(equipmentDatabase)) {
-                const item = category.find(eq => eq.id === id);
-                if (item) return item;
-            }
-            return null;
-        }
-
-        function clearAllEquipment() {
-            placedEquipment.forEach(item => {
-                scene.remove(item.mesh);
-            });
-            placedEquipment = [];
-            updateBOQ();
-            updateQuickStats();
-            showToast('All equipment cleared', 'info');
-        }
-
-        function generateRecommendations() {
-            const area = room.width * room.depth;
-            const useCase = document.getElementById('useCase').value;
-            const currentEquipment = placedEquipment.map(item => item.data.category.toLowerCase());
-            
-            let recommendations = [];
-            
-            // Check missing categories
-            if (!currentEquipment.includes('display')) {
-                recommendations.push('Consider adding a display for presentations');
-            }
-            if (!currentEquipment.includes('audio') && area > 20) {
-                recommendations.push('Audio system recommended for rooms larger than 20m²');
-            }
-            if (!currentEquipment.includes('camera') && useCase.includes('meeting')) {
-                recommendations.push('Video conferencing camera suggested for meeting rooms');
-            }
-            if (!currentEquipment.includes('control')) {
-                recommendations.push('Control system will improve user experience');
-            }
-            
-            // Room-specific recommendations
-            if (area > 50 && !currentEquipment.includes('furniture')) {
-                recommendations.push('Consider adding conference table and seating');
-            }
-            
-            const content = document.getElementById('recommendationsContent');
-            content.innerHTML = recommendations.length > 0 
-                ? recommendations.map(rec => `<div class="mb-2">• ${rec}</div>`).join('')
-                : 'All essential equipment categories are covered. Great job!';
-        }
-
-        function generateAIRecommendations() {
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            
-            // Simulate AI processing
-            setTimeout(() => {
-                const roomSize = document.getElementById('roomSize').value;
-                const useCase = document.getElementById('useCase').value;
-                const qualityLevel = document.getElementById('qualityLevel').value;
-                
-                clearAllEquipment();
-                loadRecommendedEquipment();
-                
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                showToast('AI recommendations generated', 'success');
-            }, 2000);
-        }
-
-        function exportBOQ() {
-            if (placedEquipment.length === 0) {
-                showToast('No equipment to export', 'error');
-                return;
-            }
-            
-            const projectName = document.getElementById('projectName').value || 'AV Project';
-            const clientName = document.getElementById('clientName').value || 'Client';
-            
-            let csvContent = `Bill of Quantities - ${projectName}\nClient: ${clientName}\nGenerated: ${new Date().toLocaleDateString()}\n\n`;
-            csvContent += 'Category,Item Name,Quantity,Unit Price,Total Price,Power (W),Install Time (h)\n';
-            
-            let totalCost = 0;
-            placedEquipment.forEach(item => {
-                csvContent += `${item.data.category},${item.data.name},1,$${item.data.price},$${item.data.price},${item.data.power},${item.data.installTime}\n`;
-                totalCost += item.data.price;
-            });
-            
-            csvContent += `\nTotal Project Cost:,$${totalCost.toLocaleString()}`;
-            
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${projectName.replace(/\s+/g, '_')}_BOQ.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            showToast('BOQ exported successfully', 'success');
-        }
-
-        function checkBackendConnection() {
-            const status = document.getElementById('connectionStatus');
-            
-            // Simulate connection check
-            setTimeout(() => {
-                status.className = 'connection-status status-online';
-                status.innerHTML = '🟢 Backend Connected';
-                
-                setTimeout(() => {
-                    status.style.display = 'none';
-                }, 3000);
-            }, 1000);
-        }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            
-            const colors = {
-                success: 'from-green-600 to-emerald-600',
-                error: 'from-red-600 to-rose-600',
-                info: 'from-blue-600 to-cyan-600',
-                warning: 'from-yellow-600 to-orange-600'
-            };
-            
-            toast.className = `toast bg-gradient-to-r ${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg`;
-            toast.innerHTML = `
-                <div class="flex items-center space-x-3">
-                    <div class="text-lg">${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}</div>
-                    <div class="font-medium">${message}</div>
-                </div>
-            `;
-            
-            container.appendChild(toast);
-            
-            // Show animation
-            setTimeout(() => toast.classList.add('show'), 100);
-            
-            // Auto remove
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => container.removeChild(toast), 400);
-            }, 3000);
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
+# --- NEW ENDPOINTS ---
+@app.get("/api/products/filtered")
+def get_filtered_products(
+    room_size: str = Query("medium", regex="^(small|medium|large|xlarge|auditorium)$"),
+    use_case: str = Query("meeting_room"),
+    budget_range: str = Query("standard"),
+    brand_preference: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0)
+):
+    """Get filtered and paginated products based on room requirements."""
+    try:
+        products = get_all_products_from_db()
         
-                        <option value
+        # Apply intelligent filtering
+        filtered_products = _apply_smart_filtering(
+            products, room_size, use_case, budget_range, brand_preference
+        )
+        
+        # Apply additional filters
+        if category:
+            filtered_products = [p for p in filtered_products if p.category == category]
+        
+        if search:
+            search_lower = search.lower()
+            filtered_products = [p for p in filtered_products if 
+                search_lower in p.name.lower() or 
+                search_lower in (p.brand or "").lower() or
+                search_lower in (p.category or "").lower()
+            ]
+        
+        # Apply pagination
+        total_count = len(filtered_products)
+        paginated_products = filtered_products[offset:offset + limit]
+        
+        return {
+            "products": [p.dict() for p in paginated_products],
+            "total_count": total_count,
+            "has_more": offset + limit < total_count,
+            "categories": sorted(list(set(p.category for p in filtered_products if p.category)))
+        }
+        
+    except Exception as e:
+        logger.error(f"Error filtering products: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to filter products: {str(e)}")
+
+@app.get("/api/products/recommendations")
+def get_product_recommendations(
+    room_dimensions: str = Query(..., description="Format: 'width,depth,height'"),
+    room_size: str = Query("medium"),
+    use_case: str = Query("meeting_room"),
+    budget_range: str = Query("standard"),
+    brand_preference: Optional[str] = Query(None)
+):
+    """Get AI-recommended products for specific room requirements."""
+    try:
+        # Parse room dimensions
+        try:
+            dimensions = [float(x.strip()) for x in room_dimensions.split(',')]
+            if len(dimensions) != 3:
+                raise ValueError("Invalid room dimensions format. Expected 'width,depth,height'.")
+        except ValueError as ve:
+             raise HTTPException(status_code=400, detail=str(ve))
+
+        width, depth, height = dimensions
+        
+        # Create a temporary config for analysis
+        config = EnhancedBoqConfig(
+            room_dimensions=dimensions,
+            room_capacity=room_size,
+            use_case=use_case,
+            budget_range=budget_range,
+            brand_preference=brand_preference,
+            special_requirements="",
+            project_name="Temp",
+            client_name="Temp"
+        )
+        
+        products = get_all_products_from_db()
+        matcher = IntelligentProductMatcher(products)
+        builder = EnhancedLogicalSystemBuilder(matcher, config)
+        
+        # Get recommended products by category
+        recommendations = _get_category_recommendations(builder, matcher)
+        
+        return {
+            "recommendations": recommendations,
+            "room_analysis": builder.room_analysis.dict(),
+            "total_categories": len(recommendations)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting recommendations: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get recommendations: {str(e)}")
+
+
+@app.post("/api/generate-boq")
+def generate_enhanced_boq(config: EnhancedBoqConfig):
+    try:
+        products = get_all_products_from_db()
+        if not products: raise HTTPException(status_code=500, detail="No products found in database")
+        
+        matcher = IntelligentProductMatcher(products)
+        builder = EnhancedLogicalSystemBuilder(matcher, config)
+        
+        sections = builder.build_complete_system()
+        if not sections: raise HTTPException(status_code=500, detail="Unable to generate BOQ - no suitable products found")
+        
+        subtotal = sum(section.sectionTotal for section in sections)
+        total_cost = subtotal * (1 + config.contingency / 100)
+
+        frontend_categories = {}
+        for section in sections:
+            if section.items:
+                section_items_for_frontend = []
+                for item in section.items:
+                    item_dict = item.dict()
+                    item_dict['unit_price'] = item_dict.pop('unitPrice')
+                    item_dict['total_price'] = item_dict.pop('totalPrice')
+                    section_items_for_frontend.append(item_dict)
+
+                frontend_categories[section.name] = {
+                    "items": section_items_for_frontend,
+                    "total_cost": section.sectionTotal
+                }
+        
+        compatible_response = {
+            "status": "success", "boq": {
+                "project_name": config.project_name, "client_name": config.client_name,
+                "categories": frontend_categories, "recommendations": builder.recommendations,
+            }
+        }
+        
+        logger.info(f"Generated BOQ for {config.project_name} - Total: ${total_cost:.2f}")
+        return compatible_response
+        
+    except Exception as e:
+        logger.error(f"Error generating BOQ: {str(e)}")
+        raise HTTPException(status_code=500, detail={"status": "error", "message": f"BOQ generation failed: {str(e)}"})
+
+@app.get("/api/health")
+def health_check():
+    """Health check endpoint"""
+    try:
+        with get_db_connection() as conn:
+            product_count = conn.execute('SELECT COUNT(*) FROM products').fetchone()[0]
+        return {"status": "healthy", "version": "9.2.0", "database": "connected", "product_count": product_count, "timestamp": datetime.now().isoformat()}
+    except Exception as e:
+        return {"status": "degraded", "error": str(e), "timestamp": datetime.now().isoformat()}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
