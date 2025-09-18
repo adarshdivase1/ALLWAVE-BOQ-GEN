@@ -3,49 +3,60 @@
 name: Build and Commit Product Database
 
 on:
+  # Run this workflow whenever a commit is pushed to the main branch
   push:
     branches:
       - main
+  # Also allow running this workflow manually from the Actions tab
   workflow_dispatch:
 
+# Grant the workflow permission to write back to the repository
 permissions:
   contents: write
 
 jobs:
   build-db:
-    # --- ADD THIS LINE ---
-    # This prevents the workflow from running on its own commits.
+    # This crucial line prevents the workflow from running in a loop on its own commits
     if: "!contains(github.event.head_commit.message, 'Automated:')"
 
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Check out your repository's code
       - name: Check out code
         uses: actions/checkout@v4
 
+      # 2. Set up the Python environment
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
+      # 3. Install the Python libraries needed for the script
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pandas openpyxl
 
+      # 4. Run the ingestion script to create/update the database from your Excel file
       - name: Run Data Ingestion Script
         run: python ingest_data.py
 
+      # 5. Commit and push the database file if it has changed
       - name: Commit and Push Database
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
           git add products.db
           
+          # Only proceed if there are actual changes to the database file
           if ! git diff --staged --quiet; then
-            # The commit message now includes "Automated:" which the 'if' condition above will catch
+            # The commit message includes "Automated:" which the 'if' condition above will catch
             git commit -m "Automated: Update product database"
+            
+            # Pull the latest changes from the remote to resolve conflicts before pushing
             git pull origin main
+            
             git push
           else
             echo "No changes to the database. Skipping commit."
