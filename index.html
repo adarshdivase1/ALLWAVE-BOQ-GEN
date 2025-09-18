@@ -3,651 +3,1521 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartAV Pro - Enterprise Room Configurator & BOQ Generator</title>
+    <title>Enhanced 3D AV Room Designer Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-bg: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #16213e 100%);
+            --primary-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
             --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.15);
             --accent-blue: #3b82f6;
-            --accent-green: #10b981;
             --accent-purple: #8b5cf6;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --text-primary: #ffffff;
-            --text-secondary: #94a3b8;
-            --surface-elevated: rgba(255, 255, 255, 0.1);
+            --success-green: #10b981;
+            --error-red: #ef4444;
         }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--primary-bg);
-            color: var(--text-primary);
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: white;
             overflow: hidden;
-            line-height: 1.6;
+            margin: 0;
+            padding: 0;
         }
         
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        .premium-glass {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
         }
         
-        .form-control {
-            background: rgba(255, 255, 255, 0.06) !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            border-radius: 10px !important;
-            padding: 12px 16px !important;
-            color: white !important;
-            font-size: 14px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 100%;
+        .control-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            max-width: 420px;
+            max-height: 85vh;
+            overflow-y: auto;
         }
         
-        .form-control:focus {
-            outline: none !important;
-            border-color: var(--accent-blue) !important;
-            background: rgba(255, 255, 255, 0.1) !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        .boq-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            max-width: 480px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .mini-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            max-width: 600px;
         }
         
-        .form-control::placeholder { color: rgba(255, 255, 255, 0.5); }
-        
-        .btn {
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            border: none;
+        .equipment-item {
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
             position: relative;
             overflow: hidden;
         }
         
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
-            transform: translateX(-100%);
-            transition: transform 0.6s;
+        .equipment-item:hover {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
         }
         
-        .btn:hover::before { transform: translateX(100%); }
+        .equipment-item:active {
+            cursor: grabbing;
+            transform: scale(0.98);
+        }
         
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-blue) 0%, #1d4ed8 100%);
+        .room-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 8px !important;
+            padding: 12px 16px !important;
+            color: white !important;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            border-color: var(--accent-blue) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+            outline: none !important;
+        }
+        
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+        
+        .form-select option {
+            background: #1a1a2e;
             color: white;
         }
         
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.4);
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);
-            color: white;
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
-            color: white;
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-        
-        .status-indicator {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            box-shadow: 0 0 8px currentColor;
-        }
-        
-        .status-online { color: var(--accent-green); background: var(--accent-green); animation: pulse-green 2s infinite; }
-        .status-offline { color: var(--error); background: var(--error); }
-        .status-loading { color: var(--warning); background: var(--warning); animation: pulse-orange 1.5s infinite; }
-        
-        @keyframes pulse-green {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
-        }
-        
-        @keyframes pulse-orange {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .panel {
+        .toast {
             position: fixed;
             top: 20px;
-            z-index: 100;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            opacity: 0;
         }
         
-        .control-panel { left: 20px; width: 420px; }
-        .results-panel { right: 20px; width: 480px; }
-        .product-panel { left: 460px; width: 380px; }
-        
-        .scrollbar-custom::-webkit-scrollbar { width: 6px; }
-        .scrollbar-custom::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
-        .scrollbar-custom::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
-        .scrollbar-custom::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
-        
-        .loading-overlay {
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(15px);
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
         
-        .spinner {
-            width: 60px; height: 60px;
-            border: 3px solid rgba(255, 255, 255, 0.2);
-            border-top: 3px solid var(--accent-blue);
+        .virtual-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .virtual-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .virtual-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
+            border-top: 3px solid white;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
         }
         
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         
-        .equipment-label {
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 600;
-            position: absolute;
-            z-index: 1000;
-            pointer-events: none;
-            white-space: nowrap;
-            transform: translate(-50%, -120%);
-            transition: opacity 0.3s;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
         }
         
         .boq-section {
-            border-left: 3px solid var(--accent-blue);
+            border-left: 4px solid var(--accent-blue);
             padding-left: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
         
         .boq-item {
-            background: var(--surface-elevated);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--success-green);
             transition: all 0.3s ease;
             position: relative;
         }
         
         .boq-item:hover {
             background: rgba(255, 255, 255, 0.12);
-            border-color: var(--accent-blue);
+            transform: translateX(4px);
+        }
+        
+        #renderContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .room-preset-btn {
+            background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .room-preset-btn:hover {
+            background: linear-gradient(45deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3));
+            border-color: rgba(59, 130, 246, 0.5);
             transform: translateY(-2px);
         }
         
-        .notification {
-            position: relative;
-            padding: 16px 24px;
+        .room-preset-btn.active {
+            background: linear-gradient(45deg, rgba(16, 185, 129, 0.3), rgba(59, 130, 246, 0.3));
+            border-color: rgba(16, 185, 129, 0.5);
+            animation: pulse-glow 2s infinite;
+        }
+
+        .quality-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .quality-economy { background: #f59e0b; }
+        .quality-standard { background: #3b82f6; }
+        .quality-premium { background: #8b5cf6; }
+        .quality-enterprise { background: #10b981; }
+
+        .recommendations {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
             border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: 600;
-            max-width: 400px;
-            opacity: 0;
-            transform: translateX(100%);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        
-        .notification.show {
-            opacity: 1;
-            transform: translateX(0);
+
+        .status-online {
+            background: linear-gradient(45deg, rgba(16, 185, 129, 0.2), rgba(59, 130, 246, 0.2));
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            color: #10b981;
         }
-        
-        .notification.success { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-green); color: #34d399; }
-        .notification.error { background: rgba(239, 68, 68, 0.15); border-color: var(--error); color: #f87171; }
-        .notification.warning { background: rgba(245, 158, 11, 0.15); border-color: var(--warning); color: #fbbf24; }
-        
-        .room-preset {
-            background: var(--surface-elevated);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 12px;
+
+        .status-offline {
+            background: linear-gradient(45deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+        }
+
+        .equipment-3d {
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
+            transition: all 0.2s ease;
         }
-        
-        .room-preset:hover, .room-preset.active {
-            border-color: var(--accent-blue);
-            background: rgba(59, 130, 246, 0.1);
+
+        .equipment-3d:hover {
+            transform: scale(1.1);
         }
-        
-        .toolbar {
+
+        .view-controls {
             position: fixed;
             bottom: 20px;
             right: 20px;
+            z-index: 100;
             display: flex;
-            gap: 12px;
-            z-index: 200;
+            gap: 10px;
         }
-        
-        .toolbar-btn {
-            width: 48px; height: 48px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
+
+        .view-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        
-        .toolbar-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
+
+        .view-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
             transform: translateY(-2px);
         }
-        
-        .progress-bar {
-            width: 100%; height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
-            border-radius: 2px;
-            transition: width 0.3s ease;
-        }
-        
-        .tab-container {
-            display: flex;
-            background: rgba(255, 255, 255, 0.05);
+
+        .analytics-panel {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.3);
             border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 16px;
+            padding: 16px;
+            margin-top: 16px;
         }
         
-        .tab {
-            flex: 1; padding: 8px 16px;
-            border-radius: 8px;
-            text-align: center; cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500; font-size: 13px;
+        .category-header {
+            font-weight: 600;
+            margin: 16px 0 8px 0;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 14px;
         }
-        
-        .tab.active { background: var(--accent-blue); color: white; }
     </style>
 </head>
 <body>
-    <div id="loadingOverlay" class="fixed inset-0 loading-overlay flex-col items-center justify-center z-[999]" style="display: none;">
-        <div class="spinner mb-6"></div>
-        <div id="loadingText" class="text-white text-xl font-bold"></div>
-        <div id="loadingSubtext" class="text-gray-400 text-sm mt-3"></div>
-        <div class="progress-bar mt-6 w-64"><div id="progressFill" class="progress-fill" style="width: 0%"></div></div>
+    <div id="toastContainer"></div>
+    
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="connection-status status-offline">
+        🔄 Checking Backend Connection...
     </div>
-
-    <div id="renderContainer" class="fixed inset-0 z-0"></div>
-
-    <div id="controlPanel" class="panel control-panel glass-panel p-6 scrollbar-custom">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent">SmartAV Pro</h1>
-                <p class="text-sm text-gray-400 mt-1">Enterprise Room Configurator</p>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50 hidden">
+        <div class="loading-spinner mb-4"></div>
+        <div class="text-white text-lg font-semibold">Generating AI-Powered BOQ...</div>
+        <div class="text-white/70 text-sm mt-2">Analyzing room dimensions and requirements</div>
+    </div>
+    
+    <!-- 3D Canvas Container -->
+    <div id="renderContainer"></div>
+    
+    <!-- View Controls -->
+    <div class="view-controls">
+        <button class="view-btn" id="topView" title="Top View">📐</button>
+        <button class="view-btn" id="frontView" title="Front View">👁️</button>
+        <button class="view-btn" id="isoView" title="Isometric View">🎯</button>
+        <button class="view-btn" id="resetView" title="Reset View">🔄</button>
+    </div>
+    
+    <!-- Mini Control Panel -->
+    <div class="mini-panel premium-glass rounded-xl p-4">
+        <div class="flex items-center justify-between space-x-4">
+            <div class="flex items-center space-x-3">
+                <div class="text-sm font-semibold text-blue-300">Quick Actions:</div>
+                <button id="quickGenerate" class="px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white text-sm font-semibold rounded-lg transition-all duration-300">
+                    🤖 AI Generate
+                </button>
+                <button id="togglePanels" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-semibold rounded-lg transition-all duration-300">
+                    📊 Toggle Panels
+                </button>
             </div>
-            <div id="connectionStatus" class="flex items-center text-xs">
-                <span class="status-indicator status-loading"></span>
-                <span id="statusText">Connecting...</span>
+            <div class="text-xs text-white/60">
+                <span id="quickStats">Room: 8m×6m | Items: 0 | Total: $0</span>
             </div>
         </div>
-        <div class="tab-container">
-            <div class="tab active" data-tab="basic">Basic Setup</div>
-            <div class="tab" data-tab="advanced">Advanced</div>
-            <div class="tab" data-tab="templates">Templates</div>
-        </div>
-        <form id="configForm" class="space-y-6">
-            <div id="tab-basic" class="tab-content"><div class="space-y-5"><div><h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-building mr-3 text-blue-400"></i> Project Information</h3><div class="space-y-3"><div><label class="block text-sm font-medium mb-2">Project Name</label><input type="text" id="project_name" class="form-control" value="Executive Conference Suite" required></div><div><label class="block text-sm font-medium mb-2">Client Organization</label><input type="text" id="client_name" class="form-control" value="Fortune 500 Corp" required></div></div></div><div><h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-cog mr-3 text-green-400"></i> Room Configuration</h3><div class="space-y-4"><div class="grid grid-cols-2 gap-3"><div><label class="block text-sm font-medium mb-2">Room Type</label><select id="room_size" class="form-control" required></select></div><div><label class="block text-sm font-medium mb-2">Primary Use</label><select id="use_case" class="form-control" required></select></div></div><div class="grid grid-cols-2 gap-3"><div><label class="block text-sm font-medium mb-2">Budget Tier</label><select id="budget_range" class="form-control" required></select></div><div><label class="block text-sm font-medium mb-2">Max Occupancy</label><input type="number" id="occupancy" class="form-control" placeholder="12" min="2" max="500"></div></div></div></div><div><h4 class="text-md font-semibold mb-3 flex items-center"><i class="fas fa-ruler-combined mr-2 text-yellow-400"></i> Room Dimensions (feet)</h4><div class="grid grid-cols-3 gap-3"><div><label class="block text-sm font-medium mb-1">Length</label><input type="number" id="room_length" class="form-control" placeholder="24" min="8" max="100" step="0.5"></div><div><label class="block text-sm font-medium mb-1">Width</label><input type="number" id="room_width" class="form-control" placeholder="16" min="8" max="100" step="0.5"></div><div><label class="block text-sm font-medium mb-1">Height</label><input type="number" id="room_height" class="form-control" placeholder="10" min="8" max="20" step="0.5"></div></div></div></div></div>
-            <div id="tab-advanced" class="tab-content" style="display: none;"><div class="space-y-5"><div><h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-sliders-h mr-3 text-purple-400"></i> Special Requirements</h3><div class="space-y-3"><div class="flex items-center"><input type="checkbox" id="req_wireless_presentation" class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600"><label for="req_wireless_presentation" class="ml-3 text-sm">Wireless Presentation</label></div><div class="flex items-center"><input type="checkbox" id="req_video_conferencing" class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600"><label for="req_video_conferencing" class="ml-3 text-sm">Video Conferencing</label></div><div class="flex items-center"><input type="checkbox" id="req_room_scheduling" class="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600"><label for="req_room_scheduling" class="ml-3 text-sm">Room Scheduling Panel</label></div></div></div></div></div>
-            <div id="tab-templates" class="tab-content" style="display: none;"><div class="space-y-4"><h3 class="text-lg font-semibold mb-4 flex items-center"><i class="fas fa-layer-group mr-3 text-orange-400"></i> Quick Start Templates</h3><div class="grid grid-cols-1 gap-3" id="roomPresets"></div></div></div>
-            <button type="submit" id="generateBtn" class="w-full btn btn-primary text-white font-bold flex items-center justify-center py-4"><i class="fas fa-magic mr-3"></i> Generate Smart Configuration</button>
-        </form>
     </div>
+    
+    <!-- Control Panel -->
+    <div id="controlPanel" class="control-panel premium-glass rounded-2xl p-6 virtual-scroll">
+        <h2 class="text-xl font-bold mb-4 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            🏗️ Room Designer Pro
+        </h2>
+        
+        <!-- Project Information -->
+        <div class="space-y-4 mb-6">
+            <h3 class="text-lg font-semibold text-white/90">Project Details</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Project Name</label>
+                    <input type="text" id="projectName" class="form-input" placeholder="Conference Room Alpha" value="Enhanced AV Conference Room">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Client Name</label>
+                    <input type="text" id="clientName" class="form-input" placeholder="Acme Corporation" value="Premium Enterprise Client">
+                </div>
+            </div>
+        </div>
 
-    <div id="resultsPanel" class="panel results-panel glass-panel p-6 scrollbar-custom" style="display: none;">
+        <!-- Room Presets -->
+        <div class="space-y-4 mb-6">
+            <h3 class="text-lg font-semibold text-white/90">Quick Room Presets</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <button class="room-preset-btn" data-preset="meeting">
+                    <div class="text-sm font-semibold">Meeting Room</div>
+                    <div class="text-xs opacity-75">Standard setup</div>
+                </button>
+                <button class="room-preset-btn" data-preset="boardroom">
+                    <div class="text-sm font-semibold">Boardroom</div>
+                    <div class="text-xs opacity-75">Executive style</div>
+                </button>
+                <button class="room-preset-btn" data-preset="auditorium">
+                    <div class="text-sm font-semibold">Auditorium</div>
+                    <div class="text-xs opacity-75">Large venue</div>
+                </button>
+                <button class="room-preset-btn" data-preset="huddle">
+                    <div class="text-sm font-semibold">Huddle Space</div>
+                    <div class="text-xs opacity-75">Informal setup</div>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Room Configuration -->
+        <div class="space-y-4 mb-6">
+            <h3 class="text-lg font-semibold text-white/90">Room Configuration</h3>
+            <div class="room-controls">
+                <div>
+                    <input type="number" id="roomWidth" class="form-input text-center" placeholder="Width (m)" value="8" min="3" max="25" step="0.5">
+                    <small class="text-xs text-white/60">Width (m)</small>
+                </div>
+                <div>
+                    <input type="number" id="roomDepth" class="form-input text-center" placeholder="Depth (m)" value="6" min="3" max="25" step="0.5">
+                    <small class="text-xs text-white/60">Depth (m)</small>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Room Capacity</label>
+                    <select id="roomSize" class="form-select">
+                        <option value="small">Small (2-6 people)</option>
+                        <option value="medium" selected>Medium (6-12 people)</option>
+                        <option value="large">Large (12-20 people)</option>
+                        <option value="xlarge">Extra Large (20-50 people)</option>
+                        <option value="auditorium">Auditorium (50+ people)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">Primary Use Case</label>
+                    <select id="useCase" class="form-select">
+                        <option value="meeting_room">Meeting Room</option>
+                        <option value="boardroom" selected>Executive Boardroom</option>
+                        <option value="huddle_room">Huddle Space</option>
+                        <option value="training">Training Room</option>
+                        <option value="auditorium">Auditorium</option>
+                        <option value="lecture_hall">Lecture Hall</option>
+                        <option value="webinar_studio">Webinar Studio</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">Quality Tier</label>
+                    <select id="budgetRange" class="form-select">
+                        <option value="economy">Economy Tier</option>
+                        <option value="standard" selected>Standard Professional</option>
+                        <option value="premium">Premium Enterprise</option>
+                        <option value="enterprise">Ultra High-End</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1">Brand Preference</label>
+                    <select id="brandPreference" class="form-select">
+                        <option value="">No Preference</option>
+                        <option value="logitech">Logitech</option>
+                        <option value="poly">Poly</option>
+                        <option value="cisco">Cisco</option>
+                        <option value="microsoft">Microsoft</option>
+                        <option value="zoom">Zoom</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button id="updateRoom" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105">
+                    Update Room
+                </button>
+                <button id="generateFullBoq" class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105">
+                    🤖 AI Generate
+                </button>
+            </div>
+        </div>
+        
+        <!-- Requirements Input -->
+        <div class="space-y-4 mb-6">
+            <h3 class="text-lg font-semibold text-white/90">Special Requirements</h3>
+            <textarea id="requirements" class="form-input h-24 resize-none" placeholder="Describe special requirements, accessibility needs, or specific functionality...">Seamless hybrid meeting experience with wireless presentation, 4K displays, advanced audio processing, and intuitive room controls</textarea>
+        </div>
+        
+        <!-- Enhanced Equipment Library -->
+        <div>
+            <h3 class="text-lg font-semibold mb-3 text-white/90">Equipment Library</h3>
+            <div class="mb-3">
+                <input type="text" id="equipmentSearch" class="form-input" placeholder="Search equipment..." />
+            </div>
+            
+            <div id="equipmentLibrary" class="space-y-2 max-h-64 overflow-y-auto virtual-scroll">
+                <div class="text-center py-8 text-white/60">
+                    <div class="loading-spinner mb-4 mx-auto"></div>
+                    <div class="text-sm">Loading equipment library...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- BOQ Panel -->
+    <div id="boqPanel" class="boq-panel premium-glass rounded-2xl p-6 virtual-scroll">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold flex items-center"><i class="fas fa-chart-line mr-3 text-green-400"></i> Configuration Results</h2>
-            <div class="flex space-x-2"><button id="exportBtn" title="Export BOQ as JSON" class="px-3 py-2 btn btn-primary text-sm"><i class="fas fa-download"></i></button><button id="clearBtn" title="Clear Results" class="px-3 py-2 btn btn-warning text-sm"><i class="fas fa-trash"></i></button></div>
+            <h2 class="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+                📋 Bill of Quantities
+            </h2>
+            <div class="flex space-x-2">
+                <button id="exportBoq" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-all">
+                    Export
+                </button>
+                <button id="clearBoq" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-all">
+                    Clear
+                </button>
+            </div>
         </div>
-        <div id="resultsContent" class="space-y-4"></div>
+        
+        <!-- Project Summary -->
+        <div class="mb-6 p-4 bg-gradient-to-r from-blue-500/20 to-green-500/20 rounded-lg border border-blue-500/30">
+            <div class="text-sm font-semibold text-blue-200 mb-2">Project Summary</div>
+            <div id="projectSummary" class="text-xs text-white/80 space-y-1">
+                <div>Room: <span id="summaryDimensions">8m × 6m</span></div>
+                <div>Capacity: <span id="summaryCapacity">Medium (6-12 people)</span></div>
+                <div>Type: <span id="summaryType">Executive Boardroom</span></div>
+                <div>Tier: <span id="summaryTier">Standard Professional</span></div>
+            </div>
+        </div>
+        
+        <!-- Analytics Panel -->
+        <div class="analytics-panel mb-6">
+            <div class="text-sm font-semibold text-purple-200 mb-2">📊 Room Analytics</div>
+            <div id="analyticsContent" class="text-xs text-white/80 space-y-2">
+                <div class="flex justify-between">
+                    <span>Room Area:</span>
+                    <span id="roomArea" class="font-mono">48m²</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Complexity Score:</span>
+                    <span id="complexityScore" class="font-mono">5/10</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Acoustic Rating:</span>
+                    <span id="acousticRating" class="font-mono">Good</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- BOQ Items Display -->
+        <div id="boqContent">
+            <div class="text-center py-8 text-white/60">
+                <div class="text-4xl mb-2">📦</div>
+                <div class="text-sm">No equipment added yet</div>
+                <div class="text-xs mt-1">Drag equipment from the library or use AI Generate</div>
+            </div>
+        </div>
+        
+        <!-- Recommendations -->
+        <div id="recommendationsSection" class="recommendations hidden">
+            <div class="text-sm font-semibold text-green-200 mb-2">💡 AI Recommendations</div>
+            <div id="recommendationsContent" class="text-xs text-white/80"></div>
+        </div>
+        
+        <!-- Total Summary -->
+        <div class="mt-6 p-4 bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-lg border border-green-500/30">
+            <div class="flex justify-between items-center">
+                <div>
+                    <div class="text-sm font-semibold text-green-200">Total Investment</div>
+                    <div class="text-xs text-white/60">Equipment & Installation</div>
+                </div>
+                <div class="text-right">
+                    <div id="totalCost" class="text-xl font-bold text-green-300">$0</div>
+                    <div id="totalItems" class="text-xs text-white/60">0 items</div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="toolbar">
-        <button id="fullscreenBtn" class="toolbar-btn" title="Fullscreen"><i class="fas fa-expand"></i></button>
-        <button id="screenshotBtn" class="toolbar-btn" title="Screenshot"><i class="fas fa-camera"></i></button>
-    </div>
-
-    <div id="notifications" class="fixed top-5 right-5 z-[1000] space-y-3 w-96"></div>
-    <div id="equipmentInfo" class="equipment-info-panel"></div>
 
     <script>
-        // === CONFIGURATION & STATE ===
-        const CONFIG = {
-            BACKEND_URL: 'https://adarshav-boq-backend.hf.space',
-            TIMEOUT: 20000,
-        };
-
-        const STATE = {
-            scene: null, camera: null, renderer: null, controls: null,
-            equipmentObjects: [], currentBOQ: null, isLoading: false,
-        };
+        // Global variables
+        let scene, camera, renderer, controls;
+        let room, roomWidth = 8, roomDepth = 6, roomHeight = 3;
+        let placedEquipment = [];
+        let boqData = null;
+        let allProducts = [];
+        let panelsVisible = true;
         
-        // Maps backend categories to 3D object parameters
-        const EQUIPMENT_GEOMETRY_MAP = {
-            'Displays & Projectors': { type: 'box', size: { w: 1.8, h: 1.0, d: 0.08 }, color: 0x1a1a1a, position: { x: 0, y: 1.5, z: -2.9 } },
-            'UC & Collaboration Devices': { type: 'box', size: { w: 0.8, h: 0.15, d: 0.12 }, color: 0xcccccc, position: { x: 0, y: 2.2, z: -2.85 } },
-            'Audio Systems': { type: 'box', size: { w: 0.2, h: 0.6, d: 0.2 }, color: 0x4a5568, positions: [{ x: -2.8, y: 1.5, z: -2.8 }, { x: 2.8, y: 1.5, z: -2.8 }] },
-            'Mounts, Racks & Enclosures': { type: 'box', size: { w: 0.6, h: 1.8, d: 0.6 }, color: 0x2d3748, position: { x: 3.5, y: 0.9, z: 2.0 } },
-            'default': { type: 'box', size: { w: 0.3, h: 0.3, d: 0.3 }, color: 0x718096, position: { x: 0, y: 0.15, z: 2.5 } }
-        };
-
-        // === INITIALIZATION ===
-        document.addEventListener('DOMContentLoaded', initializeApplication);
-
-        async function initializeApplication() {
-            try {
-                showLoading('Initializing SmartAV Pro...', 'Loading 3D engine');
-                await init3DScene();
-                updateProgress(30);
-
-                await loadFormOptions(); // CONNECTS TO BACKEND
-                updateProgress(60);
-                
-                setupEventListeners();
-                updateProgress(80);
-
-                updateConnectionStatus('online');
-                updateProgress(100);
-                
-                hideLoading();
-                showNotification('SmartAV Pro initialized successfully!', 'success');
-            } catch (error) {
-                console.error('Initialization failed:', error);
-                hideLoading();
-                updateConnectionStatus('offline', 'Initialization Failed');
-                showNotification(`Initialization failed: ${error.message}`, 'error');
+        // Backend API URL
+        const API_BASE_URL = 'https://adarshav-boq-backend.hf.space';
+        
+        // Equipment visualization database
+        const equipmentVisualization = {
+            'Displays & Projectors': {
+                geometry: () => new THREE.BoxGeometry(2, 1.5, 0.1),
+                material: () => new THREE.MeshPhongMaterial({ color: 0x2c3e50 }),
+                position: [0, 1.5, -2.9]
+            },
+            'UC & Collaboration Devices': {
+                geometry: () => new THREE.BoxGeometry(1.2, 0.15, 0.2),
+                material: () => new THREE.MeshPhongMaterial({ color: 0x1abc9c }),
+                position: [0, 2.2, -2.8]
+            },
+            'Audio: Speakers & Amplifiers': {
+                geometry: () => new THREE.CylinderGeometry(0.15, 0.15, 0.3),
+                material: () => new THREE.MeshPhongMaterial({ color: 0xe67e22 }),
+                position: [2, 2.8, 2]
+            },
+            'Audio: Microphones & Conferencing': {
+                geometry: () => new THREE.CylinderGeometry(0.1, 0.1, 0.4),
+                material: () => new THREE.MeshPhongMaterial({ color: 0xf39c12 }),
+                position: [0, 1, 0]
+            },
+            'Control & Processing': {
+                geometry: () => new THREE.BoxGeometry(0.5, 0.3, 0.4),
+                material: () => new THREE.MeshPhongMaterial({ color: 0x8e44ad }),
+                position: [-3, 0.5, -2]
+            },
+            'Network & Infrastructure': {
+                geometry: () => new THREE.BoxGeometry(0.4, 0.2, 0.3),
+                material: () => new THREE.MeshPhongMaterial({ color: 0x16a085 }),
+                position: [-3, 0.8, -2]
+            },
+            'Cables & Connectors': {
+                geometry: () => new THREE.BoxGeometry(0.2, 0.1, 0.1),
+                material: () => new THREE.MeshPhongMaterial({ color: 0x34495e }),
+                position: [-2.5, 0.2, -2.5]
+            },
+            'default': {
+                geometry: () => new THREE.BoxGeometry(0.5, 0.5, 0.5),
+                material: () => new THREE.MeshPhongMaterial({ color: 0x95a5a6 }),
+                position: [0, 0.5, 0]
             }
+        };
+
+        // Initialize the application
+        function init() {
+            checkBackendConnection();
+            setupScene();
+            setupEventListeners();
+            createRoom();
+            loadEquipmentLibrary();
+            updateQuickStats();
         }
 
-        // === 3D SCENE MANAGEMENT ===
-        async function init3DScene() {
-            const container = document.getElementById('renderContainer');
-            STATE.scene = new THREE.Scene();
-            STATE.scene.background = new THREE.Color(0x0f1419);
-            STATE.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            STATE.camera.position.set(6, 4, 8);
-            STATE.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-            STATE.renderer.setSize(window.innerWidth, window.innerHeight);
-            STATE.renderer.setPixelRatio(window.devicePixelRatio);
-            STATE.renderer.shadowMap.enabled = true;
-            container.appendChild(STATE.renderer.domElement);
-            setupLighting();
-            createRoom(24, 16, 10);
-            setupControls();
-            animate();
-            window.addEventListener('resize', onWindowResize);
-        }
-
-        function setupLighting() {
-            STATE.scene.add(new THREE.AmbientLight(0x404040, 0.8));
-            const sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
-            sunLight.position.set(8, 10, 5);
-            sunLight.castShadow = true;
-            STATE.scene.add(sunLight);
-            STATE.scene.add(new THREE.HemisphereLight(0x87ceeb, 0x080820, 0.5));
-        }
-
-        function setupControls() { /* This is a simplified orbit control implementation */
-            const domElement = STATE.renderer.domElement;
-            const target = new THREE.Vector3(0, 1, 0);
-            let spherical = new THREE.Spherical().setFromVector3(STATE.camera.position.clone().sub(target));
-            let state = { isDown: false, isPan: false, prev: { x: 0, y: 0 } };
-            const update = () => { STATE.camera.position.setFromSpherical(spherical).add(target); STATE.camera.lookAt(target); };
-            domElement.addEventListener('mousedown', e => { state.isDown = true; state.isPan = e.button === 2; state.prev = { x: e.clientX, y: e.clientY }; });
-            document.addEventListener('mouseup', () => state.isDown = false);
-            document.addEventListener('mousemove', e => {
-                if (!state.isDown) return;
-                const d = { x: e.clientX - state.prev.x, y: e.clientY - state.prev.y }; state.prev = { x: e.clientX, y: e.clientY };
-                if (state.isPan) { const p = new THREE.Vector3(-d.x, d.y, 0).applyEuler(STATE.camera.rotation).multiplyScalar(0.01); target.add(p); } 
-                else { spherical.theta -= d.x * 0.005; spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi - d.y * 0.005)); }
-                update();
-            });
-            domElement.addEventListener('wheel', e => { spherical.radius = Math.max(2, Math.min(40, spherical.radius + e.deltaY * 0.01)); update(); });
-            domElement.addEventListener('dblclick', () => { STATE.camera.position.set(6, 4, 8); target.set(0, 1, 0); spherical.setFromVector3(STATE.camera.position.clone().sub(target)); update(); });
-            domElement.addEventListener('contextmenu', e => e.preventDefault());
-        }
-        
-        function createRoom(length, width, height) { /* Creates the 3D room mesh */
-            if (STATE.roomMesh) STATE.scene.remove(STATE.roomMesh);
-            const roomGroup = new THREE.Group();
-            const floor = new THREE.Mesh(new THREE.PlaneGeometry(length, width), new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 0.8 }));
-            floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; roomGroup.add(floor);
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0x4a5568, side: THREE.DoubleSide, roughness: 0.9, transparent: true, opacity: 0.5 });
-            const backWall = new THREE.Mesh(new THREE.PlaneGeometry(length, height), wallMat); backWall.position.set(0, height / 2, -width / 2); backWall.receiveShadow = true; roomGroup.add(backWall);
-            const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wallMat); leftWall.position.set(-length / 2, height / 2, 0); leftWall.rotation.y = Math.PI / 2; leftWall.receiveShadow = true; roomGroup.add(leftWall);
-            STATE.roomMesh = roomGroup; STATE.scene.add(roomGroup);
-        }
-
-        function animate() { requestAnimationFrame(animate); STATE.renderer.render(STATE.scene, STATE.camera); }
-        function onWindowResize() { STATE.camera.aspect = window.innerWidth / window.innerHeight; STATE.camera.updateProjectionMatrix(); STATE.renderer.setSize(window.innerWidth, window.innerHeight); }
-
-        // === API & DATA HANDLING ===
-        async function fetchAPI(endpoint, options = {}) {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
+        // Check backend connection status
+        async function checkBackendConnection() {
+            const status = document.getElementById('connectionStatus');
             try {
-                const response = await fetch(`${CONFIG.BACKEND_URL}${endpoint}`, { ...options, signal: controller.signal, headers: { 'Content-Type': 'application/json', ...options.headers } });
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ detail: `Server error: ${response.status}` }));
-                    throw new Error(errorData.detail);
+                const response = await fetch(`${API_BASE_URL}/api/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    status.className = 'connection-status status-online';
+                    status.innerHTML = `✅ Backend Online (${data.product_count} products)`;
+                } else {
+                    throw new Error('Connection failed');
                 }
-                return response.json();
             } catch (error) {
-                clearTimeout(timeoutId);
-                throw error;
+                status.className = 'connection-status status-offline';
+                d Offline - Using Demo Mode';
+                loadDemoData();
             }
         }
 
-        async function loadFormOptions() {
-            showLoading('Connecting to backend...', 'Fetching configuration options');
-            const enums = await fetchAPI('/api/enums');
-            populateSelect(document.getElementById('room_size'), enums.room_sizes, 'medium');
-            populateSelect(document.getElementById('use_case'), enums.use_cases, 'conference');
-            populateSelect(document.getElementById('budget_range'), enums.budget_tiers, 'standard');
-        }
-
-        // === UI & EVENT HANDLERS ===
-        function setupEventListeners() {
-            document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
-            document.getElementById('configForm').addEventListener('submit', handleFormSubmit);
-            ['room_length', 'room_width', 'room_height'].forEach(id => document.getElementById(id).addEventListener('input', updateRoomFromForm));
-            document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
-            document.getElementById('screenshotBtn').addEventListener('click', takeScreenshot);
-            document.getElementById('exportBtn').addEventListener('click', exportBOQ);
-            document.getElementById('clearBtn').addEventListener('click', clearResults);
-        }
-        
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
-            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-            document.getElementById(`tab-${tabName}`).style.display = 'block';
-        }
-
-        function updateRoomFromForm() {
-            const l = parseFloat(document.getElementById('room_length').value) || 24;
-            const w = parseFloat(document.getElementById('room_width').value) || 16;
-            const h = parseFloat(document.getElementById('room_height').value) || 10;
-            createRoom(l, w, h);
-        }
-
-        async function handleFormSubmit(event) {
-            event.preventDefault();
-            if (STATE.isLoading) return;
-            STATE.isLoading = true;
-            document.getElementById('generateBtn').disabled = true;
-
-            try {
-                showLoading('Generating Configuration...', 'Analyzing room parameters');
-                updateProgress(25);
-                
-                const formData = collectFormData();
-                const boq = await fetchAPI('/api/generate-boq', { method: 'POST', body: JSON.stringify(formData) });
-                
-                updateProgress(75);
-                showLoading('Finalizing Results...', 'Creating 3D visualization');
-                
-                STATE.currentBOQ = boq;
-                displayResults(boq);
-                visualizeBOQ(boq); // Create 3D objects
-                
-                document.getElementById('resultsPanel').style.display = 'block';
-                showNotification('Configuration generated successfully!', 'success');
-            } catch (error) {
-                console.error('Generation failed:', error);
-                showNotification(`Error: ${error.message}`, 'error');
-            } finally {
-                hideLoading();
-                STATE.isLoading = false;
-                document.getElementById('generateBtn').disabled = false;
-            }
-        }
-        
-        function collectFormData() {
-            return {
-                project_name: document.getElementById('project_name').value,
-                client_name: document.getElementById('client_name').value,
-                room_size: document.getElementById('room_size').value,
-                use_case: document.getElementById('use_case').value,
-                budget_range: document.getElementById('budget_range').value,
-                occupancy: parseInt(document.getElementById('occupancy').value) || null,
-                room_dimensions: {
-                    length: parseFloat(document.getElementById('room_length').value) || 24,
-                    width: parseFloat(document.getElementById('room_width').value) || 16,
-                    height: parseFloat(document.getElementById('room_height').value) || 10
+        // Load demo data when backend is unavailable
+        function loadDemoData() {
+            allProducts = [
+                {
+                    id: 1,
+                    name: "75\" 4K Interactive Display",
+                    category: "Displays & Projectors",
+                    subcategory: "Interactive Displays",
+                    brand: "Samsung",
+                    model: "WM75R",
+                    price: 3500,
+                    quality_tier: "premium",
+                    description: "Professional 75-inch 4K interactive display with touch capability"
                 },
-                special_requirements: [] // Placeholder for advanced features
-            };
+                {
+                    id: 2,
+                    name: "Conference Camera 4K",
+                    category: "UC & Collaboration Devices",
+                    subcategory: "Conference Cameras",
+                    brand: "Logitech",
+                    model: "Rally Plus",
+                    price: 2200,
+                    quality_tier: "premium",
+                    description: "Ultra HD conference camera with AI-powered auto-framing"
+                },
+                {
+                    id: 3,
+                    name: "Ceiling Speakers (Pair)",
+                    category: "Audio: Speakers & Amplifiers",
+                    subcategory: "Ceiling Speakers",
+                    brand: "Bose",
+                    model: "EdgeMax EM90",
+                    price: 800,
+                    quality_tier: "standard",
+                    description: "Professional ceiling speakers with wide coverage"
+                },
+                {
+                    id: 4,
+                    name: "Wireless Microphone System",
+                    category: "Audio: Microphones & Conferencing",
+                    subcategory: "Wireless Microphones",
+                    brand: "Shure",
+                    model: "QLXD24/SM58",
+                    price: 1200,
+                    quality_tier: "premium",
+                    description: "Digital wireless handheld microphone system"
+                },
+                {
+                    id: 5,
+                    name: "Control System Processor",
+                    category: "Control & Processing",
+                    subcategory: "Control Processors",
+                    brand: "Crestron",
+                    model: "CP4",
+                    price: 2800,
+                    quality_tier: "enterprise",
+                    description: "4-Series control system processor"
+                },
+                {
+                    id: 6,
+                    name: "Network Switch 24-Port",
+                    category: "Network & Infrastructure",
+                    subcategory: "Network Switches",
+                    brand: "Cisco",
+                    model: "SG350-24",
+                    price: 450,
+                    quality_tier: "standard",
+                    description: "24-port Gigabit managed switch"
+                },
+                {
+                    id: 7,
+                    name: "HDMI Cable 15ft",
+                    category: "Cables & Connectors",
+                    subcategory: "HDMI Cables",
+                    brand: "Generic",
+                    model: "HDMI-15FT-4K",
+                    price: 25,
+                    quality_tier: "standard",
+                    description: "High-speed HDMI cable 4K@60Hz"
+                }
+            ];
         }
 
-        function displayResults(boq) {
-            const container = document.getElementById('resultsContent');
-            container.innerHTML = '';
+        // Setup Three.js scene
+        function setupScene() {
+            const container = document.getElementById('renderContainer');
             
-            // Summary
-            let summaryHtml = `<div class="boq-section"><h3 class="text-lg font-bold text-white mb-3">Project Summary</h3><div class="grid grid-cols-2 gap-4">`;
-            summaryHtml += `<div class="text-center"><div class="text-2xl font-bold text-green-400">$${boq.summary.total_cost.toLocaleString()}</div><div class="text-sm text-gray-400">Total Cost</div></div>`;
-            summaryHtml += `<div class="text-center"><div class="text-2xl font-bold text-blue-400">${boq.summary.total_items}</div><div class="text-sm text-gray-400">Total Items</div></div>`;
-            summaryHtml += `<div class="text-center col-span-2"><div class="text-xl font-bold text-purple-400">${boq.summary.estimated_installation_time}</div><div class="text-sm text-gray-400">Est. Install Time</div></div>`;
-            summaryHtml += `</div></div>`;
-            container.innerHTML += summaryHtml;
-            
-            // Sections and Items
-            boq.sections.forEach(section => {
-                let itemsHtml = section.items.map(item => `
-                    <div class="boq-item">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="font-semibold text-white">${item.name}</h4>
-                                <p class="text-sm text-gray-400">${item.brand} ${item.part_number || ''}</p>
-                            </div>
-                            <div class="text-right ml-4">
-                                <div class="font-bold text-green-400">$${item.total_price.toLocaleString()}</div>
-                                <div class="text-xs text-gray-400">${item.quantity} × $${item.unit_price.toLocaleString()}</div>
-                            </div>
-                        </div>
-                    </div>`).join('');
-                container.innerHTML += `<div class="boq-section"><h3 class="text-lg font-bold text-white mb-3">${section.name}</h3>${itemsHtml}</div>`;
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.Fog(0x0a0a0a, 10, 50);
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(10, 8, 10);
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.setClearColor(0x000000, 0);
+            container.appendChild(renderer.domElement);
+
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0x3b82f6, 0.5, 20);
+            pointLight.position.set(0, 5, 0);
+            scene.add(pointLight);
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Start render loop
+            animate();
+        }
+
+        // Create room geometry
+        function createRoom() {
+            // Remove existing room
+            if (room) {
+                scene.remove(room);
+            }
+
+            room = new THREE.Group();
+
+            // Floor
+            const floorGeometry = new THREE.PlaneGeometry(roomWidth, roomDepth);
+            const floorMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x2c3e50,
+                transparent: true,
+                opacity: 0.8 
             });
-            
-            // Recommendations
-            if (boq.recommendations.length > 0) {
-                let recsHtml = boq.recommendations.map(r => `<li class="text-gray-300">${r}</li>`).join('');
-                container.innerHTML += `<div class="boq-section"><h3 class="text-lg font-bold text-white mb-3">Recommendations</h3><ul class="list-disc list-inside space-y-1">${recsHtml}</ul></div>`;
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            room.add(floor);
+
+            // Walls
+            const wallMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x34495e,
+                transparent: true,
+                opacity: 0.6,
+                side: THREE.DoubleSide
+            });
+
+            // Front wall
+            const frontWallGeometry = new THREE.PlaneGeometry(roomWidth, roomHeight);
+            const frontWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
+            frontWall.position.set(0, roomHeight / 2, -roomDepth / 2);
+            room.add(frontWall);
+
+            // Back wall
+            const backWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
+            backWall.position.set(0, roomHeight / 2, roomDepth / 2);
+            backWall.rotation.y = Math.PI;
+            room.add(backWall);
+
+            // Left wall
+            const sideWallGeometry = new THREE.PlaneGeometry(roomDepth, roomHeight);
+            const leftWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
+            leftWall.position.set(-roomWidth / 2, roomHeight / 2, 0);
+            leftWall.rotation.y = Math.PI / 2;
+            room.add(leftWall);
+
+            // Right wall
+            const rightWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
+            rightWall.position.set(roomWidth / 2, roomHeight / 2, 0);
+            rightWall.rotation.y = -Math.PI / 2;
+            room.add(rightWall);
+
+            // Add wireframe outline
+            const wireframeGeometry = new THREE.BoxGeometry(roomWidth, roomHeight, roomDepth);
+            const wireframeMaterial = new THREE.MeshBasicMaterial({
+                color: 0x3b82f6,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.3
+            });
+            const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
+            wireframe.position.y = roomHeight / 2;
+            room.add(wireframe);
+
+            scene.add(room);
+            updateAnalytics();
+        }
+
+        // Load equipment library
+        async function loadEquipmentLibrary() {
+            try {
+                // Try to load from backend first
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/products`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        allProducts = data.products || [];
+                    } else {
+                        throw new Error('Backend unavailable');
+                    }
+                } catch (error) {
+                    // Use demo data if backend fails
+                    if (allProducts.length === 0) {
+                        loadDemoData();
+                    }
+                }
+
+                displayEquipmentLibrary(allProducts);
+            } catch (error) {
+                console.error('Error loading equipment library:', error);
+                showToast('Failed to load equipment library', 'error');
             }
         }
-        
-        function visualizeBOQ(boq) {
-            clearEquipment();
-            let audioCount = 0;
-            boq.sections.forEach(section => {
-                section.items.forEach(item => {
-                    const geo = EQUIPMENT_GEOMETRY_MAP[item.category] || EQUIPMENT_GEOMETRY_MAP['default'];
-                    let position = geo.position;
-                    if (item.category === 'Audio Systems' && geo.positions) {
-                        position = geo.positions[audioCount % geo.positions.length];
-                        audioCount++;
-                    }
-                    if (position) {
-                        const mesh = createEquipmentMesh(item, geo);
-                        mesh.position.set(position.x, position.y, position.z);
-                        STATE.scene.add(mesh);
-                        STATE.equipmentObjects.push(mesh);
-                    }
+
+        // Display equipment library
+        function displayEquipmentLibrary(products) {
+            const library = document.getElementById('equipmentLibrary');
+            library.innerHTML = '';
+
+            const categories = {};
+            products.forEach(product => {
+                if (!categories[product.category]) {
+                    categories[product.category] = [];
+                }
+                categories[product.category].push(product);
+            });
+
+            Object.keys(categories).forEach(category => {
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'category-header bg-gradient-to-r from-blue-600/20 to-purple-600/20 text-blue-200';
+                categoryHeader.textContent = category;
+                library.appendChild(categoryHeader);
+
+                categories[category].forEach(product => {
+                    const item = createEquipmentItem(product);
+                    library.appendChild(item);
                 });
             });
         }
-        
-        function createEquipmentMesh(item, geo) {
-            const geometry = new THREE.BoxGeometry(geo.size.w, geo.size.h, geo.size.d);
-            const material = new THREE.MeshStandardMaterial({ color: geo.color, roughness: 0.5 });
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
-            mesh.userData.info = `<strong>${item.name}</strong><br>${item.brand}`;
-            return mesh;
+
+        // Create equipment item element
+        function createEquipmentItem(product) {
+            const div = document.createElement('div');
+            div.className = 'equipment-item premium-glass rounded-lg p-3 mb-2 relative';
+            div.draggable = true;
+            div.dataset.productId = product.id;
+
+            const qualityClass = `quality-${product.quality_tier || 'standard'}`;
+            
+            div.innerHTML = `
+                <div class="quality-indicator ${qualityClass}"></div>
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="font-semibold text-sm text-white">${product.name}</div>
+                        <div class="text-xs text-white/60 mt-1">${product.brand} ${product.model || ''}</div>
+                        <div class="text-xs text-white/50 mt-1">${product.subcategory || product.category}</div>
+                    </div>
+                    <div class="text-right ml-3">
+                        <div class="font-bold text-green-400">$${product.price?.toLocaleString() || 'N/A'}</div>
+                        <div class="text-xs text-white/60 capitalize">${product.quality_tier || 'standard'}</div>
+                    </div>
+                </div>
+            `;
+
+            // Drag events
+            div.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('application/json', JSON.stringify(product));
+                div.style.opacity = '0.5';
+            });
+
+            div.addEventListener('dragend', () => {
+                div.style.opacity = '1';
+            });
+
+            // Click to add
+            div.addEventListener('click', () => {
+                addProductToBoq(product);
+                add3DEquipment(product);
+                showToast(`Added ${product.name} to BOQ`, 'success');
+            });
+
+            return div;
         }
 
-        function clearEquipment() {
-            STATE.equipmentObjects.forEach(obj => STATE.scene.remove(obj));
-            STATE.equipmentObjects = [];
+        // Add product to BOQ
+        function addProductToBoq(product) {
+            if (!boqData) {
+                boqData = {
+                    project_name: document.getElementById('projectName').value,
+                    client_name: document.getElementById('clientName').value,
+                    room_dimensions: `${roomWidth}m × ${roomDepth}m`,
+                    room_capacity: document.getElementById('roomSize').value,
+                    use_case: document.getElementById('useCase').value,
+                    quality_tier: document.getElementById('budgetRange').value,
+                    categories: {}
+                };
+            }
+
+            const category = product.category;
+            if (!boqData.categories[category]) {
+                boqData.categories[category] = {
+                    items: [],
+                    total_cost: 0
+                };
+            }
+
+            // Check if product already exists, increment quantity if it does
+            const existingItem = boqData.categories[category].items.find(item => item.id === product.id);
+            if (existingItem) {
+                existingItem.quantity += 1;
+                existingItem.total_price = existingItem.quantity * existingItem.unit_price;
+            } else {
+                boqData.categories[category].items.push({
+                    id: product.id,
+                    name: product.name,
+                    brand: product.brand,
+                    model: product.model || '',
+                    unit_price: product.price || 0,
+                    quantity: 1,
+                    total_price: product.price || 0,
+                    quality_tier: product.quality_tier || 'standard',
+                    description: product.description || ''
+                });
+            }
+
+            updateBoqDisplay();
+            updateQuickStats();
         }
 
-        // === UTILITY FUNCTIONS ===
-        function populateSelect(el, opts, def) { el.innerHTML = ''; opts.forEach(o => { const opt = document.createElement('option'); opt.value = o.value; opt.textContent = o.name; if(o.value === def) opt.selected = true; el.appendChild(opt); }); }
-        function showLoading(text, subtext) { document.getElementById('loadingText').textContent = text; document.getElementById('loadingSubtext').textContent = subtext; document.getElementById('loadingOverlay').style.display = 'flex'; }
-        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; updateProgress(0); }
-        function updateProgress(p) { document.getElementById('progressFill').style.width = `${p}%`; }
-        function showNotification(msg, type) { const cont = document.getElementById('notifications'); const notif = document.createElement('div'); notif.className = `notification ${type}`; notif.innerHTML = `<div>${msg}</div>`; cont.appendChild(notif); setTimeout(() => notif.classList.add('show'), 10); setTimeout(() => { notif.classList.remove('show'); notif.addEventListener('transitionend', () => notif.remove()); }, 5000); }
-        function updateConnectionStatus(status, text) { const el = document.getElementById('connectionStatus'); const ind = el.querySelector('.status-indicator'); ind.className = `status-indicator status-${status}`; document.getElementById('statusText').textContent = text || `${status.charAt(0).toUpperCase() + status.slice(1)}`; }
-        function toggleFullscreen() { if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } else { document.exitFullscreen(); } }
-        function takeScreenshot() { const dataURL = STATE.renderer.domElement.toDataURL('image/png'); const link = document.createElement('a'); link.download = 'smartav-config.png'; link.href = dataURL; link.click(); }
-        function exportBOQ() { if(STATE.currentBOQ){ const d = JSON.stringify(STATE.currentBOQ, null, 2); const b = new Blob([d], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'boq.json'; a.click();} else { showNotification('No BOQ to export', 'warning');} }
-        function clearResults() { document.getElementById('resultsContent').innerHTML = ''; document.getElementById('resultsPanel').style.display = 'none'; STATE.currentBOQ = null; clearEquipment(); showNotification('Results cleared', 'success'); }
+        // Add 3D equipment to scene
+        function add3DEquipment(product) {
+            const categoryConfig = equipmentVisualization[product.category] || equipmentVisualization['default'];
+            
+            const geometry = categoryConfig.geometry();
+            const material = categoryConfig.material();
+            const equipment = new THREE.Mesh(geometry, material);
+            
+            const basePosition = categoryConfig.position;
+            const offset = placedEquipment.length * 0.3;
+            equipment.position.set(
+                basePosition[0] + (Math.random() - 0.5) * 2,
+                basePosition[1],
+                basePosition[2] + offset
+            );
+            
+            equipment.castShadow = true;
+            equipment.receiveShadow = true;
+            equipment.userData = { product };
+            equipment.className = 'equipment-3d';
+            
+            // Add hover effect
+            equipment.addEventListener = function(type, callback) {
+                // Placeholder for event handling
+            };
+            
+            scene.add(equipment);
+            placedEquipment.push(equipment);
+        }
 
+        // Update BOQ display
+        function updateBoqDisplay() {
+            const boqContent = document.getElementById('boqContent');
+            
+            if (!boqData || Object.keys(boqData.categories).length === 0) {
+                boqContent.innerHTML = `
+                    <div class="text-center py-8 text-white/60">
+                        <div class="text-4xl mb-2">📦</div>
+                        <div class="text-sm">No equipment added yet</div>
+                        <div class="text-xs mt-1">Drag equipment from the library or use AI Generate</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            let totalCost = 0;
+            let totalItems = 0;
+
+            Object.entries(boqData.categories).forEach(([category, data]) => {
+                const categoryTotal = data.items.reduce((sum, item) => sum + item.total_price, 0);
+                totalCost += categoryTotal;
+                totalItems += data.items.length;
+
+                html += `
+                    <div class="boq-section">
+                        <h4 class="text-sm font-semibold text-blue-300 mb-2">${category}</h4>
+                        ${data.items.map(item => `
+                            <div class="boq-item">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <div class="text-sm font-medium">${item.name}</div>
+                                        <div class="text-xs text-white/60">${item.brand} ${item.model}</div>
+                                        <div class="text-xs text-white/50 mt-1">Qty: ${item.quantity} × $${item.unit_price.toLocaleString()}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-green-400">$${item.total_price.toLocaleString()}</div>
+                                        <button class="text-xs text-red-400 hover:text-red-300 mt-1" onclick="removeBoqItem('${category}', ${item.id})">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                        <div class="text-right mt-2 text-sm font-semibold text-blue-300">
+                            Category Total: $${categoryTotal.toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            });
+
+            boqContent.innerHTML = html;
+            
+            // Update totals
+            document.getElementById('totalCost').textContent = `$${totalCost.toLocaleString()}`;
+            document.getElementById('totalItems').textContent = `${totalItems} items`;
+        }
+
+        // Remove item from BOQ
+        function removeBoqItem(category, itemId) {
+            if (boqData && boqData.categories[category]) {
+                const items = boqData.categories[category].items;
+                const itemIndex = items.findIndex(item => item.id === itemId);
+                
+                if (itemIndex > -1) {
+                    const item = items[itemIndex];
+                    if (item.quantity > 1) {
+                        item.quantity -= 1;
+                        item.total_price = item.quantity * item.unit_price;
+                    } else {
+                        items.splice(itemIndex, 1);
+                    }
+
+                    // Remove category if empty
+                    if (items.length === 0) {
+                        delete boqData.categories[category];
+                    }
+
+                    updateBoqDisplay();
+                    updateQuickStats();
+                    showToast('Item removed from BOQ', 'success');
+                }
+            }
+        }
+
+        // Update analytics
+        function updateAnalytics() {
+            const area = roomWidth * roomDepth;
+            document.getElementById('roomArea').textContent = `${area}m²`;
+            
+            const complexity = Math.min(10, Math.floor((area / 10) + (placedEquipment.length / 5) + 2));
+            document.getElementById('complexityScore').textContent = `${complexity}/10`;
+            
+            const acoustic = area > 50 ? 'Excellent' : area > 30 ? 'Good' : area > 15 ? 'Fair' : 'Basic';
+            document.getElementById('acousticRating').textContent = acoustic;
+        }
+
+        // Update quick stats
+        function updateQuickStats() {
+            const totalCost = boqData ? 
+                Object.values(boqData.categories).reduce((sum, cat) => 
+                    sum + cat.items.reduce((itemSum, item) => itemSum + item.total_price, 0), 0
+                ) : 0;
+            
+            const totalItems = boqData ? 
+                Object.values(boqData.categories).reduce((sum, cat) => sum + cat.items.length, 0) : 0;
+
+            document.getElementById('quickStats').textContent = 
+                `Room: ${roomWidth}m×${roomDepth}m | Items: ${totalItems} | Total: $${totalCost.toLocaleString()}`;
+        }
+
+        // Generate full BOQ using AI
+        async function generateFullBoq() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.remove('hidden');
+
+            try {
+                const requestData = {
+                    room_dimensions: [roomWidth, roomDepth, roomHeight],
+                    room_capacity: document.getElementById('roomSize').value,
+                    use_case: document.getElementById('useCase').value,
+                    budget_range: document.getElementById('budgetRange').value,
+                    special_requirements: document.getElementById('requirements').value,
+                    brand_preference: document.getElementById('brandPreference').value || null
+                };
+
+                let response;
+                try {
+                    response = await fetch(`${API_BASE_URL}/api/generate-boq`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData)
+                    });
+                } catch (error) {
+                    throw new Error('Backend unavailable');
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    boqData = {
+                        project_name: document.getElementById('projectName').value,
+                        client_name: document.getElementById('clientName').value,
+                        room_dimensions: `${roomWidth}m × ${roomDepth}m`,
+                        room_capacity: document.getElementById('roomSize').value,
+                        use_case: document.getElementById('useCase').value,
+                        quality_tier: document.getElementById('budgetRange').value,
+                        categories: data.boq.categories || {}
+                    };
+
+                    updateBoqDisplay();
+                    updateQuickStats();
+                    
+                    // Show recommendations if available
+                    if (data.boq.recommendations) {
+                        const recSection = document.getElementById('recommendationsSection');
+                        const recContent = document.getElementById('recommendationsContent');
+                        recContent.innerHTML = data.boq.recommendations.join('<br>• ');
+                        recSection.classList.remove('hidden');
+                    }
+
+                    // Add 3D equipment for each item
+                    Object.values(boqData.categories).forEach(category => {
+                        category.items.forEach(item => {
+                            // Create a mock product object for 3D visualization
+                            const mockProduct = {
+                                id: item.id,
+                                name: item.name,
+                                category: Object.keys(boqData.categories).find(cat => 
+                                    boqData.categories[cat].items.some(i => i.id === item.id)
+                                )
+                            };
+                            add3DEquipment(mockProduct);
+                        });
+                    });
+
+                    showToast('✅ AI BOQ generated successfully!', 'success');
+                } else {
+                    throw new Error(data.message || 'Failed to generate BOQ');
+                }
+            } catch (error) {
+                console.error('Error generating BOQ:', error);
+                showToast('⚠️ Using demo BOQ generation', 'warning');
+                generateDemoBoq();
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        // Generate demo BOQ when backend is unavailable
+        function generateDemoBoq() {
+            const useCase = document.getElementById('useCase').value;
+            const quality = document.getElementById('budgetRange').value;
+            
+            // Demo BOQ based on room requirements
+            const demoCategories = {
+                'Displays & Projectors': {
+                    items: [
+                        {
+                            id: 1,
+                            name: "75\" 4K Interactive Display",
+                            brand: "Samsung",
+                            model: "WM75R",
+                            unit_price: 3500,
+                            quantity: 1,
+                            total_price: 3500,
+                            quality_tier: "premium"
+                        }
+                    ]
+                },
+                'UC & Collaboration Devices': {
+                    items: [
+                        {
+                            id: 2,
+                            name: "Conference Camera 4K",
+                            brand: "Logitech",
+                            model: "Rally Plus",
+                            unit_price: 2200,
+                            quantity: 1,
+                            total_price: 2200,
+                            quality_tier: "premium"
+                        }
+                    ]
+                },
+                'Audio: Speakers & Amplifiers': {
+                    items: [
+                        {
+                            id: 3,
+                            name: "Ceiling Speakers (Pair)",
+                            brand: "Bose",
+                            model: "EdgeMax EM90",
+                            unit_price: 800,
+                            quantity: 2,
+                            total_price: 1600,
+                            quality_tier: "standard"
+                        }
+                    ]
+                }
+            };
+
+            boqData = {
+                project_name: document.getElementById('projectName').value,
+                client_name: document.getElementById('clientName').value,
+                room_dimensions: `${roomWidth}m × ${roomDepth}m`,
+                room_capacity: document.getElementById('roomSize').value,
+                use_case: useCase,
+                quality_tier: quality,
+                categories: demoCategories
+            };
+
+            updateBoqDisplay();
+            updateQuickStats();
+            
+            // Show demo recommendations
+            const recSection = document.getElementById('recommendationsSection');
+            const recContent = document.getElementById('recommendationsContent');
+            recContent.innerHTML = 'Consider adding wireless presentation system<br>• Upgrade to enterprise-grade control system<br>• Add backup power solution';
+            recSection.classList.remove('hidden');
+        }
+
+        // Export BOQ
+        function exportBoq() {
+            if (!boqData) {
+                showToast('No BOQ data to export', 'warning');
+                return;
+            }
+
+            const exportData = {
+                ...boqData,
+                generated_at: new Date().toISOString(),
+                total_cost: Object.values(boqData.categories).reduce((sum, cat) => 
+                    sum + cat.items.reduce((itemSum, item) => itemSum + item.total_price, 0), 0
+                ),
+                total_items: Object.values(boqData.categories).reduce((sum, cat) => sum + cat.items.length, 0)
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `BOQ_${boqData.project_name.replace(/\s+/g, '_')}_${Date.now()}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showToast('BOQ exported successfully', 'success');
+        }
+
+        // Clear BOQ
+        function clearBoq() {
+            if (confirm('Are you sure you want to clear the entire BOQ?')) {
+                boqData = null;
+                placedEquipment.forEach(equipment => scene.remove(equipment));
+                placedEquipment = [];
+                updateBoqDisplay();
+                updateQuickStats();
+                document.getElementById('recommendationsSection').classList.add('hidden');
+                showToast('BOQ cleared', 'success');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast premium-glass rounded-lg px-6 py-3 ${type === 'success' ? 'border-green-500/50' : type === 'error' ? 'border-red-500/50' : type === 'warning' ? 'border-yellow-500/50' : 'border-blue-500/50'}`;
+            toast.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <div class="text-sm font-medium text-white">${message}</div>
+                </div>
+            `;
+
+            document.getElementById('toastContainer').appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Room controls
+            document.getElementById('updateRoom').addEventListener('click', () => {
+                roomWidth = parseFloat(document.getElementById('roomWidth').value) || 8;
+                roomDepth = parseFloat(document.getElementById('roomDepth').value) || 6;
+                createRoom();
+                updateQuickStats();
+                showToast('Room updated successfully', 'success');
+            });
+
+            // BOQ generation
+            document.getElementById('generateFullBoq').addEventListener('click', generateFullBoq);
+            document.getElementById('quickGenerate').addEventListener('click', generateFullBoq);
+
+            // BOQ controls
+            document.getElementById('exportBoq').addEventListener('click', exportBoq);
+            document.getElementById('clearBoq').addEventListener('click', clearBoq);
+
+            // Panel toggle
+            document.getElementById('togglePanels').addEventListener('click', () => {
+                panelsVisible = !panelsVisible;
+                const panels = [document.getElementById('controlPanel'), document.getElementById('boqPanel')];
+                panels.forEach(panel => {
+                    panel.style.display = panelsVisible ? 'block' : 'none';
+                });
+                showToast(panelsVisible ? 'Panels shown' : 'Panels hidden', 'info');
+            });
+
+            // Equipment search
+            document.getElementById('equipmentSearch').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredProducts = allProducts.filter(product => 
+                    product.name.toLowerCase().includes(searchTerm) ||
+                    product.brand.toLowerCase().includes(searchTerm) ||
+                    product.category.toLowerCase().includes(searchTerm)
+                );
+                displayEquipmentLibrary(filteredProducts);
+            });
+
+            // Room presets
+            document.querySelectorAll('.room-preset-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const preset = e.target.closest('.room-preset-btn').dataset.preset;
+                    applyRoomPreset(preset);
+                    
+                    // Update active state
+                    document.querySelectorAll('.room-preset-btn').forEach(b => b.classList.remove('active'));
+                    e.target.closest('.room-preset-btn').classList.add('active');
+                });
+            });
+
+            // View controls
+            document.getElementById('topView').addEventListener('click', () => {
+                camera.position.set(0, 15, 0);
+                camera.lookAt(0, 0, 0);
+            });
+
+            document.getElementById('frontView').addEventListener('click', () => {
+                camera.position.set(0, 2, 10);
+                camera.lookAt(0, 1, 0);
+            });
+
+            document.getElementById('isoView').addEventListener('click', () => {
+                camera.position.set(10, 8, 10);
+                camera.lookAt(0, 0, 0);
+            });
+
+            document.getElementById('resetView').addEventListener('click', () => {
+                camera.position.set(10, 8, 10);
+                camera.lookAt(0, 0, 0);
+            });
+
+            // Form updates
+            ['roomSize', 'useCase', 'budgetRange', 'brandPreference'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateProjectSummary);
+            });
+
+            ['projectName', 'clientName'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateProjectSummary);
+            });
+
+            updateProjectSummary();
+        }
+
+       // Apply room preset
+        function applyRoomPreset(preset) {
+            const presets = {
+                meeting: {
+                    width: 6,
+                    depth: 4,
+                    capacity: 'small',
+                    useCase: 'meeting_room'
+                },
+                boardroom: {
+                    width: 10,
+                    depth: 8,
+                    capacity: 'medium',
+                    useCase: 'boardroom'
+                },
+                auditorium: {
+                    width: 15,
+                    depth: 12,
+                    capacity: 'xlarge',
+                    useCase: 'auditorium'
+                },
+                huddle: {
+                    width: 4,
+                    depth: 3,
+                    capacity: 'small',
+                    useCase: 'huddle_room'
+                }
+            };
+
+            const config = presets[preset];
+            if (config) {
+                document.getElementById('roomWidth').value = config.width;
+                document.getElementById('roomDepth').value = config.depth;
+                document.getElementById('roomSize').value = config.capacity;
+                document.getElementById('useCase').value = config.useCase;
+                
+                roomWidth = config.width;
+                roomDepth = config.depth;
+                
+                createRoom();
+                updateProjectSummary();
+                updateQuickStats();
+                showToast(`Applied ${preset} preset`, 'success');
+            }
+        }
+
+        // Update project summary
+        function updateProjectSummary() {
+            document.getElementById('summaryDimensions').textContent = `${roomWidth}m × ${roomDepth}m`;
+            document.getElementById('summaryCapacity').textContent = document.getElementById('roomSize').options[document.getElementById('roomSize').selectedIndex].text;
+            document.getElementById('summaryType').textContent = document.getElementById('useCase').options[document.getElementById('useCase').selectedIndex].text;
+            document.getElementById('summaryTier').textContent = document.getElementById('budgetRange').options[document.getElementById('budgetRange').selectedIndex].text;
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate equipment slightly for visual appeal
+            placedEquipment.forEach((equipment, index) => {
+                equipment.rotation.y += 0.005 * (index % 2 === 0 ? 1 : -1);
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Make functions globally accessible
+        window.removeBoqItem = removeBoqItem;
+
+        // Initialize the application
+        init();
     </script>
 </body>
 </html>
-what seems to be the issue in this?
