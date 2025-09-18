@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D AV Room Designer & BOQ Generator Pro</title>
+    <title>Enhanced 3D AV Room Designer Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -40,7 +40,7 @@
             top: 20px;
             left: 20px;
             z-index: 100;
-            max-width: 380px;
+            max-width: 420px;
             max-height: 85vh;
             overflow-y: auto;
         }
@@ -50,26 +50,65 @@
             top: 20px;
             right: 20px;
             z-index: 100;
-            max-width: 450px;
+            max-width: 480px;
             max-height: 85vh;
             overflow-y: auto;
         }
         
         .equipment-item {
-            cursor: pointer;
+            cursor: grab;
             transition: all 0.3s ease;
             border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
         }
         
         .equipment-item:hover {
             border-color: var(--accent-blue);
             background: rgba(59, 130, 246, 0.1);
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+        
+        .equipment-item:active {
+            cursor: grabbing;
+            transform: scale(0.98);
         }
         
         .equipment-item.selected {
             border-color: var(--success-green);
             background: rgba(16, 185, 129, 0.2);
+            animation: selectedPulse 2s infinite;
+        }
+        
+        @keyframes selectedPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
+        }
+        
+        .draggable {
+            cursor: grab;
+        }
+        
+        .draggable:active {
+            cursor: grabbing;
+        }
+        
+        .drop-zone {
+            min-height: 200px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+            transform: scale(1.02);
         }
         
         .room-controls {
@@ -86,6 +125,13 @@
             padding: 12px 16px !important;
             color: white !important;
             font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            border-color: var(--accent-blue) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+            outline: none !important;
         }
         
         .form-input::placeholder {
@@ -103,22 +149,13 @@
             left: 50%;
             transform: translateX(-50%) translateY(-100px);
             z-index: 1000;
-            transition: transform 0.4s ease;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             opacity: 0;
         }
         
         .toast.show {
             transform: translateX(-50%) translateY(0);
             opacity: 1;
-        }
-        
-        .placement-mode .equipment-item.selected {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { border-color: var(--success-green); }
-            50% { border-color: var(--accent-purple); }
         }
         
         .virtual-scroll::-webkit-scrollbar {
@@ -172,6 +209,29 @@
             padding: 12px;
             margin-bottom: 8px;
             border-left: 3px solid var(--success-green);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .boq-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(4px);
+        }
+        
+        .boq-item.editable {
+            border-left-color: var(--accent-purple);
+        }
+        
+        .edit-controls {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .boq-item:hover .edit-controls {
+            opacity: 1;
         }
         
         .recommendations {
@@ -214,11 +274,121 @@
             height: 100%;
             z-index: 1;
         }
+        
+        .room-preset-btn {
+            background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .room-preset-btn:hover {
+            background: linear-gradient(45deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3));
+            border-color: rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .room-preset-btn.active {
+            background: linear-gradient(45deg, rgba(16, 185, 129, 0.3), rgba(59, 130, 246, 0.3));
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+        
+        .context-menu {
+            position: fixed;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px;
+            z-index: 1000;
+            min-width: 150px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        
+        .context-menu-item {
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 14px;
+        }
+        
+        .context-menu-item:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+        
+        .context-menu-item.danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+        
+        .equipment-highlight {
+            animation: highlightPulse 1s ease-out;
+        }
+        
+        @keyframes highlightPulse {
+            0% { 
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+                transform: scale(1);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+                transform: scale(1.05);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+                transform: scale(1);
+            }
+        }
+
+        .quality-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .quality-economy { background: #f59e0b; }
+        .quality-standard { background: #3b82f6; }
+        .quality-premium { background: #8b5cf6; }
+        .quality-enterprise { background: #10b981; }
+
+        .interactive-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            z-index: 200;
+            animation: hintFade 4s ease-in-out infinite;
+        }
+        
+        @keyframes hintFade {
+            0%, 80%, 100% { opacity: 0.7; }
+            40% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
     <div class="particles" id="particles"></div>
     <div id="toastContainer"></div>
+    <div id="contextMenu" class="context-menu hidden"></div>
+    
+    <!-- Interactive Hints -->
+    <div id="interactiveHint" class="interactive-hint">
+        Drag equipment to room • Right-click to edit • Double-click for details
+    </div>
     
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50 hidden">
@@ -242,12 +412,35 @@
             <div class="space-y-3">
                 <div>
                     <label class="block text-sm font-medium mb-1">Project Name</label>
-                    <input type="text" id="projectName" class="form-input" placeholder="Conference Room Alpha" value="3D Designed Conference Room">
+                    <input type="text" id="projectName" class="form-input" placeholder="Conference Room Alpha" value="Enhanced AV Conference Room">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Client Name</label>
-                    <input type="text" id="clientName" class="form-input" placeholder="Acme Corporation" value="Enterprise Client">
+                    <input type="text" id="clientName" class="form-input" placeholder="Acme Corporation" value="Premium Enterprise Client">
                 </div>
+            </div>
+        </div>
+
+        <!-- Room Presets -->
+        <div class="space-y-4 mb-6">
+            <h3 class="text-lg font-semibold text-white/90">Quick Room Presets</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <button class="room-preset-btn" data-preset="meeting">
+                    <div class="text-sm font-semibold">Meeting Room</div>
+                    <div class="text-xs opacity-75">Standard setup</div>
+                </button>
+                <button class="room-preset-btn" data-preset="boardroom">
+                    <div class="text-sm font-semibold">Boardroom</div>
+                    <div class="text-xs opacity-75">Executive style</div>
+                </button>
+                <button class="room-preset-btn" data-preset="auditorium">
+                    <div class="text-sm font-semibold">Auditorium</div>
+                    <div class="text-xs opacity-75">Large venue</div>
+                </button>
+                <button class="room-preset-btn" data-preset="huddle">
+                    <div class="text-sm font-semibold">Huddle Space</div>
+                    <div class="text-xs opacity-75">Informal setup</div>
+                </button>
             </div>
         </div>
         
@@ -256,75 +449,69 @@
             <h3 class="text-lg font-semibold text-white/90">Room Configuration</h3>
             <div class="room-controls">
                 <div>
-                    <input type="number" id="roomWidth" class="form-input text-center" placeholder="Width (m)" value="8" min="3" max="20" step="0.5">
+                    <input type="number" id="roomWidth" class="form-input text-center" placeholder="Width (m)" value="8" min="3" max="25" step="0.5">
                     <small class="text-xs text-white/60">Width (m)</small>
                 </div>
                 <div>
-                    <input type="number" id="roomDepth" class="form-input text-center" placeholder="Depth (m)" value="6" min="3" max="20" step="0.5">
+                    <input type="number" id="roomDepth" class="form-input text-center" placeholder="Depth (m)" value="6" min="3" max="25" step="0.5">
                     <small class="text-xs text-white/60">Depth (m)</small>
                 </div>
             </div>
             
             <div class="grid grid-cols-1 gap-3">
                 <div>
-                    <label class="block text-sm font-medium mb-1">Room Size Category</label>
+                    <label class="block text-sm font-medium mb-1">Room Capacity</label>
                     <select id="roomSize" class="form-select">
-                        <option value="small">Small (Up to 6 people)</option>
+                        <option value="small">Small (2-6 people)</option>
                         <option value="medium" selected>Medium (6-12 people)</option>
                         <option value="large">Large (12-20 people)</option>
-                        <option value="xlarge">Extra Large (20+ people)</option>
+                        <option value="xlarge">Extra Large (20-50 people)</option>
+                        <option value="auditorium">Auditorium (50+ people)</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Use Case</label>
+                    <label class="block text-sm font-medium mb-1">Primary Use Case</label>
                     <select id="useCase" class="form-select">
                         <option value="meeting_room">Meeting Room</option>
                         <option value="boardroom" selected>Executive Boardroom</option>
                         <option value="huddle_room">Huddle Space</option>
                         <option value="training">Training Room</option>
                         <option value="auditorium">Auditorium</option>
+                        <option value="lecture_hall">Lecture Hall</option>
+                        <option value="webinar_studio">Webinar Studio</option>
                     </select>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium mb-1">Brand Ecosystem</label>
                     <select id="brandPreference" class="form-select">
-                        <option value="">Any Brand</option>
-                        <option value="logitech" selected>Logitech</option>
-                        <option value="poly">Poly</option>
-                        <option value="cisco">Cisco</option>
-                        <option value="microsoft">Microsoft</option>
+                        <option value="">Multi-Brand Best-of-Breed</option>
+                        <option value="logitech" selected>Logitech Complete</option>
+                        <option value="poly">Poly Professional</option>
+                        <option value="cisco">Cisco Webex</option>
+                        <option value="microsoft">Microsoft Teams</option>
+                        <option value="zoom">Zoom Native</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Budget Range</label>
+                    <label class="block text-sm font-medium mb-1">Quality Tier</label>
                     <select id="budgetRange" class="form-select">
-                        <option value="economy">Economy</option>
-                        <option value="standard" selected>Standard</option>
-                        <option value="premium">Premium</option>
-                        <option value="enterprise">Enterprise</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1">Priority Focus</label>
-                    <select id="priority" class="form-select">
-                        <option value="cost">Cost Optimization</option>
-                        <option value="balanced" selected>Balanced</option>
-                        <option value="performance">Performance</option>
-                        <option value="future_proof">Future-Proof</option>
+                        <option value="economy">Economy Tier</option>
+                        <option value="standard" selected>Standard Professional</option>
+                        <option value="premium">Premium Enterprise</option>
+                        <option value="enterprise">Ultra High-End</option>
                     </select>
                 </div>
             </div>
             
             <div class="grid grid-cols-2 gap-3">
-                <button id="updateRoom" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
-                    Update 3D Room
+                <button id="updateRoom" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105">
+                    Update Room
                 </button>
-                <button id="generateFullBoq" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors">
-                    🤖 AI Generate BOQ
+                <button id="generateFullBoq" class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105">
+                    🤖 AI Generate
                 </button>
             </div>
         </div>
@@ -332,960 +519,1047 @@
         <!-- Requirements Input -->
         <div class="space-y-4 mb-6">
             <h3 class="text-lg font-semibold text-white/90">Special Requirements</h3>
-            <textarea id="requirements" class="form-input h-20" placeholder="Describe any special requirements, preferred brands, or specific needs...">Prefer Logitech ecosystem with wireless presentation capabilities and enhanced audio for hybrid meetings</textarea>
+            <textarea id="requirements" class="form-input h-24 resize-none" placeholder="Describe special requirements, accessibility needs, or specific functionality...">Seamless hybrid meeting experience with wireless presentation, 4K displays, advanced audio processing, and intuitive room controls</textarea>
         </div>
         
-        <!-- Equipment Library -->
+        <!-- Enhanced Equipment Library with Drag & Drop -->
         <div>
-            <h3 class="text-lg font-semibold mb-3 text-white/90">Manual Equipment Placement</h3>
-            <div class="space-y-2 max-h-48 overflow-y-auto virtual-scroll">
-                <div class="equipment-item premium-glass rounded-lg p-3" data-type="display" data-name="Interactive 75&quot; 4K Display" data-price="3200" data-category="Displays & Projectors">
-                    <div class="font-semibold text-sm">Interactive 75" 4K Display</div>
-                    <div class="text-xs text-blue-300">Wall Mounted - $3,200</div>
+            <h3 class="text-lg font-semibold mb-3 text-white/90">Equipment Library</h3>
+            <div class="mb-3">
+                <input type="text" id="equipmentSearch" class="form-input" placeholder="Search equipment..." />
+            </div>
+            
+            <div class="space-y-2 max-h-64 overflow-y-auto virtual-scroll">
+                <!-- Displays & Visual -->
+                <div class="text-sm font-semibold text-blue-300 mb-2">📺 Displays & Visual</div>
+                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
+                     draggable="true" 
+                     data-type="display" 
+                     data-name="Interactive 86&quot; 4K Display" 
+                     data-price="4500" 
+                     data-category="Displays & Projectors"
+                     data-brand="Professional"
+                     data-tier="premium">
+                    <div class="quality-indicator quality-premium"></div>
+                    <div class="font-semibold text-sm">Interactive 86" 4K Display</div>
+                    <div class="text-xs text-blue-300">Touch-enabled, Wall Mount - $4,500</div>
                 </div>
-                <div class="equipment-item premium-glass rounded-lg p-3" data-type="videobar" data-name="Logitech Rally Bar" data-price="2700" data-category="UC & Collaboration Devices">
-                    <div class="font-semibold text-sm">Logitech Rally Bar</div>
-                    <div class="text-xs text-blue-300">All-in-one Video Bar - $2,700</div>
-                </div>
-                <div class="equipment-item premium-glass rounded-lg p-3" data-type="controller" data-name="Logitech Tap IP" data-price="1200" data-category="UC & Collaboration Devices">
-                    <div class="font-semibold text-sm">Logitech Tap IP</div>
-                    <div class="text-xs text-blue-300">Room Controller - $1,200</div>
-                </div>
-                <div class="equipment-item premium-glass rounded-lg p-3" data-type="projector" data-name="4K Laser Projector" data-price="8500" data-category="Displays & Projectors">
+                
+                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
+                     draggable="true" 
+                     data-type="projector" 
+                     data-name="4K Laser Projector" 
+                     data-price="8500" 
+                     data-category="Displays & Projectors"
+                     data-brand="Professional"
+                     data-tier="enterprise">
+                    <div class="quality-indicator quality-enterprise"></div>
                     <div class="font-semibold text-sm">4K Laser Projector</div>
-                    <div class="text-xs text-blue-300">Ceiling Mount - $8,500</div>
+                    <div class="text-xs text-blue-300">6000 Lumens, Ceiling Mount - $8,500</div>
                 </div>
-                <div class="equipment-item premium-glass rounded-lg p-3" data-type="camera" data-name="PTZ Conference Camera" data-price="1800" data-category="UC & Collaboration Devices">
-                    <div class="font-semibold text-sm">PTZ Conference Camera</div>
-                    <div class="text-xs text-blue-300">Ceiling/Wall Mount - $1,800</div>
+                
+                <!-- Audio/Video Collaboration -->
+                <div class="text-sm font-semibold text-green-300 mb-2 mt-4">🎥 UC & Collaboration</div>
+                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
+                     draggable="true" 
+                     data-type="videobar" 
+                     data-name="Logitech Rally Bar" 
+                     data-price="2700" 
+                     data-category="UC & Collaboration Devices"
+                     data-brand="Logitech"
+                     data-tier="premium">
+                    <div class="quality-indicator quality-premium"></div>
+                    <div class="font-semibold text-sm">Logitech Rally Bar</div>
+                    <div class="text-xs text-green-300">AI-Powered All-in-One - $2,700</div>
                 </div>
-                <div class="equipment-item premium-glass rounded-lg p-3" data-type="speaker" data-name="Ceiling Speaker System" data-price="650" data-category="Audio: Speakers & Amplifiers">
-                    <div class="font-semibold text-sm">Ceiling Speaker System</div>
-                    <div class="text-xs text-blue-300">Recessed Mount - $650</div>
+                
+                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
+                     draggable="true" 
+                     data-type="camera" 
+                     data-name="PTZ 4K Conference Camera" 
+                     data-price="2200" 
+                     data-category="UC & Collaboration Devices"
+                     data-brand="Professional"
+                     data-tier="premium">
+                    <div class="quality-indicator quality-premium"></div>
+                    <div class="font-semibold text-sm">PTZ 4K Conference Camera</div>
+                    <div class="text-xs text-green-300">AI Tracking, Ceiling Mount - $2,200</div>
                 </div>
-                <div class="equipment-item premium-glass rounded-lg p-3" data-type="microphone" data-name="Wireless Microphone Array" data-price="1100" data-category="Audio: Microphones & Conferencing">
-                    <div class="font-semibold text-sm">Wireless Microphone Array</div>
-                    <div class="text-xs text-blue-300">Table/Ceiling - $1,100</div>
+                
+                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
+                     draggable="true" 
+                     data-type="controller" 
+                     data-name="Logitech Tap IP" 
+                     data-price="1200" 
+                     data-category="UC & Collaboration Devices"
+                     data-brand="Logitech"
+                     data-tier="standard">
+                    <div class="quality-indicator quality-standard"></div>
+                    <div class="font-semibold text-sm">Logitech Tap IP</div>
+                    <div class="text-xs text-green-300">Touch Room Controller - $1,200</div>
+                </div>
+                
+                <!-- Audio Systems -->
+                <div class="text-sm font-semibold text-yellow-300 mb-2 mt-4">🔊 Audio Systems</div>
+                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
+                     draggable="true" 
+                     data-type="speaker" 
+                     data-name="Premium Ceiling Speaker Array" 
+                     data-price="850" 
+                     data-category="Audio: Speakers & Amplifiers"
+                     data-brand="Professional"
+                     data-tier="premium">
+                    <div class="quality-indicator quality-premium"></div>
+                    <div class="font-semibold text-sm">Premium Ceiling Speaker Array</div>
+                    <div class="text-xs text-yellow-300">Spatial Audio, Per Unit - $850</div>
+                </div>
+                
+                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
+                     draggable="true" 
+                     data-type="microphone" 
+                     data-name="AI Microphone Array" 
+                     data-price="1400" 
+                     data-category="Audio: Microphones & Conferencing"
+                     data-brand="Logitech"
+                     data-tier="premium">
+                    <div class="quality-indicator quality-premium"></div>
+                    <div class="font-semibold text-sm">AI Microphone Array</div>
+                    <div class="text-xs text-yellow-300">Beamforming, Noise Cancellation - $1,400</div>
+                </div>
+                
+                <!-- Control & Infrastructure -->
+                <div class="text-sm font-semibold text-purple-300 mb-2 mt-4">⚙️ Control & Infrastructure</div>
+                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
+                     draggable="true" 
+                     data-type="processor" 
+                     data-name="AV Control Processor" 
+                     data-price="3200" 
+                     data-category="Control & Processing"
+                     data-brand="Professional"
+                     data-tier="enterprise">
+                    <div class="quality-indicator quality-enterprise"></div>
+                    <div class="font-semibold text-sm">AV Control Processor</div>
+                    <div class="text-xs text-purple-300">Enterprise Grade, Rack Mount - $3,200</div>
+                </div>
+                
+                <div class="equipment-item premium-glass rounded-lg p-3 draggable" 
+                     draggable="true" 
+                     data-type="network" 
+                     data-name="Managed Network Switch" 
+                     data-price="800" 
+                     data-category="Network & Infrastructure"
+                     data-brand="Professional"
+                     data-tier="standard">
+                    <div class="quality-indicator quality-standard"></div>
+                    <div class="font-semibold text-sm">Managed Network Switch</div>
+                    <div class="text-xs text-purple-300">24-Port PoE+, Rack Mount - $800</div>
                 </div>
             </div>
             
-            <div class="mt-4 p-3 bg-blue-500/20 rounded-lg">
-                <div class="text-sm text-blue-200">
-                    💡 <strong>Click equipment</strong> then <strong>click in room</strong> to place manually, or use <strong>AI Generate</strong> for intelligent system design
+            <div class="mt-4 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg border border-blue-500/30">
+                <div class="text-sm text-blue-200 mb-2">
+                    ✨ <strong>Enhanced Interactions:</strong>
                 </div>
+                <ul class="text-xs text-blue-200/80 space-y-1">
+                    <li>• <strong>Drag & Drop:</strong> Drag equipment directly to room</li>
+                    <li>• <strong>Right-click:</strong> Edit, replace, or delete equipment</li>
+                    <li>• <strong>Double-click:</strong> View detailed specifications</li>
+                    <li>• <strong>AI Generate:</strong> Intelligent complete system design</li>
+                </ul>
             </div>
         </div>
     </div>
     
-    <!-- BOQ Panel -->
+    <!-- Enhanced BOQ Panel with Editing Capabilities -->
     <div class="boq-panel premium-glass rounded-2xl p-6 virtual-scroll">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-                📊 Professional BOQ
+                📋 Bill of Quantities
             </h2>
-            <div class="flex gap-2">
-                <button id="exportBoq" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">
-                    📄 Export
+            <div class="flex space-x-2">
+                <button id="exportBoq" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-all">
+                    Export
                 </button>
-                <button id="clearAll" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">
-                    🗑️ Clear
+                <button id="clearBoq" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-all">
+                    Clear
                 </button>
             </div>
         </div>
         
-        <div id="boqContent" class="space-y-4">
-            <div class="text-center py-8 text-white/60">
-                <div class="text-lg mb-2">🎯 Ready to Design</div>
-                <div class="text-sm">Use AI Generate for intelligent system design or place equipment manually in the 3D room</div>
+        <!-- Project Summary -->
+        <div class="mb-6 p-4 bg-gradient-to-r from-blue-500/20 to-green-500/20 rounded-lg border border-blue-500/30">
+            <div class="text-sm font-semibold text-blue-200 mb-2">Project Summary</div>
+            <div id="projectSummary" class="text-xs text-white/80 space-y-1">
+                <div>Room: <span id="summaryDimensions">8m × 6m</span></div>
+                <div>Capacity: <span id="summaryCapacity">Medium (6-12 people)</span></div>
+                <div>Type: <span id="summaryType">Executive Boardroom</span></div>
+                <div>Tier: <span id="summaryTier">Standard Professional</span></div>
             </div>
+        </div>
+        
+        <!-- BOQ Categories -->
+        <div id="boqContainer" class="space-y-4">
+            <!-- BOQ items will be dynamically populated here -->
+            <div class="boq-section">
+                <h3 class="text-lg font-semibold text-white/90 mb-3">Getting Started</h3>
+                <div class="text-sm text-white/70 p-4 bg-white/5 rounded-lg border border-white/10">
+                    <p class="mb-2">🚀 <strong>Quick Setup:</strong></p>
+                    <ul class="text-xs space-y-1 text-white/60">
+                        <li>1. Configure room dimensions and requirements</li>
+                        <li>2. Choose a room preset or drag equipment manually</li>
+                        <li>3. Use AI Generate for intelligent system design</li>
+                        <li>4. Review and customize your BOQ</li>
+                        <li>5. Export for project documentation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Summary -->
+        <div id="totalSummary" class="mt-6 p-4 bg-gradient-to-r from-green-600/20 to-blue-600/20 rounded-lg border border-green-500/30">
+            <div class="flex justify-between items-center">
+                <span class="text-lg font-bold text-green-300">Total Project Value:</span>
+                <span id="totalCost" class="text-xl font-bold text-white">$0.00</span>
+            </div>
+            <div class="text-xs text-white/60 mt-2">
+                <div class="flex justify-between">
+                    <span>Equipment:</span>
+                    <span id="equipmentCost">$0.00</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Installation (Est.):</span>
+                    <span id="installationCost">$0.00</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI Recommendations -->
+        <div id="recommendations" class="recommendations hidden">
+            <div class="text-sm font-semibold text-green-300 mb-2">🤖 AI Recommendations</div>
+            <div id="recommendationText" class="text-xs text-white/80"></div>
         </div>
     </div>
     
     <script>
-        // Configuration - Multiple fallback endpoints
-        const BACKEND_ENDPOINTS = [
-            'https://adarshav-boq-backend.hf.space',
-        ];
+        // Enhanced 3D AV Room Designer Pro - Complete Implementation
+        class Enhanced3DRoomDesigner {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.controls = null;
+                this.room = null;
+                this.equipment = [];
+                this.selectedObject = null;
+                this.boqData = {};
+                this.isDragging = false;
+                this.draggedElement = null;
+                this.roomDimensions = { width: 8, depth: 6, height: 3 };
+                
+                this.init();
+                this.setupEventListeners();
+                this.createParticles();
+                this.updateProjectSummary();
+            }
+            
+            init() {
+                // Create scene
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x0a0a1a);
+                
+                // Create camera
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.set(10, 8, 10);
+                this.camera.lookAt(0, 0, 0);
+                
+                // Create renderer
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                this.renderer.toneMappingExposure = 1.2;
+                
+                const renderContainer = document.getElementById('renderContainer');
+                renderContainer.appendChild(this.renderer.domElement);
+                this.renderer.domElement.id = 'canvas3d';
+                
+                // Add lighting
+                this.setupLighting();
+                
+                // Create initial room
+                this.createRoom();
+                
+                // Setup controls (basic orbit simulation)
+                this.setupControls();
+                
+                // Start render loop
+                this.animate();
+            }
+            
+            setupLighting() {
+                // Ambient light
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+                this.scene.add(ambientLight);
+                
+                // Directional light (main)
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 10, 5);
+                directionalLight.castShadow = true;
+                directionalLight.shadow.mapSize.width = 2048;
+                directionalLight.shadow.mapSize.height = 2048;
+                this.scene.add(directionalLight);
+                
+                // Point lights for ambiance
+                const pointLight1 = new THREE.PointLight(0x3b82f6, 0.5, 20);
+                pointLight1.position.set(5, 6, 5);
+                this.scene.add(pointLight1);
+                
+                const pointLight2 = new THREE.PointLight(0x8b5cf6, 0.3, 15);
+                pointLight2.position.set(-5, 4, -5);
+                this.scene.add(pointLight2);
+            }
+            
+            setupControls() {
+                // Basic orbit controls simulation
+                let mouseDown = false;
+                let mouseX = 0;
+                let mouseY = 0;
+                
+                const canvas = this.renderer.domElement;
+                
+                canvas.addEventListener('mousedown', (event) => {
+                    mouseDown = true;
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+                });
+                
+                canvas.addEventListener('mouseup', () => {
+                    mouseDown = false;
+                });
+                
+                canvas.addEventListener('mousemove', (event) => {
+                    if (!mouseDown) return;
+                    
+                    const deltaX = event.clientX - mouseX;
+                    const deltaY = event.clientY - mouseY;
+                    
+                    // Rotate camera around scene
+                    const spherical = new THREE.Spherical();
+                    spherical.setFromVector3(this.camera.position);
+                    spherical.theta -= deltaX * 0.01;
+                    spherical.phi += deltaY * 0.01;
+                    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+                    
+                    this.camera.position.setFromSpherical(spherical);
+                    this.camera.lookAt(0, 0, 0);
+                    
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+                });
+                
+                // Zoom with wheel
+                canvas.addEventListener('wheel', (event) => {
+                    event.preventDefault();
+                    const scale = event.deltaY > 0 ? 1.1 : 0.9;
+                    this.camera.position.multiplyScalar(scale);
+                    
+                    // Clamp zoom
+                    const distance = this.camera.position.length();
+                    if (distance < 5) this.camera.position.normalize().multiplyScalar(5);
+                    if (distance > 50) this.camera.position.normalize().multiplyScalar(50);
+                });
+            }
+            
+            createRoom() {
+                // Remove existing room
+                if (this.room) {
+                    this.scene.remove(this.room);
+                }
+                
+                const { width, depth, height } = this.roomDimensions;
+                this.room = new THREE.Group();
+                
+                // Floor
+                const floorGeometry = new THREE.PlaneGeometry(width, depth);
+                const floorMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x2a2a3a,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor.rotation.x = -Math.PI / 2;
+                floor.receiveShadow = true;
+                this.room.add(floor);
+                
+                // Walls
+                this.createWalls(width, depth, height);
+                
+                // Grid
+                const gridHelper = new THREE.GridHelper(Math.max(width, depth) * 1.2, 20, 0x444444, 0x333333);
+                gridHelper.position.y = 0.01;
+                this.room.add(gridHelper);
+                
+                this.scene.add(this.room);
+            }
+            
+            createWalls(width, depth, height) {
+                const wallMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x404050,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                
+                // Back wall
+                const backWallGeometry = new THREE.PlaneGeometry(width, height);
+                const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
+                backWall.position.set(0, height/2, -depth/2);
+                this.room.add(backWall);
+                
+                // Left wall
+                const leftWallGeometry = new THREE.PlaneGeometry(depth, height);
+                const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
+                leftWall.position.set(-width/2, height/2, 0);
+                leftWall.rotation.y = Math.PI/2;
+                this.room.add(leftWall);
+                
+                // Right wall
+                const rightWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
+                rightWall.position.set(width/2, height/2, 0);
+                rightWall.rotation.y = -Math.PI/2;
+                this.room.add(rightWall);
+            }
+            
+            addEquipment(type, name, position) {
+                const equipment = this.createEquipmentMesh(type, name);
+                equipment.position.copy(position);
+                equipment.userData = { type, name, id: Date.now().toString() };
+                
+                this.scene.add(equipment);
+                this.equipment.push(equipment);
+                
+                return equipment;
+            }
+            
+            createEquipmentMesh(type, name) {
+                let geometry, material, mesh;
+                
+                switch(type) {
+                    case 'display':
+                        geometry = new THREE.BoxGeometry(2, 1.2, 0.1);
+                        material = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+                        mesh = new THREE.Mesh(geometry, material);
+                        
+                        // Screen
+                        const screenGeometry = new THREE.PlaneGeometry(1.8, 1.0);
+                        const screenMaterial = new THREE.MeshLambertMaterial({ color: 0x2563eb });
+                        const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+                        screen.position.z = 0.06;
+                        mesh.add(screen);
+                        break;
+                        
+                    case 'videobar':
+                        geometry = new THREE.BoxGeometry(1.5, 0.15, 0.15);
+                        material = new THREE.MeshLambertMaterial({ color: 0x333333 });
+                        mesh = new THREE.Mesh(geometry, material);
+                        break;
+                        
+                    case 'camera':
+                        geometry = new THREE.SphereGeometry(0.15, 16, 16);
+                        material = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+                        mesh = new THREE.Mesh(geometry, material);
+                        break;
+                        
+                    case 'speaker':
+                        geometry = new THREE.CylinderGeometry(0.3, 0.3, 0.1, 12);
+                        material = new THREE.MeshLambertMaterial({ color: 0x2a2a2a });
+                        mesh = new THREE.Mesh(geometry, material);
+                        break;
+                        
+                    case 'projector':
+                        geometry = new THREE.BoxGeometry(0.8, 0.3, 1.2);
+                        material = new THREE.MeshLambertMaterial({ color: 0x404040 });
+                        mesh = new THREE.Mesh(geometry, material);
+                        break;
+                        
+                    default:
+                        geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                        material = new THREE.MeshLambertMaterial({ color: 0x3b82f6 });
+                        mesh = new THREE.Mesh(geometry, material);
+                }
+                
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                
+                return mesh;
+            }
+            
+            setupEventListeners() {
+                // Room updates
+                document.getElementById('updateRoom').addEventListener('click', () => {
+                    this.updateRoom();
+                });
+                
+                // BOQ generation
+                document.getElementById('generateFullBoq').addEventListener('click', () => {
+                    this.generateAIBoq();
+                });
+                
+                // Drag and drop
+                this.setupDragAndDrop();
+                
+                // Room presets
+                document.querySelectorAll('.room-preset-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.applyRoomPreset(e.target.closest('.room-preset-btn').dataset.preset);
+                    });
+                });
+                
+                // Project info updates
+                document.getElementById('projectName').addEventListener('input', () => {
+                    this.updateProjectSummary();
+                });
+                
+                // Window resize
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+            
+            setupDragAndDrop() {
+                const equipmentItems = document.querySelectorAll('.equipment-item');
+                const canvas = this.renderer.domElement;
+                
+                equipmentItems.forEach(item => {
+                    item.addEventListener('dragstart', (e) => {
+                        this.draggedElement = e.target;
+                        e.dataTransfer.effectAllowed = 'copy';
+                    });
+                });
+                
+                canvas.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                });
+                
+                canvas.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    
+                    if (!this.draggedElement) return;
+                    
+                    const rect = canvas.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                    
+                    // Convert screen coordinates to world position
+                    const vector = new THREE.Vector3(x, y, 0.5);
+                    vector.unproject(this.camera);
+                    
+                    const raycaster = new THREE.Raycaster();
+                    raycaster.set(this.camera.position, vector.sub(this.camera.position).normalize());
+                    
+                    // Find floor intersection
+                    const floorY = 0;
+                    const distance = (floorY - this.camera.position.y) / raycaster.ray.direction.y;
+                    const worldPosition = new THREE.Vector3();
+                    raycaster.ray.at(distance, worldPosition);
+                    
+                    // Add equipment
+                    const type = this.draggedElement.dataset.type;
+                    const name = this.draggedElement.dataset.name;
+                    const price = parseFloat(this.draggedElement.dataset.price);
+                    const category = this.draggedElement.dataset.category;
+                    
+                    const equipment = this.addEquipment(type, name, worldPosition);
+                    
+                    // Add to BOQ
+                    this.addToBOQ(name, price, category, 1);
+                    
+                    // Show toast
+                    this.showToast(`Added ${name} to room`, 'success');
+                    
+                    // Highlight the added equipment
+                    this.highlightEquipment(equipment);
+                    
+                    this.draggedElement = null;
+                });
+            }
+            
+            updateRoom() {
+                const width = parseFloat(document.getElementById('roomWidth').value) || 8;
+                const depth = parseFloat(document.getElementById('roomDepth').value) || 6;
+                
+                this.roomDimensions = { width, depth, height: 3 };
+                this.createRoom();
+                this.updateProjectSummary();
+                
+                this.showToast('Room updated successfully!', 'success');
+            }
+            
+            applyRoomPreset(preset) {
+                // Remove active class from all buttons
+                document.querySelectorAll('.room-preset-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active class to clicked button
+                event.target.closest('.room-preset-btn').classList.add('active');
+                
+                const presets = {
+                    meeting: { width: 6, depth: 4, capacity: 'small', useCase: 'meeting_room' },
+                    boardroom: { width: 8, depth: 6, capacity: 'medium', useCase: 'boardroom' },
+                    auditorium: { width: 15, depth: 12, capacity: 'xlarge', useCase: 'auditorium' },
+                    huddle: { width: 4, depth: 3, capacity: 'small', useCase: 'huddle_room' }
+                };
+                
+                const config = presets[preset];
+                if (config) {
+                    document.getElementById('roomWidth').value = config.width;
+                    document.getElementById('roomDepth').value = config.depth;
+                    document.getElementById('roomSize').value = config.capacity;
+                    document.getElementById('useCase').value = config.useCase;
+                    
+                    this.updateRoom();
+                    this.showToast(`Applied ${preset} preset`, 'info');
+                }
+            }
+            
+            generateAIBoq() {
+                this.showLoadingOverlay(true);
+                
+                setTimeout(() => {
+                    this.clearBOQ();
+                    
+                    const roomSize = document.getElementById('roomSize').value;
+                    const useCase = document.getElementById('useCase').value;
+                    const budget = document.getElementById('budgetRange').value;
+                    const brand = document.getElementById('brandPreference').value;
+                    
+                    // AI-generated equipment based on parameters
+                    const equipment = this.getAIRecommendations(roomSize, useCase, budget, brand);
+                    
+                    equipment.forEach(item => {
+                        this.addToBOQ(item.name, item.price, item.category, item.quantity);
+                    });
+                    
+                    // Generate recommendations
+                    this.generateRecommendations(roomSize, useCase, budget);
+                    
+                    this.showLoadingOverlay(false);
+                    this.showToast('AI BOQ generated successfully!', 'success');
+                }, 2000);
+            }
+            
+            getAIRecommendations(roomSize, useCase, budget, brand) {
+                const recommendations = [];
+                
+                // Base equipment for any room
+                if (brand === 'logitech' || brand === '') {
+                    recommendations.push(
+                        { name: 'Logitech Rally Bar', price: 2700, category: 'UC & Collaboration Devices', quantity: 1 },
+                        { name: 'Logitech Tap IP', price: 1200, category: 'UC & Collaboration Devices', quantity: 1 }
+                    );
+                }
+                
+                // Display recommendations
+                if (roomSize === 'small' || roomSize === 'medium') {
+                    recommendations.push(
+                        { name: 'Interactive 86" 4K Display', price: 4500, category: 'Displays & Projectors', quantity: 1 }
+                    );
+                } else {
+                    recommendations.push(
+                        { name: '4K Laser Projector', price: 8500, category: 'Displays & Projectors', quantity: 1 }
+                    );
+                }
+                
+                // Audio system
+                const speakerCount = roomSize === 'small' ? 2 : roomSize === 'medium' ? 4 : 6;
+                recommendations.push(
+                    { name: 'Premium Ceiling Speaker Array', price: 850, category: 'Audio: Speakers & Amplifiers', quantity: speakerCount },
+                    { name: 'AI Microphone Array', price: 1400, category: 'Audio: Microphones & Conferencing', quantity: 1 }
+                );
+                
+                // Control and infrastructure
+                recommendations.push(
+                    { name: 'AV Control Processor', price: 3200, category: 'Control & Processing', quantity: 1 },
+                    { name: 'Managed Network Switch', price: 800, category: 'Network & Infrastructure', quantity: 1 }
+                );
+                
+                // Additional camera for larger rooms
+                if (roomSize === 'large' || roomSize === 'xlarge') {
+                    recommendations.push(
+                        { name: 'PTZ 4K Conference Camera', price: 2200, category: 'UC & Collaboration Devices', quantity: 1 }
+                    );
+                }
+                
+                return recommendations;
+            }
+            
+            addToBOQ(name, price, category, quantity = 1) {
+                if (!this.boqData[category]) {
+                    this.boqData[category] = [];
+                }
+                
+                // Check if item already exists
+                const existingItem = this.boqData[category].find(item => item.name === name);
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                } else {
+                    this.boqData[category].push({
+                        name,
+                        price,
+                        quantity,
+                        total: price * quantity
+                    });
+                }
+                
+                this.renderBOQ();
+            }
+            
+            renderBOQ() {
+                const container = document.getElementById('boqContainer');
+                container.innerHTML = '';
+                
+                let totalCost = 0;
+                let equipmentCost = 0;
+                
+                Object.entries(this.boqData).forEach(([category, items]) => {
+                    if (items.length === 0) return;
+                    
+                    const section = document.createElement('div');
+                    section.className = 'boq-section';
+                    
+                    const header = document.createElement('h3');
+                    header.className = 'text-lg font-semibold text-white/90 mb-3';
+                    header.textContent = category;
+                    section.appendChild(header);
+                    
+                    items.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'boq-item';
+                        
+                        const total = item.price * item.quantity;
+                        equipmentCost += total;
+                        
+                        itemDiv.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="font-semibold text-sm text-white">${item.name}</div>
+                                    <div class="text-xs text-white/60">
+                                        $${item.price.toLocaleString()} × ${item.quantity} = $${total.toLocaleString()}
+                                    </div>
+                                </div>
+                                <div class="edit-controls">
+                                    <button class="text-blue-400 hover:text-blue-300 mr-2 text-xs" 
+                                            onclick="roomDesigner.editBOQItem('${category}', '${item.name}')">
+                                        ✏️
+                                    </button>
+                                    <button class="text-red-400 hover:text-red-300 text-xs" 
+                                            onclick="roomDesigner.removeBOQItem('${category}', '${item.name}')">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        section.appendChild(itemDiv);
+                    });
+                    
+                    container.appendChild(section);
+                });
+                
+                // Calculate installation cost (20% of equipment cost)
+                const installationCost = equipmentCost * 0.2;
+                totalCost = equipmentCost + installationCost;
+                
+                // Update totals
+                document.getElementById('equipmentCost').textContent = `$${equipmentCost.toLocaleString()}`;
+                document.getElementById('installationCost').textContent = `$${installationCost.toLocaleString()}`;
+                document.getElementById('totalCost').textContent = `$${totalCost.toLocaleString()}`;
+            }
+            
+            clearBOQ() {
+                this.boqData = {};
+                this.renderBOQ();
+            }
+            
+            removeBOQItem(category, name) {
+                if (this.boqData[category]) {
+                    this.boqData[category] = this.boqData[category].filter(item => item.name !== name);
+                    if (this.boqData[category].length === 0) {
+                        delete this.boqData[category];
+                    }
+                }
+                this.renderBOQ();
+                this.showToast(`Removed ${name} from BOQ`, 'info');
+            }
+            
+            editBOQItem(category, name) {
+                const item = this.boqData[category]?.find(item => item.name === name);
+                if (item) {
+                    const newQuantity = prompt(`Enter new quantity for ${name}:`, item.quantity);
+                    if (newQuantity && !isNaN(newQuantity) && newQuantity > 0) {
+                        item.quantity = parseInt(newQuantity);
+                        item.total = item.price * item.quantity;
+                        this.renderBOQ();
+                        this.showToast(`Updated quantity for ${name}`, 'success');
+                    }
+                }
+            }
+            
+            generateRecommendations(roomSize, useCase, budget) {
+                const recommendations = document.getElementById('recommendations');
+                const recommendationText = document.getElementById('recommendationText');
+                
+                let text = `Based on your ${roomSize} ${useCase.replace('_', ' ')} with ${budget} budget tier, `;
+                text += `we recommend focusing on high-quality collaboration equipment. `;
+                
+                if (roomSize === 'large' || roomSize === 'xlarge') {
+                    text += `Consider dual display setup for better visibility. `;
+                }
+                
+                text += `Ensure proper cable management and consider future scalability.`;
+                
+                recommendationText.textContent = text;
+                recommendations.classList.remove('hidden');
+            }
+            
+            updateProjectSummary() {
+                const dimensions = `${document.getElementById('roomWidth').value || 8}m × ${document.getElementById('roomDepth').value || 6}m`;
+                const capacity = document.getElementById('roomSize').options[document.getElementById('roomSize').selectedIndex].text;
+                const type = document.getElementById('useCase').options[document.getElementById('useCase').selectedIndex].text;
+                const tier = document.getElementById('budgetRange').options[document.getElementById('budgetRange').selectedIndex].text;
+                
+                document.getElementById('summaryDimensions').textContent = dimensions;
+                document.getElementById('summaryCapacity').textContent = capacity;
+                document.getElementById('summaryType').textContent = type;
+                document.getElementById('summaryTier').textContent = tier;
+            }
+            
+            highlightEquipment(equipment) {
+                equipment.material.emissive.setHex(0x10b981);
+                setTimeout(() => {
+                    equipment.material.emissive.setHex(0x000000);
+                }, 1000);
+            }
+            
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast premium-glass rounded-lg p-4 ${type === 'success' ? 'border-green-500' : type === 'error' ? 'border-red-500' : 'border-blue-500'} border`;
+                
+                const color = type === 'success' ? 'text-green-300' : type === 'error' ? 'text-red-300' : 'text-blue-300';
+                toast.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 rounded-full ${type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'}"></div>
+                        <span class="${color} font-semibold">${message}</span>
+                    </div>
+                `;
+                
+                document.getElementById('toastContainer').appendChild(toast);
+                
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() =>
+                        setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 400);
+                }, 3000);
+            }
+            
+            showLoadingOverlay(show) {
+                const overlay = document.getElementById('loadingOverlay');
+                if (show) {
+                    overlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('hidden');
+                }
+            }
+            
+            createParticles() {
+                const particlesContainer = document.getElementById('particles');
+                
+                for (let i = 0; i < 50; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 6 + 's';
+                    particle.style.animationDuration = (6 + Math.random() * 4) + 's';
+                    particlesContainer.appendChild(particle);
+                }
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                // Add subtle animation to equipment
+                this.equipment.forEach((item, index) => {
+                    if (item.userData.type === 'speaker') {
+                        item.rotation.y += 0.005;
+                    }
+                    if (item.userData.type === 'camera') {
+                        item.rotation.y = Math.sin(Date.now() * 0.001 + index) * 0.2;
+                    }
+                });
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
         
-        // Global variables
-        let scene, camera, renderer;
-        let room, placedEquipment = [];
-        let selectedEquipmentType = null;
-        let roomWidth = 8, roomDepth = 6, roomHeight = 3;
-        let placementMode = false;
-        let currentBoqData = null;
+        // Equipment search functionality
+        function setupEquipmentSearch() {
+            const searchInput = document.getElementById('equipmentSearch');
+            const equipmentItems = document.querySelectorAll('.equipment-item');
+            
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                
+                equipmentItems.forEach(item => {
+                    const name = item.querySelector('.font-semibold').textContent.toLowerCase();
+                    const category = item.previousElementSibling?.textContent?.toLowerCase() || '';
+                    
+                    if (name.includes(searchTerm) || category.includes(searchTerm)) {
+                        item.style.display = 'block';
+                        if (searchTerm && name.includes(searchTerm)) {
+                            item.classList.add('equipment-highlight');
+                            setTimeout(() => item.classList.remove('equipment-highlight'), 1000);
+                        }
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
         
-        // Enhanced equipment configurations with better 3D models
-        const equipmentConfig = {
-            display: { 
-                color: 0x2563eb, 
-                size: [0.15, 1.8, 1.2], 
-                position: 'wall',
-                emissive: 0x001133,
-                metalness: 0.3,
-                roughness: 0.4
-            },
-            videobar: { 
-                color: 0x10b981, 
-                size: [1.0, 0.12, 0.18], 
-                position: 'wall_top',
-                emissive: 0x003311,
-                metalness: 0.7,
-                roughness: 0.3
-            },
-            controller: { 
-                color: 0x6b7280, 
-                size: [0.35, 0.08, 0.25], 
-                position: 'table',
-                emissive: 0x111111,
-                metalness: 0.8,
-                roughness: 0.2
-            },
-            projector: { 
-                color: 0x8b5cf6, 
-                size: [0.6, 0.35, 0.8], 
-                position: 'ceiling',
-                emissive: 0x330055,
-                metalness: 0.4,
-                roughness: 0.3
-            },
-            camera: { 
-                color: 0x10b981, 
-                size: [0.25, 0.25, 0.35], 
-                position: 'ceiling',
-                emissive: 0x003311,
-                metalness: 0.6,
-                roughness: 0.2
-            },
-            speaker: { 
-                color: 0xf59e0b, 
-                size: [0.35, 0.15, 0.35], 
-                position: 'ceiling',
-                emissive: 0x331100,
-                metalness: 0.2,
-                roughness: 0.6
-            },
-            microphone: { 
-                color: 0xef4444, 
-                size: [0.12, 0.4, 0.12], 
-                position: 'table',
-                emissive: 0x330000,
-                metalness: 0.7,
-                roughness: 0.3
+        // Export BOQ functionality
+        function setupExportFeatures() {
+            document.getElementById('exportBoq').addEventListener('click', () => {
+                const projectName = document.getElementById('projectName').value || 'AV Room Design';
+                const clientName = document.getElementById('clientName').value || 'Client';
+                
+                let csvContent = "Category,Item Name,Unit Price,Quantity,Total\n";
+                
+                Object.entries(roomDesigner.boqData).forEach(([category, items]) => {
+                    items.forEach(item => {
+                        const total = item.price * item.quantity;
+                        csvContent += `"${category}","${item.name}",${item.price},${item.quantity},${total}\n`;
+                    });
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `${projectName}_BOQ.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                roomDesigner.showToast('BOQ exported successfully!', 'success');
+            });
+            
+            document.getElementById('clearBoq').addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear the BOQ? This action cannot be undone.')) {
+                    roomDesigner.clearBOQ();
+                    roomDesigner.showToast('BOQ cleared', 'info');
+                }
+            });
+        }
+        
+        // Context menu functionality
+        function setupContextMenu() {
+            const contextMenu = document.getElementById('contextMenu');
+            const canvas = document.getElementById('canvas3d') || document.querySelector('#renderContainer canvas');
+            
+            if (canvas) {
+                canvas.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    
+                    // Simple context menu for the canvas
+                    contextMenu.innerHTML = `
+                        <div class="context-menu-item" onclick="roomDesigner.resetCamera()">Reset View</div>
+                        <div class="context-menu-item" onclick="roomDesigner.centerView()">Center Room</div>
+                        <div class="context-menu-item danger" onclick="roomDesigner.clearAllEquipment()">Clear Equipment</div>
+                    `;
+                    
+                    contextMenu.style.left = e.clientX + 'px';
+                    contextMenu.style.top = e.clientY + 'px';
+                    contextMenu.classList.remove('hidden');
+                });
+            }
+            
+            // Hide context menu when clicking elsewhere
+            document.addEventListener('click', () => {
+                contextMenu.classList.add('hidden');
+            });
+        }
+        
+        // Additional utility functions for Enhanced3DRoomDesigner
+        Enhanced3DRoomDesigner.prototype.resetCamera = function() {
+            this.camera.position.set(10, 8, 10);
+            this.camera.lookAt(0, 0, 0);
+            this.showToast('Camera view reset', 'info');
+        };
+        
+        Enhanced3DRoomDesigner.prototype.centerView = function() {
+            this.camera.lookAt(0, 0, 0);
+            this.showToast('View centered on room', 'info');
+        };
+        
+        Enhanced3DRoomDesigner.prototype.clearAllEquipment = function() {
+            if (confirm('Remove all equipment from the room?')) {
+                this.equipment.forEach(item => {
+                    this.scene.remove(item);
+                });
+                this.equipment = [];
+                this.showToast('All equipment removed', 'info');
             }
         };
         
         // Initialize the application
-        function init() {
-            try {
-                createParticles();
-                setupScene();
-                createRoom();
-                setupEventListeners();
-                animate();
-                showToast('🚀 3D AV Room Designer Pro Ready!', 'success');
-            } catch (error) {
-                console.error('Initialization error:', error);
-                showToast('Error initializing 3D scene. Please refresh the page.', 'error');
-            }
-        }
+        let roomDesigner;
         
-        function createParticles() {
-            const particleContainer = document.getElementById('particles');
-            for (let i = 0; i < 30; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 6 + 's';
-                particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
-                particleContainer.appendChild(particle);
-            }
-        }
-        
-        function setupScene() {
-            // Create scene
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a1a);
-            scene.fog = new THREE.Fog(0x0a0a1a, 20, 50);
-            
-            // Create camera
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(12, 10, 12);
-            camera.lookAt(0, 0, 0);
-            
-            // Create renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            
-            // Append to the render container
-            const renderContainer = document.getElementById('renderContainer');
-            renderContainer.appendChild(renderer.domElement);
-            
-            // Enhanced lighting system
-            const ambientLight = new THREE.AmbientLight(0x404080, 0.4);
-            scene.add(ambientLight);
-            
-            // Main directional light
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(15, 15, 10);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
-            directionalLight.shadow.camera.near = 0.5;
-            directionalLight.shadow.camera.far = 50;
-            directionalLight.shadow.camera.left = -20;
-            directionalLight.shadow.camera.right = 20;
-            directionalLight.shadow.camera.top = 20;
-            directionalLight.shadow.camera.bottom = -20;
-            scene.add(directionalLight);
-            
-            // Room lighting
-            const roomLight = new THREE.PointLight(0xfff8dc, 0.6, 25);
-            roomLight.position.set(0, roomHeight + 1, 0);
-            roomLight.castShadow = true;
-            scene.add(roomLight);
-            
-            setupMouseControls();
-        }
-        
-        function setupMouseControls() {
-            let mouseX = 0, mouseY = 0;
-            let isMouseDown = false;
-            let cameraRadius = 18;
-            let cameraTheta = Math.PI / 4;
-            let cameraPhi = Math.PI / 3;
-            
-            const canvas = renderer.domElement;
-            
-            canvas.addEventListener('mousedown', (event) => {
-                if (placementMode) return;
-                isMouseDown = true;
-                mouseX = event.clientX;
-                mouseY = event.clientY;
-                canvas.style.cursor = 'grabbing';
-            });
-            
-            canvas.addEventListener('mousemove', (event) => {
-                if (!isMouseDown || placementMode) return;
-                
-                const deltaX = event.clientX - mouseX;
-                const deltaY = event.clientY - mouseY;
-                
-                cameraTheta -= deltaX * 0.01;
-                cameraPhi += deltaY * 0.01;
-                cameraPhi = Math.max(0.1, Math.min(Math.PI - 0.1, cameraPhi));
-                
-                updateCameraPosition();
-                
-                mouseX = event.clientX;
-                mouseY = event.clientY;
-            });
-            
-            canvas.addEventListener('mouseup', () => {
-                isMouseDown = false;
-                canvas.style.cursor = placementMode ? 'crosshair' : 'grab';
-            });
-            
-            canvas.addEventListener('wheel', (event) => {
-                event.preventDefault();
-                cameraRadius += event.deltaY * 0.02;
-                cameraRadius = Math.max(8, Math.min(40, cameraRadius));
-                updateCameraPosition();
-            });
-            
-            canvas.addEventListener('click', (event) => {
-                if (placementMode && selectedEquipmentType) {
-                    placeEquipment(event);
-                }
-            });
-            
-            function updateCameraPosition() {
-                camera.position.x = cameraRadius * Math.sin(cameraPhi) * Math.cos(cameraTheta);
-                camera.position.y = cameraRadius * Math.cos(cameraPhi);
-                camera.position.z = cameraRadius * Math.sin(cameraPhi) * Math.sin(cameraTheta);
-                camera.lookAt(0, roomHeight / 2, 0);
-            }
-            
-            updateCameraPosition();
-        }
-        
-        function createRoom() {
-            if (room) {
-                scene.remove(room);
-            }
-            
-            room = new THREE.Group();
-            
-            // Enhanced floor
-            const floorGeometry = new THREE.PlaneGeometry(roomWidth, roomDepth);
-            const floorMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x8B7355,
-                roughness: 0.8,
-                metalness: 0.1
-            });
-            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-            floor.rotation.x = -Math.PI / 2;
-            floor.receiveShadow = true;
-            room.add(floor);
-            
-            // Enhanced walls
-            const wallMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0xE5E7EB,
-                roughness: 0.9,
-                metalness: 0.05
-            });
-            
-            // Front wall
-            const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomHeight), wallMaterial);
-            frontWall.position.set(0, roomHeight/2, -roomDepth/2);
-            frontWall.receiveShadow = true;
-            room.add(frontWall);
-            
-            // Back wall
-            const backWall = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomHeight), wallMaterial);
-            backWall.position.set(0, roomHeight/2, roomDepth/2);
-            backWall.rotation.y = Math.PI;
-            backWall.receiveShadow = true;
-            room.add(backWall);
-            
-            // Left wall
-            const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(roomDepth, roomHeight), wallMaterial);
-            leftWall.position.set(-roomWidth/2, roomHeight/2, 0);
-            leftWall.rotation.y = Math.PI/2;
-            leftWall.receiveShadow = true;
-            room.add(leftWall);
-            
-            // Right wall
-            const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(roomDepth, roomHeight), wallMaterial);
-            rightWall.position.set(roomWidth/2, roomHeight/2, 0);
-            rightWall.rotation.y = -Math.PI/2;
-            rightWall.receiveShadow = true;
-            room.add(rightWall);
-            
-            // Ceiling
-            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(roomWidth, roomDepth), wallMaterial);
-            ceiling.position.y = roomHeight;
-            ceiling.rotation.x = Math.PI / 2;
-            ceiling.receiveShadow = true;
-            room.add(ceiling);
-            
-            // Add conference table
-            createConferenceTable();
-            
-            scene.add(room);
-        }
-        
-        function createConferenceTable() {
-            const tableGroup = new THREE.Group();
-            
-            // Table top
-            const tableGeometry = new THREE.BoxGeometry(roomWidth * 0.7, 0.08, roomDepth * 0.4);
-            const tableMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x8B4513,
-                roughness: 0.3,
-                metalness: 0.1
-            });
-            const table = new THREE.Mesh(tableGeometry, tableMaterial);
-            table.position.y = 0.76;
-            table.castShadow = true;
-            table.receiveShadow = true;
-            tableGroup.add(table);
-            const legGeometry = new THREE.BoxGeometry(0.1, 0.72, 0.1);
-            const legMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x654321,
-                roughness: 0.4,
-                metalness: 0.2
-            });
-            
-            // Four table legs
-            const legPositions = [
-                [-roomWidth * 0.3, 0.36, -roomDepth * 0.15],
-                [roomWidth * 0.3, 0.36, -roomDepth * 0.15],
-                [-roomWidth * 0.3, 0.36, roomDepth * 0.15],
-                [roomWidth * 0.3, 0.36, roomDepth * 0.15]
-            ];
-            
-            legPositions.forEach(pos => {
-                const leg = new THREE.Mesh(legGeometry, legMaterial);
-                leg.position.set(pos[0], pos[1], pos[2]);
-                leg.castShadow = true;
-                tableGroup.add(leg);
-            });
-            
-            room.add(tableGroup);
-        }
-        
-        function setupEventListeners() {
-            // Equipment selection
-            document.querySelectorAll('.equipment-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    // Clear previous selection
-                    document.querySelectorAll('.equipment-item').forEach(el => el.classList.remove('selected'));
-                    
-                    // Select current item
-                    item.classList.add('selected');
-                    selectedEquipmentType = item.dataset.type;
-                    
-                    // Enter placement mode
-                    placementMode = true;
-                    renderer.domElement.style.cursor = 'crosshair';
-                    document.body.classList.add('placement-mode');
-                    
-                    showToast(`Click in the room to place: ${item.dataset.name}`, 'info');
-                });
-            });
-            
-            // Room update
-            document.getElementById('updateRoom').addEventListener('click', updateRoomDimensions);
-            
-            // Generate full BOQ
-            document.getElementById('generateFullBoq').addEventListener('click', generateFullBoQ);
-            
-            // Export BOQ
-            document.getElementById('exportBoq').addEventListener('click', exportBoQ);
-            
-            // Clear all equipment
-            document.getElementById('clearAll').addEventListener('click', clearAllEquipment);
-            
-            // Handle window resize
-            window.addEventListener('resize', onWindowResize);
-            
-            // Escape key to exit placement mode
-            document.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && placementMode) {
-                    exitPlacementMode();
-                }
-            });
-        }
-        
-        function updateRoomDimensions() {
-            roomWidth = parseFloat(document.getElementById('roomWidth').value) || 8;
-            roomDepth = parseFloat(document.getElementById('roomDepth').value) || 6;
-            
-            // Clear existing equipment
-            clearAllEquipment();
-            
-            // Recreate room
-            createRoom();
-            
-            showToast('Room updated successfully!', 'success');
-        }
-        
-        function placeEquipment(event) {
-            const rect = renderer.domElement.getBoundingClientRect();
-            const mouse = new THREE.Vector2();
-            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-            
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(mouse, camera);
-            
-            // Find intersection with floor
-            const floorIntersects = raycaster.intersectObjects(scene.children, true);
-            const floorIntersect = floorIntersects.find(intersect => 
-                intersect.object.geometry instanceof THREE.PlaneGeometry && 
-                Math.abs(intersect.object.rotation.x + Math.PI / 2) < 0.1
-            );
-            
-            if (floorIntersect) {
-                const position = floorIntersect.point;
-                const equipment = createEquipmentMesh(selectedEquipmentType, position);
-                
-                if (equipment) {
-                    scene.add(equipment);
-                    
-                    // Get equipment data
-                    const selectedItem = document.querySelector('.equipment-item.selected');
-                    const equipmentData = {
-                        type: selectedEquipmentType,
-                        name: selectedItem.dataset.name,
-                        price: parseFloat(selectedItem.dataset.price),
-                        category: selectedItem.dataset.category,
-                        mesh: equipment,
-                        position: position.clone()
-                    };
-                    
-                    placedEquipment.push(equipmentData);
-                    updateBoQ();
-                    
-                    showToast(`${equipmentData.name} placed successfully!`, 'success');
-                    
-                    // Exit placement mode
-                    exitPlacementMode();
-                }
-            }
-        }
-        
-        function createEquipmentMesh(type, position) {
-            const config = equipmentConfig[type];
-            if (!config) return null;
-            
-            const geometry = new THREE.BoxGeometry(config.size[0], config.size[1], config.size[2]);
-            const material = new THREE.MeshStandardMaterial({
-                color: config.color,
-                emissive: config.emissive,
-                metalness: config.metalness,
-                roughness: config.roughness
-            });
-            
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            
-            // Position based on equipment type
-            switch (config.position) {
-                case 'wall':
-                    mesh.position.set(0, 1.5, -roomDepth/2 + 0.1);
-                    break;
-                case 'wall_top':
-                    mesh.position.set(0, 2.2, -roomDepth/2 + 0.1);
-                    break;
-                case 'ceiling':
-                    mesh.position.set(position.x, roomHeight - 0.2, position.z);
-                    break;
-                case 'table':
-                    mesh.position.set(position.x, 0.84, position.z);
-                    break;
-                default:
-                    mesh.position.copy(position);
-                    mesh.position.y += config.size[1] / 2;
-            }
-            
-            return mesh;
-        }
-        
-        function exitPlacementMode() {
-            placementMode = false;
-            selectedEquipmentType = null;
-            renderer.domElement.style.cursor = 'grab';
-            document.body.classList.remove('placement-mode');
-            
-            // Clear selection
-            document.querySelectorAll('.equipment-item').forEach(el => el.classList.remove('selected'));
-        }
-        
-        async function generateFullBoQ() {
-            showLoadingOverlay(true);
-            
-            const roomData = {
-                width: roomWidth,
-                depth: roomDepth,
-                height: roomHeight,
-                roomSize: document.getElementById('roomSize').value,
-                useCase: document.getElementById('useCase').value,
-                brandPreference: document.getElementById('brandPreference').value,
-                budgetRange: document.getElementById('budgetRange').value,
-                priority: document.getElementById('priority').value,
-                requirements: document.getElementById('requirements').value,
-                projectName: document.getElementById('projectName').value,
-                clientName: document.getElementById('clientName').value
-            };
-            
-            try {
-                const response = await callBackendAPI(roomData);
-                if (response && response.boq) {
-                    currentBoqData = response;
-                    displayFullBoQ(response);
-                    showToast('AI-powered BOQ generated successfully!', 'success');
-                } else {
-                    throw new Error('Invalid response format');
-                }
-            } catch (error) {
-                console.error('BOQ generation error:', error);
-                showToast('Failed to generate BOQ. Please try again.', 'error');
-                generateFallbackBoQ(roomData);
-            } finally {
-                showLoadingOverlay(false);
-            }
-        }
-        
-        async function callBackendAPI(roomData) {
-            for (const endpoint of BACKEND_ENDPOINTS) {
-                try {
-                    const response = await fetch(`${endpoint}/generate_boq`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(roomData),
-                        timeout: 30000
-                    });
-                    
-                    if (response.ok) {
-                        return await response.json();
-                    }
-                } catch (error) {
-                    console.warn(`Endpoint ${endpoint} failed:`, error);
-                    continue;
-                }
-            }
-            throw new Error('All backend endpoints failed');
-        }
-        
-        function generateFallbackBoQ(roomData) {
-            // Fallback BOQ generation logic
-            const fallbackBoQ = {
-                project: {
-                    name: roomData.projectName || "3D Designed Conference Room",
-                    client: roomData.clientName || "Enterprise Client",
-                    date: new Date().toLocaleDateString(),
-                    room_size: `${roomData.width}m × ${roomData.depth}m × ${roomData.height}m`
-                },
-                boq: {
-                    "Displays & Projectors": [
-                        {
-                            name: "Interactive 75\" 4K Display",
-                            brand: roomData.brandPreference === 'logitech' ? 'Logitech' : 'Professional Grade',
-                            model: "PD-7500-4K",
-                            quantity: 1,
-                            unit_price: 3200,
-                            total_price: 3200,
-                            specifications: "4K resolution, touch capability, wall mount included"
-                        }
-                    ],
-                    "UC & Collaboration Devices": [
-                        {
-                            name: "All-in-One Video Bar",
-                            brand: roomData.brandPreference === 'logitech' ? 'Logitech Rally Bar' : 'Professional UC Device',
-                            model: roomData.brandPreference === 'logitech' ? "RB-1000" : "UC-VB-Pro",
-                            quantity: 1,
-                            unit_price: 2700,
-                            total_price: 2700,
-                            specifications: "4K camera, premium speakers, AI-powered framing"
-                        },
-                        {
-                            name: "Room Controller",
-                            brand: roomData.brandPreference === 'logitech' ? 'Logitech Tap IP' : 'Professional Controller',
-                            model: "TAP-IP-001",
-                            quantity: 1,
-                            unit_price: 1200,
-                            total_price: 1200,
-                            specifications: "Touch interface, calendar integration, wireless connectivity"
-                        }
-                    ],
-                    "Audio: Speakers & Amplifiers": [
-                        {
-                            name: "Ceiling Speaker System",
-                            brand: "Professional Audio",
-                            model: "CS-6000",
-                            quantity: 4,
-                            unit_price: 650,
-                            total_price: 2600,
-                            specifications: "High-fidelity audio, recessed mount, zone control"
-                        }
-                    ],
-                    "Audio: Microphones & Conferencing": [
-                        {
-                            name: "Wireless Microphone Array",
-                            brand: roomData.brandPreference === 'logitech' ? 'Logitech' : 'Professional Audio',
-                            model: "WMA-4000",
-                            quantity: 2,
-                            unit_price: 1100,
-                            total_price: 2200,
-                            specifications: "Beamforming technology, wireless, noise cancellation"
-                        }
-                    ],
-                    "Installation & Services": [
-                        {
-                            name: "Professional Installation",
-                            brand: "Certified Installer",
-                            model: "INST-FULL",
-                            quantity: 1,
-                            unit_price: 2500,
-                            total_price: 2500,
-                            specifications: "Complete installation, testing, and commissioning"
-                        },
-                        {
-                            name: "System Configuration",
-                            brand: "Technical Services",
-                            model: "SYS-CONFIG",
-                            quantity: 1,
-                            unit_price: 1200,
-                            total_price: 1200,
-                            specifications: "Network setup, device configuration, user training"
-                        }
-                    ]
-                },
-                recommendations: [
-                    `Optimized for ${roomData.useCase} with ${roomData.roomSize} capacity`,
-                    `${roomData.brandPreference ? roomData.brandPreference.charAt(0).toUpperCase() + roomData.brandPreference.slice(1) : 'Multi-brand'} ecosystem for seamless integration`,
-                    `${roomData.budgetRange.charAt(0).toUpperCase() + roomData.budgetRange.slice(1)} tier equipment selected`,
-                    "Future-ready 4K infrastructure",
-                    "Hybrid meeting optimized setup"
-                ]
-            };
-            
-            currentBoqData = fallbackBoQ;
-            displayFullBoQ(fallbackBoQ);
-            showToast('Fallback BOQ generated successfully!', 'info');
-        }
-        
-        function displayFullBoQ(data) {
-            const boqContent = document.getElementById('boqContent');
-            
-            let html = `
-                <div class="space-y-4">
-                    <div class="boq-section">
-                        <h3 class="text-lg font-semibold text-white mb-3">📋 Project Information</h3>
-                        <div class="space-y-2 text-sm">
-                            <div><strong>Project:</strong> ${data.project.name}</div>
-                            <div><strong>Client:</strong> ${data.project.client}</div>
-                            <div><strong>Date:</strong> ${data.project.date}</div>
-                            <div><strong>Room Size:</strong> ${data.project.room_size}</div>
-                        </div>
-                    </div>
-            `;
-            
-            let totalCost = 0;
-            
-            for (const [category, items] of Object.entries(data.boq)) {
-                html += `
-                    <div class="boq-section">
-                        <h3 class="text-lg font-semibold text-white mb-3">${category}</h3>
-                        <div class="space-y-2">
-                `;
-                
-                items.forEach(item => {
-                    totalCost += item.total_price;
-                    html += `
-                        <div class="boq-item">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <div class="font-semibold text-white">${item.name}</div>
-                                    <div class="text-sm text-blue-300">${item.brand} - ${item.model}</div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="font-semibold text-green-300">$${item.total_price.toLocaleString()}</div>
-                                    <div class="text-xs text-white/60">${item.quantity} × $${item.unit_price.toLocaleString()}</div>
-                                </div>
-                            </div>
-                            <div class="text-xs text-white/70">${item.specifications}</div>
-                        </div>
-                    `;
-                });
-                
-                html += `
-                        </div>
-                    </div>
-                `;
-            }
-            
-            html += `
-                    <div class="border-t-2 border-green-400 pt-4 mt-6">
-                        <div class="flex justify-between items-center text-xl font-bold">
-                            <span>Total Project Cost:</span>
-                            <span class="text-green-300">$${totalCost.toLocaleString()}</span>
-                        </div>
-                    </div>
-            `;
-            
-            if (data.recommendations && data.recommendations.length > 0) {
-                html += `
-                    <div class="recommendations">
-                        <h3 class="text-lg font-semibold text-white mb-3">💡 AI Recommendations</h3>
-                        <ul class="space-y-2 text-sm">
-                            ${data.recommendations.map(rec => `<li class="flex items-start"><span class="text-green-400 mr-2">•</span>${rec}</li>`).join('')}
-                        </ul>
-                    </div>
-                `;
-            }
-            
-            html += '</div>';
-            boqContent.innerHTML = html;
-        }
-        
-        function updateBoQ() {
-            if (placedEquipment.length === 0) {
-                document.getElementById('boqContent').innerHTML = `
-                    <div class="text-center py-8 text-white/60">
-                        <div class="text-lg mb-2">🎯 Ready to Design</div>
-                        <div class="text-sm">Use AI Generate for intelligent system design or place equipment manually in the 3D room</div>
-                    </div>
-                `;
-                return;
-            }
-            
-            const categories = {};
-            let totalCost = 0;
-            
-            placedEquipment.forEach(item => {
-                if (!categories[item.category]) {
-                    categories[item.category] = [];
-                }
-                categories[item.category].push(item);
-                totalCost += item.price;
-            });
-            
-            let html = '<div class="space-y-4">';
-            
-            for (const [category, items] of Object.entries(categories)) {
-                html += `
-                    <div class="boq-section">
-                        <h3 class="text-lg font-semibold text-white mb-3">${category}</h3>
-                        <div class="space-y-2">
-                `;
-                
-                items.forEach(item => {
-                    html += `
-                        <div class="boq-item">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="font-semibold text-white">${item.name}</div>
-                                    <div class="text-sm text-blue-300">Manually Placed</div>
-                                </div>
-                                <div class="text-green-300 font-semibold">$${item.price.toLocaleString()}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                html += '</div></div>';
-            }
-            
-            html += `
-                <div class="border-t-2 border-green-400 pt-4 mt-6">
-                    <div class="flex justify-between items-center text-xl font-bold">
-                        <span>Current Total:</span>
-                        <span class="text-green-300">$${totalCost.toLocaleString()}</span>
-                    </div>
-                </div>
-            </div>`;
-            
-            document.getElementById('boqContent').innerHTML = html;
-        }
-        
-        function exportBoQ() {
-            if (!currentBoqData && placedEquipment.length === 0) {
-                showToast('No BOQ data to export', 'error');
-                return;
-            }
-            
-            let exportData;
-            
-            if (currentBoqData) {
-                exportData = currentBoqData;
-            } else {
-                // Create export data from manually placed equipment
-                const categories = {};
-                let totalCost = 0;
-                
-                placedEquipment.forEach(item => {
-                    if (!categories[item.category]) {
-                        categories[item.category] = [];
-                    }
-                    categories[item.category].push({
-                        name: item.name,
-                        brand: "Manual Selection",
-                        model: "N/A",
-                        quantity: 1,
-                        unit_price: item.price,
-                        total_price: item.price,
-                        specifications: "Manually placed equipment"
-                    });
-                    totalCost += item.price;
-                });
-                
-                exportData = {
-                    project: {
-                        name: document.getElementById('projectName').value || "Manual 3D Room Design",
-                        client: document.getElementById('clientName').value || "Client",
-                        date: new Date().toLocaleDateString(),
-                        room_size: `${roomWidth}m × ${roomDepth}m × ${roomHeight}m`
-                    },
-                    boq: categories,
-                    total_cost: totalCost
-                };
-            }
-            
-            // Create and download JSON file
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `AV_Room_BOQ_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showToast('BOQ exported successfully!', 'success');
-        }
-        
-        function clearAllEquipment() {
-            // Remove equipment meshes from scene
-            placedEquipment.forEach(item => {
-                if (item.mesh) {
-                    scene.remove(item.mesh);
-                }
-            });
-            
-            placedEquipment = [];
-            currentBoqData = null;
-            updateBoQ();
-            showToast('All equipment cleared', 'info');
-        }
-        
-        function showLoadingOverlay(show) {
-            const overlay = document.getElementById('loadingOverlay');
-            if (show) {
-                overlay.classList.remove('hidden');
-            } else {
-                overlay.classList.add('hidden');
-            }
-        }
-        
-        function showToast(message, type = 'info') {
-            const toastContainer = document.getElementById('toastContainer');
-            
-            const colors = {
-                success: 'bg-green-600',
-                error: 'bg-red-600',
-                info: 'bg-blue-600',
-                warning: 'bg-yellow-600'
-            };
-            
-            const toast = document.createElement('div');
-            toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-lg font-semibold shadow-lg`;
-            toast.textContent = message;
-            
-            toastContainer.appendChild(toast);
-            
-            // Show toast
-            setTimeout(() => toast.classList.add('show'), 100);
-            
-            // Hide and remove toast
+        document.addEventListener('DOMContentLoaded', () => {
+            roomDesigner = new Enhanced3DRoomDesigner();
+            setupEquipmentSearch();
+            setupExportFeatures();
+            setupContextMenu();
+            
+            // Hide interactive hint after 10 seconds
             setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toastContainer.removeChild(toast), 400);
-            }, 3000);
-        }
-        
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            // Add subtle rotation to placed equipment
-            placedEquipment.forEach((item, index) => {
-                if (item.mesh) {
-                    item.mesh.rotation.y += 0.005 * (index % 2 === 0 ? 1 : -1);
+                const hint = document.getElementById('interactiveHint');
+                if (hint) {
+                    hint.style.opacity = '0';
+                    setTimeout(() => hint.remove(), 500);
                 }
-            });
-            
-            renderer.render(scene, camera);
-        }
+            }, 10000);
+        });
         
-        // Initialize the application when DOM is loaded
-        document.addEventListener('DOMContentLoaded', init);
+        // Global functions for BOQ management
+        window.roomDesigner = null; // Will be set when initialized
+        
+        // Make functions globally accessible for onclick handlers
+        window.editBOQItem = function(category, name) {
+            if (window.roomDesigner) {
+                window.roomDesigner.editBOQItem(category, name);
+            }
+        };
+        
+        window.removeBOQItem = function(category, name) {
+            if (window.roomDesigner) {
+                window.roomDesigner.removeBOQItem(category, name);
+            }
+        };
+        
     </script>
 </body>
 </html>
-            
-            // Table legs
+            <h2
