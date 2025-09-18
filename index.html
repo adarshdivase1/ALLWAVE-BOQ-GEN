@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AV Product List Generator</title>
+    <title>3D AV Room Designer & Specifier</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -33,7 +33,7 @@
 <body>
     <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex-col items-center justify-center z-50 hidden">
         <div class="loading-spinner mb-4"></div>
-        <div class="text-white text-lg font-semibold">Generating Product List...</div>
+        <div class="text-white text-lg font-semibold">Generating Logical Product List...</div>
     </div>
     <div id="renderContainer"></div>
     <div id="controlPanel" class="control-panel premium-glass rounded-2xl p-6">
@@ -63,7 +63,7 @@
                 </select>
             </div>
         </div>
-        <button id="quickGenerate" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg">🤖 AI Generate List</button>
+        <button id="quickGenerate" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg">🤖 Generate Logical List</button>
         <div class="space-y-4 mt-6">
             <h3 class="text-lg font-semibold">Product Library</h3>
             <div id="equipmentLibrary" class="space-y-2 max-h-96 overflow-y-auto"></div>
@@ -75,13 +75,24 @@
             <button id="clearAll" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg">🗑️ Clear</button>
         </div>
         <div id="boqContent" class="space-y-4">
-            <div class="text-center text-gray-400 py-8">Your product list will appear here.</div>
+            <div class="text-center text-gray-400 py-8">Your generated product list will appear here.</div>
         </div>
     </div>
 
     <script>
-        const BACKEND_URL = 'https://adarshav-boq-backend.hf.space'; // Make sure this is your correct backend URL
+        const BACKEND_URL = 'https://adarshdivase1-allwave-boq-gen.hf.space'; // Make sure this is your correct backend URL
         let scene, camera, renderer, controls;
+        let allEquipmentData = [];
+        let placedEquipment = [];
+        const TABLE_HEIGHT = 0.75;
+        const equipmentSizeDatabase = {
+            'default': { width: 0.5, height: 0.5, depth: 0.1, color: 0x555555 },
+            'Displays & Projectors': { width: 1.45, height: 0.84, depth: 0.06, color: 0x1a1a1a },
+            'UC & Collaboration Devices': { width: 0.9, height: 0.16, depth: 0.12, color: 0x333333 },
+            'Audio Systems': { width: 0.6, height: 0.05, depth: 0.6, color: 0xf5f5f5 },
+            'Mounts, Racks & Enclosures': { width: 0.5, height: 1.0, depth: 0.6, color: 0x2d3748 },
+            'Cables & Connectors': { width: 0.1, height: 0.1, depth: 0.1, color: 0x888888 },
+        };
         
         document.addEventListener('DOMContentLoaded', init);
 
@@ -99,9 +110,10 @@
                 if (!response.ok) throw new Error(`Server responded with status ${response.status}`);
                 const products = await response.json();
                 
+                allEquipmentData = products; // Cache the full list
                 library.innerHTML = '';
                 if(products.length === 0) {
-                    library.innerHTML = '<div class="text-gray-400 p-2">No products found in the database.</div>';
+                    library.innerHTML = '<div class="text-gray-400 p-2">No products found. Run ingest script.</div>';
                     return;
                 }
 
@@ -136,7 +148,8 @@
         function setupEventListeners() {
             document.getElementById('quickGenerate').addEventListener('click', handleAIGenerateClick);
             document.getElementById('clearAll').addEventListener('click', () => {
-                document.getElementById('boqContent').innerHTML = '<div class="text-center text-gray-400 py-8">Your product list will appear here.</div>';
+                document.getElementById('boqContent').innerHTML = '<div class="text-center text-gray-400 py-8">List cleared.</div>';
+                clear3DScene();
             });
         }
 
@@ -158,6 +171,7 @@
                 const result = await response.json();
                 if (result.status !== 'success') throw new Error(result.message || 'Failed to generate list.');
                 renderBackendList(result.list);
+                placeModelsFromBackend(result.list);
             } catch (error) {
                 document.getElementById('boqContent').innerHTML = `<div class="text-red-400 p-4">Error: ${error.message}</div>`;
                 console.error('Error generating list:', error);
@@ -170,7 +184,7 @@
             const boqContent = document.getElementById('boqContent');
             boqContent.innerHTML = '';
             if (!listData.sections || listData.sections.length === 0) {
-                boqContent.innerHTML = `<div class="text-center text-gray-400 py-8">No products recommended for this configuration.</div>`;
+                boqContent.innerHTML = `<div class="text-center text-gray-400 py-8">No products recommended.</div>`;
                 return;
             }
             listData.sections.forEach(section => {
@@ -187,7 +201,41 @@
                 boqContent.innerHTML += sectionHtml;
             });
         }
+        
+        function placeModelsFromBackend(listData) {
+            clear3DScene();
+            const itemsToPlace = [];
+            listData.sections.forEach(section => {
+                section.items.forEach(item => {
+                    const fullProductData = allEquipmentData.find(p => p.id === item.productId);
+                    if (fullProductData) itemsToPlace.push(fullProductData);
+                });
+            });
+            const smartLayout = getSmartLayout(itemsToPlace);
+            smartLayout.forEach((item, index) => {
+                setTimeout(() => createEquipment(item.data, item.position), index * 50);
+            });
+        }
+        
+        function getSmartLayout(items) {
+            const layout = [];
+            let counters = {};
+            items.forEach(itemData => {
+                let position = { x: 0, y: 0.5, z: 0 };
+                const cat = itemData.category || 'default';
+                counters[cat] = (counters[cat] || 0) + 1;
+                let count = counters[cat];
+                if (cat.includes('Display')) position = { x: 0, y: 1.5, z: -2.9 };
+                else if (cat.includes('UC')) position = { x: 0, y: 2.7, z: 2.8 };
+                else if (cat.includes('Audio')) position = { x: (count % 2 === 0 ? 1 : -1) * 2, y: 2.9, z: 0 };
+                else if (cat.includes('Mounts')) position = { x: -3.7, y: 0.5, z: -2.7 };
+                else position = { x: 2 + (count * 0.2), y: 0.1, z: 2.8 };
+                layout.push({ data: itemData, position });
+            });
+            return layout;
+        }
 
+        // --- 3D Scene Management ---
         function initThreeJS() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f0f23);
@@ -197,13 +245,61 @@
             document.getElementById('renderContainer').appendChild(renderer.domElement);
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            scene.add(new THREE.AmbientLight(0x404040, 3));
+            scene.add(new THREE.AmbientLight(0xcccccc, 1.5));
             const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(5, 5, 5);
+            light.position.set(5, 10, 7.5);
             scene.add(light);
-            camera.position.z = 5;
+            createRoom(8, 6, 3);
+            camera.position.set(0, 4, 8);
             animate();
         }
+
+        function createRoom(width, depth, height) {
+            const roomGroup = new THREE.Group();
+            roomGroup.name = 'room';
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 }));
+            floor.rotation.x = -Math.PI / 2;
+            roomGroup.add(floor);
+            const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x2d3748, side: THREE.DoubleSide });
+            const backWall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wallMaterial);
+            backWall.position.set(0, height / 2, -depth / 2);
+            roomGroup.add(backWall);
+            const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(depth, height), wallMaterial);
+            leftWall.position.set(-width / 2, height / 2, 0);
+            leftWall.rotation.y = Math.PI / 2;
+            roomGroup.add(leftWall);
+            if (width > 3.5 && depth > 2.5) roomGroup.add(createConferenceTable(width, depth));
+            scene.add(roomGroup);
+        }
+
+        function createConferenceTable(roomWidth, roomDepth) {
+            const tableGroup = new THREE.Group();
+            const tableW = Math.max(1.2, roomWidth * 0.5);
+            const tableD = Math.max(2.4, roomDepth * 0.6);
+            const tabletop = new THREE.Mesh(new THREE.BoxGeometry(tableD, 0.05, tableW), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4 }));
+            tabletop.position.y = TABLE_HEIGHT;
+            tableGroup.add(tabletop);
+            return tableGroup;
+        }
+
+        function createEquipment(data, position) {
+            const sizeInfo = equipmentSizeDatabase[data.category] || equipmentSizeDatabase['default'];
+            const equipmentMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(sizeInfo.width, sizeInfo.height, sizeInfo.depth),
+                new THREE.MeshStandardMaterial({ color: sizeInfo.color, roughness: 0.4 })
+            );
+            equipmentMesh.position.set(position.x, position.y, position.z);
+            equipmentMesh.userData = data; // Attach data for identification
+            equipmentMesh.name = "equipment";
+            placedEquipment.push(equipmentMesh);
+            scene.add(equipmentMesh);
+        }
+
+        function clear3DScene() {
+            placedEquipment.forEach(obj => scene.remove(obj));
+            placedEquipment = [];
+        }
+
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
