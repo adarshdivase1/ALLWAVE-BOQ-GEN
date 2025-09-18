@@ -3,119 +3,815 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart 3D AV Room Designer & BOQ Generator</title>
+    <title>Smart AV BOQ Generator - Professional Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --accent-blue: #3b82f6;
+            --primary-bg: #0a0a0f;
+            --secondary-bg: #1a1a2e;
+            --accent-color: #3b82f6;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
         }
-        body { font-family: 'Inter', sans-serif; background: var(--primary-gradient); color: white; overflow: hidden; }
-        .premium-glass { background: var(--glass-bg); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); }
-        .panel { position: fixed; top: 20px; z-index: 100; max-width: 420px; max-height: calc(100vh - 40px); overflow-y: auto; }
-        .control-panel { left: 20px; }
-        .boq-panel { right: 20px; }
-        .form-input, .form-select { width: 100%; background: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; border-radius: 8px !important; padding: 12px 16px !important; color: white !important; transition: border-color 0.3s; }
-        .form-input:focus, .form-select:focus { outline: none; border-color: var(--accent-blue); }
-        .form-select option { background: #1a1a2e; }
-        .loading-spinner { border: 3px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 3px solid white; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .boq-section { border-left: 4px solid var(--accent-blue); padding-left: 16px; margin-bottom: 20px; }
-        .boq-item { background: rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
-        #renderContainer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, var(--secondary-bg) 100%);
+            color: white;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .form-control {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 8px !important;
+            padding: 12px 16px !important;
+            color: white !important;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .form-control:focus {
+            outline: none !important;
+            border-color: var(--accent-color) !important;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #1d4ed8 100%);
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-online { background-color: var(--success-color); }
+        .status-offline { background-color: var(--error-color); }
+        .status-loading { background-color: var(--warning-color); animation: pulse 2s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .boq-section {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .boq-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .boq-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-color);
+        }
+        
+        .scrollbar-custom::-webkit-scrollbar { width: 8px; }
+        .scrollbar-custom::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
+        .scrollbar-custom::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 10px; }
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+        
+        .panel {
+            position: fixed;
+            top: 20px;
+            z-index: 100;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        .control-panel { left: 20px; width: 400px; }
+        .results-panel { right: 20px; width: 450px; }
+        
+        #renderContainer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+        }
+        
+        .notification {
+            position: relative;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            max-width: 400px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.4s ease-in-out;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .notification.success { background: rgba(16, 185, 129, 0.9); border: 1px solid var(--success-color); }
+        .notification.error { background: rgba(239, 68, 68, 0.9); border: 1px solid var(--error-color); }
+
+        .equipment-label {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            position: absolute;
+            z-index: 10;
+            pointer-events: none;
+            white-space: nowrap;
+            transform: translate(-50%, -120%);
+            transition: opacity 0.2s;
+        }
     </style>
 </head>
 <body>
-    <div id="loadingOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-[999]" style="display: none;">
-        <div class="loading-spinner mb-4"></div>
-        <div id="loadingText" class="text-white text-lg font-semibold">Generating Smart BOQ...</div>
+    <div id="loadingOverlay" class="fixed inset-0 loading-overlay flex-col items-center justify-center z-[999]" style="display: none;">
+        <div class="spinner mb-4"></div>
+        <div id="loadingText" class="text-white text-lg font-semibold">Initializing...</div>
+        <div id="loadingSubtext" class="text-gray-400 text-sm mt-2"></div>
     </div>
 
     <div id="renderContainer"></div>
 
-    <div id="controlPanel" class="panel control-panel premium-glass rounded-2xl p-6">
-        <h2 class="text-2xl font-bold mb-5 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Smart AV Designer</h2>
-        
-        <div class="space-y-4 mb-6">
-            <h3 class="text-lg font-semibold border-b border-gray-700 pb-2">Project Details</h3>
-            <div><label class="block text-sm font-medium mb-1">Project Name</label><input type="text" id="project_name" class="form-input" value="New AV Project"></div>
-            <div><label class="block text-sm font-medium mb-1">Client Name</label><input type="text" id="client_name" class="form-input" value="Valued Client"></div>
+    <div id="controlPanel" class="panel control-panel glass-panel p-6 scrollbar-custom">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                Smart AV Designer
+            </h1>
+            <div id="connectionStatus" class="flex items-center text-sm">
+                <span class="status-indicator status-loading"></span>
+                <span id="statusText">Connecting...</span>
+            </div>
         </div>
 
-        <div class="space-y-4 mb-6">
-            <h3 class="text-lg font-semibold border-b border-gray-700 pb-2">Room Configuration</h3>
-            <div><label class="block text-sm font-medium mb-1">Room Size</label><select id="room_size" class="form-select"></select></div>
-            <div><label class="block text-sm font-medium mb-1">Primary Use Case</label><select id="use_case" class="form-select"></select></div>
-            <div><label class="block text-sm font-medium mb-1">Budget Preference</label><select id="budget_range" class="form-select"></select></div>
-            <div><label class="block text-sm font-medium mb-1">Expected Occupancy</label><input type="number" id="occupancy" class="form-input" placeholder="e.g., 10" min="1"></div>
+        <form id="configForm" class="space-y-6">
+            <div>
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-project-diagram mr-2 text-blue-400"></i> Project Details
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Project Name</label>
+                        <input type="text" id="project_name" class="form-control" value="Premium Conference Room" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Client Name</label>
+                        <input type="text" id="client_name" class="form-control" value="Enterprise Client" required>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-cube mr-2 text-green-400"></i> Room Configuration
+                </h3>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Room Size</label>
+                            <select id="room_size" class="form-control" required></select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Use Case</label>
+                            <select id="use_case" class="form-control" required></select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Budget Tier</label>
+                            <select id="budget_range" class="form-control"></select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Occupancy</label>
+                            <input type="number" id="occupancy" class="form-control" placeholder="e.g., 12" min="1" max="1000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-md font-semibold mb-3 flex items-center">
+                    <i class="fas fa-ruler mr-2 text-yellow-400"></i> Room Dimensions (ft)
+                </h4>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Length</label>
+                        <input type="number" id="room_length" class="form-control" placeholder="20" min="1" step="0.1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Width</label>
+                        <input type="number" id="room_width" class="form-control" placeholder="15" min="1" step="0.1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Height</label>
+                        <input type="number" id="room_height" class="form-control" placeholder="9" min="1" step="0.1">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="generateBtn" class="w-full btn-primary text-white font-semibold flex items-center justify-center">
+                <i class="fas fa-magic mr-2"></i> Generate & Visualize
+            </button>
+        </form>
+
+        <div class="mt-6 pt-6 border-t border-gray-700/50">
+            <h4 class="text-md font-semibold mb-3 flex items-center">
+                <i class="fas fa-gamepad mr-2 text-purple-400"></i> 3D Controls
+            </h4>
+            <div class="grid grid-cols-2 gap-2 text-sm text-gray-400">
+                <div><i class="fas fa-arrows-alt mr-2"></i>Orbit: L-Click + Drag</div>
+                <div><i class="fas fa-search-plus mr-2"></i>Zoom: Mouse Wheel</div>
+                <div><i class="fas fa-hand-paper mr-2"></i>Pan: R-Click + Drag</div>
+                <div><i class="fas fa-sync-alt mr-2"></i>Reset: Double Click</div>
+            </div>
         </div>
-        
-        <button id="generateBoq" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-transform transform hover:scale-105">
-            🤖 Generate BOQ & Visualize
-        </button>
     </div>
 
-    <div id="boqPanel" class="panel boq-panel premium-glass rounded-2xl p-6" style="display: none;">
+    <div id="resultsPanel" class="panel results-panel glass-panel p-6 scrollbar-custom" style="display: none;">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold">Generated BOQ</h2>
-            <button id="clearBoq" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg">🗑️ Clear</button>
+            <h2 class="text-xl font-bold flex items-center">
+                <i class="fas fa-chart-bar mr-2 text-green-400"></i> Generated Results
+            </h2>
+            <div class="flex space-x-2">
+                <button id="exportBtn" title="Export BOQ as JSON" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button id="clearBtn" title="Clear Results" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-colors">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
         </div>
-        <div id="boqContent" class="space-y-4">
-             <div class="text-center text-gray-400 py-8">Your generated BOQ and room analysis will appear here.</div>
-        </div>
+        <div id="resultsContent" class="space-y-4"></div>
     </div>
+
+    <div id="notifications" class="fixed top-5 right-5 z-[1000] space-y-3 w-80"></div>
 
     <script>
-        const BACKEND_URL = 'http://127.0.0.1:8000'; // Standard local FastAPI address
-        
-        // --- 3D Scene Globals ---
-        let scene, camera, renderer, controls;
-        let placedEquipment = [];
-        const equipmentSizeDatabase = {
-            'default': { width: 0.5, height: 0.5, depth: 0.1, color: 0x555555 },
-            'Displays & Projectors': { width: 1.8, height: 1.0, depth: 0.08, color: 0x1a1a1a },
-            'UC & Collaboration Devices': { width: 0.8, height: 0.15, depth: 0.12, color: 0xcccccc },
-            'Audio Systems': { width: 0.2, height: 0.8, depth: 0.2, color: 0x333333 },
-            'Mounts, Racks & Enclosures': { width: 0.6, height: 1.2, depth: 0.6, color: 0x2d3748 },
-            'Cables & Connectors': { width: 0.1, height: 0.1, depth: 0.1, color: 0x888888 },
+        // --- CONFIGURATION ---
+        const CONFIG = {
+             BACKEND_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                ? 'http://localhost:8000' 
+                : 'http://127.0.0.1:8000', // Replace with your production URL if needed
+            CONNECTION_TIMEOUT: 5000
         };
 
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', init);
+        // --- GLOBAL STATE ---
+        const AppState = {
+            scene: null, camera: null, renderer: null, controls: null,
+            placedEquipment: [], isBackendConnected: false, currentBOQ: null, animationId: null,
+            equipmentLabels: []
+        };
 
-        function init() {
-            initThreeJS();
-            setupEventListeners();
-            populateDropdowns();
+        // --- EQUIPMENT DATABASE ---
+        const EQUIPMENT_DATABASE = {
+            'Displays & Projectors': { size: { width: 1.8, height: 1.0, depth: 0.08 }, color: 0x1a1a1a, position: { x: 0, y: 1.5, z: -2.9 } },
+            'UC & Collaboration Devices': { size: { width: 0.8, height: 0.15, depth: 0.12 }, color: 0xcccccc, position: { x: 0, y: 2.2, z: -2.85 } },
+            'Audio Systems': { size: { width: 0.2, height: 0.6, depth: 0.2 }, color: 0x4a5568, positions: [{ x: -2.8, y: 1.5, z: -2.8 }, { x: 2.8, y: 1.5, z: -2.8 }] },
+            'Mounts, Racks & Enclosures': { size: { width: 0.6, height: 1.8, depth: 0.6 }, color: 0x2d3748, position: { x: 3.5, y: 0.9, z: 2.0 } },
+            'default': { size: { width: 0.3, height: 0.3, depth: 0.3 }, color: 0x718096, position: { x: 0, y: 0.15, z: 2.5 } }
+        };
+        
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        async function initializeApp() {
+            showLoading('Initializing...', 'Setting up 3D environment');
+            try {
+                initializeThreeJS();
+                await checkBackendConnection();
+                await loadConfiguration();
+                setupEventListeners();
+                showNotification('Application initialized successfully', 'success');
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                showNotification(`Initialization failed: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
+            }
         }
 
-        async function populateDropdowns() {
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/enums`);
-                if (!response.ok) throw new Error('Failed to fetch configuration options from backend.');
-                const enums = await response.json();
+        // --- THREE.JS SETUP ---
+        function initializeThreeJS() {
+            const container = document.getElementById('renderContainer');
+            AppState.scene = new THREE.Scene();
+            AppState.scene.background = new THREE.Color(0x0a0a0f);
+            AppState.scene.fog = new THREE.Fog(0x0a0a0f, 10, 30);
+            
+            AppState.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            AppState.camera.position.set(6, 4, 8);
+            
+            AppState.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+            AppState.renderer.setSize(window.innerWidth, window.innerHeight);
+            AppState.renderer.shadowMap.enabled = true;
+            AppState.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            AppState.renderer.outputEncoding = THREE.sRGBEncoding;
+            AppState.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            AppState.renderer.toneMappingExposure = 1.1;
+            container.appendChild(AppState.renderer.domElement);
 
-                populateSelect('room_size', enums.room_sizes);
-                populateSelect('use_case', enums.use_cases);
-                populateSelect('budget_range', enums.budget_tiers);
+            setupCustomOrbitControls();
+            setupLighting();
+            createProfessionalRoom();
+            animate();
+            
+            window.addEventListener('resize', handleWindowResize);
+        }
+        
+        function setupCustomOrbitControls() {
+            const domElement = AppState.renderer.domElement;
+            const target = new THREE.Vector3(0, 1, 0);
+            let spherical = new THREE.Spherical();
+            spherical.setFromVector3(AppState.camera.position.clone().sub(target));
+
+            let state = {
+                isMouseDown: false, isRightMouseDown: false,
+                prevMouse: { x: 0, y: 0 }
+            };
+
+            const updateCamera = () => {
+                AppState.camera.position.setFromSpherical(spherical).add(target);
+                AppState.camera.lookAt(target);
+            };
+
+            domElement.addEventListener('mousedown', e => {
+                if (e.button === 0) state.isMouseDown = true;
+                if (e.button === 2) state.isRightMouseDown = true;
+                state.prevMouse = { x: e.clientX, y: e.clientY };
+            });
+            
+            domElement.addEventListener('mouseup', e => {
+                if (e.button === 0) state.isMouseDown = false;
+                if (e.button === 2) state.isRightMouseDown = false;
+            });
+
+            domElement.addEventListener('mousemove', e => {
+                if (!state.isMouseDown && !state.isRightMouseDown) return;
+                const delta = { x: e.clientX - state.prevMouse.x, y: e.clientY - state.prevMouse.y };
+                state.prevMouse = { x: e.clientX, y: e.clientY };
+                
+                if (state.isMouseDown) { // Orbit
+                    spherical.theta -= delta.x * 0.005;
+                    spherical.phi -= delta.y * 0.005;
+                    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+                } else { // Pan
+                    const panOffset = new THREE.Vector3().copy(AppState.camera.position).sub(target);
+                    let targetDistance = panOffset.length();
+                    targetDistance *= Math.tan((AppState.camera.fov / 2) * Math.PI / 180.0);
+                    const panX = -2 * delta.x * (targetDistance / domElement.clientHeight);
+                    const panY = 2 * delta.y * (targetDistance / domElement.clientHeight);
+                    const panVector = new THREE.Vector3(panX, panY, 0).applyEuler(AppState.camera.rotation);
+                    target.add(panVector);
+                }
+                updateCamera();
+            });
+
+            domElement.addEventListener('wheel', e => {
+                spherical.radius = Math.max(2, Math.min(20, spherical.radius + e.deltaY * 0.01));
+                updateCamera();
+            });
+
+            domElement.addEventListener('dblclick', () => {
+                AppState.camera.position.set(6, 4, 8);
+                target.set(0, 1, 0);
+                spherical.setFromVector3(AppState.camera.position.clone().sub(target));
+                updateCamera();
+                showNotification('Camera view reset', 'success');
+            });
+            domElement.addEventListener('contextmenu', e => e.preventDefault());
+        }
+
+        function setupLighting() {
+            AppState.scene.add(new THREE.AmbientLight(0x404040, 0.5));
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            sunLight.position.set(8, 10, 5);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.set(2048, 2048);
+            AppState.scene.add(sunLight);
+            
+            const fillLight = new THREE.HemisphereLight(0x87ceeb, 0x080820, 0.4);
+            AppState.scene.add(fillLight);
+
+            const pointLight = new THREE.PointLight(0x3b82f6, 0.8, 15);
+            pointLight.position.set(0, 2.8, -2.5);
+            AppState.scene.add(pointLight);
+        }
+
+        // --- CORE APPLICATION LOGIC ---
+        function setupEventListeners() {
+            document.getElementById('configForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('clearBtn').addEventListener('click', clearResults);
+            document.getElementById('exportBtn').addEventListener('click', handleExport);
+        }
+        
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            if (!AppState.isBackendConnected) {
+                showNotification('Backend is not connected. Cannot generate.', 'error');
+                return;
+            }
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.disabled = true;
+
+            showLoading('Generating Smart BOQ...', 'Contacting AI recommendation engine');
+            try {
+                // Collect form data
+                const config = {
+                    project_name: document.getElementById('project_name').value,
+                    client_name: document.getElementById('client_name').value,
+                    room_size: document.getElementById('room_size').value,
+                    use_case: document.getElementById('use_case').value,
+                    budget_range: document.getElementById('budget_range').value,
+                    occupancy: parseInt(document.getElementById('occupancy').value) || null,
+                    room_dimensions: null
+                };
+                
+                const length = parseFloat(document.getElementById('room_length').value);
+                const width = parseFloat(document.getElementById('room_width').value);
+                const height = parseFloat(document.getElementById('room_height').value);
+                if (length && width && height) {
+                    config.room_dimensions = { length, width, height };
+                    createProfessionalRoom(length, width, height); // Resize room
+                }
+
+                // API Calls
+                const boq = await fetchAPI('/api/generate-boq', config);
+                showLoading('Creating Visualization...', 'Calculating equipment placement');
+                const vizData = await fetchAPI('/api/visualize-room', config);
+                
+                AppState.currentBOQ = boq;
+                renderResults(boq, vizData);
+                placeEquipmentInScene(boq);
+                
+                showNotification('BOQ and Visualization generated successfully!', 'success');
             } catch (error) {
-                console.error("Error populating dropdowns:", error);
-                alert("Could not connect to the backend to get configuration options. Please ensure the backend server is running.");
+                console.error('Generation failed:', error);
+                showNotification(error.message, 'error');
+            } finally {
+                hideLoading();
+                generateBtn.disabled = false;
             }
         }
         
-        function populateSelect(elementId, options) {
-            const select = document.getElementById(elementId);
+        async function loadConfiguration() {
+             if (!AppState.isBackendConnected) throw new Error('Backend not connected');
+            try {
+                const config = await fetchAPI('/api/enums');
+                populateDropdown('room_size', config.room_sizes);
+                populateDropdown('use_case', config.use_cases);
+                populateDropdown('budget_range', config.budget_tiers);
+
+                // Set default values
+                document.getElementById('room_size').value = 'medium';
+                document.getElementById('use_case').value = 'conference';
+                document.getElementById('budget_range').value = 'standard';
+            } catch (error) {
+                throw new Error('Failed to load application configuration from backend.');
+            }
+        }
+        
+        // --- API & DATA HANDLING ---
+        async function fetchAPI(endpoint, body = null) {
+            const options = {
+                method: body ? 'POST' : 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            };
+            if (body) options.body = JSON.stringify(body);
+            
+            const response = await fetch(CONFIG.BACKEND_URL + endpoint, options);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: `Server error with status ${response.status}` }));
+                throw new Error(errorData.detail || 'An unknown error occurred.');
+            }
+            return response.json();
+        }
+        
+        function handleExport() {
+            if (!AppState.currentBOQ) {
+                showNotification('No BOQ to export.', 'error');
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(AppState.currentBOQ, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            const projectName = AppState.currentBOQ.project_info.project_name.replace(/\s+/g, '_');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `${projectName}_BOQ.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            showNotification('BOQ exported successfully.', 'success');
+        }
+
+        // --- 3D SCENE & VISUALIZATION ---
+        function createProfessionalRoom(width = 8, depth = 6, height = 3) {
+            const existingRoom = AppState.scene.getObjectByName('room');
+            if (existingRoom) AppState.scene.remove(existingRoom);
+            const roomGroup = new THREE.Group();
+            roomGroup.name = 'room';
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 0.8, metalness: 0.1 }));
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            roomGroup.add(floor);
+            
+            const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x4a5568, side: THREE.DoubleSide, roughness: 0.9 });
+            const backWall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wallMaterial);
+            backWall.position.set(0, height / 2, -depth / 2);
+            backWall.receiveShadow = true;
+            roomGroup.add(backWall);
+            
+            const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(depth, height), wallMaterial);
+            leftWall.position.set(-width / 2, height / 2, 0);
+            leftWall.rotation.y = Math.PI / 2;
+            leftWall.receiveShadow = true;
+            roomGroup.add(leftWall);
+
+            roomGroup.add(createConferenceTable());
+            AppState.scene.add(roomGroup);
+        }
+
+        function createConferenceTable() {
+            const tableGroup = new THREE.Group();
+            const tableTop = new THREE.Mesh(new THREE.BoxGeometry(4, 0.08, 1.8), new THREE.MeshStandardMaterial({ color: 0x1a202c, roughness: 0.3, metalness: 0.1 }));
+            tableTop.position.y = 0.76;
+            tableTop.castShadow = true;
+            tableTop.receiveShadow = true;
+            tableGroup.add(tableTop);
+            
+            const legMaterial = new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 0.4, metalness: 0.6 });
+            const legGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.76);
+            [-1.8, 1.8].forEach(x => {
+                [-0.7, 0.7].forEach(z => {
+                    const leg = new THREE.Mesh(legGeometry, legMaterial);
+                    leg.position.set(x, 0.38, z);
+                    leg.castShadow = true;
+                    tableGroup.add(leg);
+                });
+            });
+            return tableGroup;
+        }
+        
+        function placeEquipmentInScene(boq) {
+            clear3DScene();
+            let audioCount = 0;
+            boq.sections.forEach(section => {
+                section.items.forEach(item => {
+                    const category = item.category;
+                    const dbEntry = EQUIPMENT_DATABASE[category] || EQUIPMENT_DATABASE['default'];
+                    let position = dbEntry.position;
+                    if (category === 'Audio Systems' && dbEntry.positions) {
+                        position = dbEntry.positions[audioCount % dbEntry.positions.length];
+                        audioCount++;
+                    }
+                    if (position) {
+                        const mesh = createEquipmentMesh(item, dbEntry);
+                        mesh.position.set(position.x, position.y, position.z);
+                        AppState.scene.add(mesh);
+                        AppState.placedEquipment.push(mesh);
+                    }
+                });
+            });
+        }
+        
+        function createEquipmentMesh(item, dbEntry) {
+            const { size, color } = dbEntry;
+            const geometry = new THREE.BoxGeometry(size.width, size.height, size.depth);
+            const material = new THREE.MeshStandardMaterial({ color, roughness: 0.5 });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData = { name: item.name };
+
+            // Add Label
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'equipment-label';
+            labelDiv.textContent = item.name;
+            document.body.appendChild(labelDiv);
+            AppState.equipmentLabels.push({ div: labelDiv, mesh: mesh });
+
+            return mesh;
+        }
+        
+        function clear3DScene() {
+            AppState.placedEquipment.forEach(obj => AppState.scene.remove(obj));
+            AppState.placedEquipment = [];
+            AppState.equipmentLabels.forEach(label => label.div.remove());
+            AppState.equipmentLabels = [];
+        }
+        
+        function animate() {
+            AppState.animationId = requestAnimationFrame(animate);
+            updateLabels();
+            AppState.renderer.render(AppState.scene, AppState.camera);
+        }
+
+        // --- UI & UTILITY FUNCTIONS ---
+        function renderResults(boq, vizData) {
+            const contentEl = document.getElementById('resultsContent');
+            contentEl.innerHTML = ''; // Clear previous
+            
+            // Summary
+            contentEl.innerHTML += createSummaryHTML(boq.summary);
+            // Visualization Details
+            contentEl.innerHTML += createVizDetailsHTML(vizData);
+            // BOQ Sections
+            boq.sections.forEach(section => {
+                contentEl.innerHTML += createSectionHTML(section);
+            });
+            // Recommendations
+            if (boq.recommendations.length > 0) {
+                contentEl.innerHTML += createRecommendationsHTML(boq.recommendations);
+            }
+            document.getElementById('resultsPanel').style.display = 'block';
+        }
+        
+        function createSummaryHTML(summary) {
+            return `
+                <div class="boq-section">
+                    <h3 class="text-lg font-semibold mb-3 text-blue-300 flex items-center"><i class="fas fa-file-invoice-dollar mr-2"></i> Project Summary</h3>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="boq-item !p-3 !mb-0"><span class="font-semibold text-gray-400">Total Cost:</span><br>$${summary.total_cost.toFixed(2)}</div>
+                        <div class="boq-item !p-3 !mb-0"><span class="font-semibold text-gray-400">Total Items:</span><br>${summary.total_items}</div>
+                        <div class="boq-item !p-3 !mb-0"><span class="font-semibold text-gray-400">Budget Tier:</span><br>${summary.budget_tier.charAt(0).toUpperCase() + summary.budget_tier.slice(1)}</div>
+                        <div class="boq-item !p-3 !mb-0"><span class="font-semibold text-gray-400">Install Time:</span><br>${summary.estimated_installation_time}</div>
+                    </div>
+                </div>`;
+        }
+
+        function createVizDetailsHTML(vizData) {
+            return `
+                <div class="boq-section">
+                     <h3 class="text-lg font-semibold mb-3 text-blue-300 flex items-center"><i class="fas fa-drafting-compass mr-2"></i> Layout & Power</h3>
+                     <div class="space-y-3 text-sm text-gray-300">
+                        <div>
+                            <h4 class="font-semibold text-gray-200">Layout Suggestions:</h4>
+                            <ul class="list-disc list-inside pl-2 text-gray-400">${vizData.layout_suggestions.map(s => `<li>${s}</li>`).join('')}</ul>
+                        </div>
+                        <div class="boq-item !p-3 mt-2">
+                             <h4 class="font-semibold text-gray-200">Power Needs:</h4>
+                            <p class="text-gray-400">Est. ${vizData.power_requirements.estimated_total_watts}W | ${vizData.power_requirements.recommended_circuits} Circuits | UPS: ${vizData.power_requirements.ups_recommendation}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createSectionHTML(section) {
+            let itemsHtml = section.items.map(item => `
+                <div class="boq-item">
+                    <div class="flex justify-between items-start">
+                       <div>
+                            <div class="font-semibold text-white">${item.name}</div>
+                            <div class="text-sm text-gray-400">${item.brand || 'N/A'}</div>
+                       </div>
+                       <div class="text-right flex-shrink-0 ml-4">
+                            <div class="text-sm font-semibold text-blue-300">$${item.total_price.toFixed(2)}</div>
+                            <div class="text-xs text-gray-400 mt-1">Qty: ${item.quantity}</div>
+                       </div>
+                    </div>
+                </div>`).join('');
+            
+            return `<div class="boq-section">
+                        <h3 class="text-lg font-semibold mb-3 text-blue-300">${section.name}</h3>
+                        ${itemsHtml}
+                    </div>`;
+        }
+        
+        function createRecommendationsHTML(recommendations) {
+            return `<div class="boq-section">
+                        <h3 class="text-lg font-semibold mb-3 text-blue-300 flex items-center"><i class="fas fa-lightbulb mr-2"></i> Recommendations</h3>
+                        <ul class="list-disc list-inside space-y-2 text-sm text-gray-300">${recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>
+                    </div>`;
+        }
+
+        function clearResults() {
+            document.getElementById('resultsPanel').style.display = 'none';
+            document.getElementById('resultsContent').innerHTML = '';
+            AppState.currentBOQ = null;
+            clear3DScene();
+            showNotification('Results cleared', 'success');
+        }
+        
+        function updateLabels() {
+            AppState.equipmentLabels.forEach(label => {
+                const vector = new THREE.Vector3();
+                label.mesh.getWorldPosition(vector);
+                vector.project(AppState.camera);
+                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+                
+                label.div.style.left = `${x}px`;
+                label.div.style.top = `${y}px`;
+                label.div.style.opacity = vector.z < 1 ? '1' : '0';
+            });
+        }
+        
+        function showLoading(text, subtext = '') {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingSubtext').textContent = subtext;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('notifications');
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            notif.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} mr-2"></i> ${message}`;
+            container.appendChild(notif);
+            setTimeout(() => notif.classList.add('show'), 10);
+            setTimeout(() => {
+                notif.classList.remove('show');
+                notif.addEventListener('transitionend', () => notif.remove());
+            }, 4000);
+        }
+
+        async function checkBackendConnection() {
+            updateConnectionStatus('loading', 'Connecting...');
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.CONNECTION_TIMEOUT);
+                await fetch(`${CONFIG.BACKEND_URL}/api/health`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                AppState.isBackendConnected = true;
+                updateConnectionStatus('online', 'Connected');
+            } catch (error) {
+                AppState.isBackendConnected = false;
+                updateConnectionStatus('offline', 'Offline');
+                throw new Error('Cannot connect to backend server.');
+            }
+        }
+        
+        function populateDropdown(id, options) {
+            const select = document.getElementById(id);
             select.innerHTML = '';
             options.forEach(opt => {
                 const option = document.createElement('option');
@@ -125,261 +821,16 @@
             });
         }
 
-        // --- Event Listeners ---
-        function setupEventListeners() {
-            document.getElementById('generateBoq').addEventListener('click', handleGenerateClick);
-            document.getElementById('clearBoq').addEventListener('click', () => {
-                document.getElementById('boqPanel').style.display = 'none';
-                clear3DScene();
-            });
+        function updateConnectionStatus(status, text) {
+            const statusIndicator = document.querySelector('#connectionStatus .status-indicator');
+            statusIndicator.className = `status-indicator status-${status}`;
+            document.getElementById('statusText').textContent = text;
         }
 
-        // --- Core Logic ---
-        async function handleGenerateClick() {
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            const loadingText = document.getElementById('loadingText');
-            
-            loadingText.textContent = 'Generating Smart BOQ...';
-            loadingOverlay.style.display = 'flex';
-
-            const config = {
-                project_name: document.getElementById('project_name').value,
-                client_name: document.getElementById('client_name').value,
-                room_size: document.getElementById('room_size').value,
-                use_case: document.getElementById('use_case').value,
-                budget_range: document.getElementById('budget_range').value,
-                occupancy: parseInt(document.getElementById('occupancy').value) || null,
-            };
-
-            try {
-                // 1. Generate the BOQ
-                const boqResponse = await fetch(`${BACKEND_URL}/api/generate-boq`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(config),
-                });
-                if (!boqResponse.ok) {
-                    const errorData = await boqResponse.json();
-                    throw new Error(errorData.detail || `Server responded with status ${boqResponse.status}`);
-                }
-                const boq = await boqResponse.json();
-                renderBOQ(boq);
-                document.getElementById('boqPanel').style.display = 'block';
-
-                // 2. Generate the Visualization
-                loadingText.textContent = 'Creating 3D Visualization...';
-                await visualizeRoom(config, boq);
-
-            } catch (error) {
-                console.error('Error during generation:', error);
-                const boqContent = document.getElementById('boqContent');
-                boqContent.innerHTML = `<div class="text-red-400 p-4 rounded-lg bg-red-500/10"><strong>Error:</strong> ${error.message}</div>`;
-                document.getElementById('boqPanel').style.display = 'block';
-            } finally {
-                loadingOverlay.style.display = 'none';
-            }
-        }
-        
-        async function visualizeRoom(config, boq) {
-            clear3DScene(); // Clear previous models
-            const vizResponse = await fetch(`${BACKEND_URL}/api/visualize-room`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(config),
-            });
-            if (!vizResponse.ok) throw new Error('Failed to get visualization data.');
-            const vizData = await vizResponse.json();
-            
-            renderVisualizationDetails(vizData);
-            placeEquipmentFromBOQ(boq, vizData);
-        }
-
-        // --- Rendering Functions ---
-        function renderBOQ(boq) {
-            const boqContent = document.getElementById('boqContent');
-            boqContent.innerHTML = ''; // Clear previous content
-
-            // Summary Section
-            let summaryHtml = `
-                <div class="boq-section">
-                    <h3 class="text-lg font-semibold mb-3 text-blue-300">Project Summary</h3>
-                    <div class="grid grid-cols-2 gap-3 text-sm">
-                        <div class="boq-item !p-2 !mb-0"><span class="font-semibold">Total Cost:</span> $${boq.summary.total_cost.toFixed(2)}</div>
-                        <div class="boq-item !p-2 !mb-0"><span class="font-semibold">Total Items:</span> ${boq.summary.total_items}</div>
-                        <div class="boq-item !p-2 !mb-0"><span class="font-semibold">Budget Tier:</span> ${boq.summary.budget_tier.charAt(0).toUpperCase() + boq.summary.budget_tier.slice(1)}</div>
-                        <div class="boq-item !p-2 !mb-0"><span class="font-semibold">Install Time:</span> ${boq.summary.estimated_installation_time}</div>
-                    </div>
-                </div>`;
-            boqContent.innerHTML += summaryHtml;
-
-            // Equipment Sections
-            boq.sections.forEach(section => {
-                let sectionHtml = `<div class="boq-section">
-                    <h3 class="text-lg font-semibold mb-3 text-blue-300">${section.name}</h3>`;
-                section.items.forEach(item => {
-                    sectionHtml += `<div class="boq-item">
-                        <div class="flex justify-between items-start">
-                           <div>
-                                <div class="font-semibold text-white">${item.name}</div>
-                                <div class="text-sm text-gray-400">${item.brand}</div>
-                           </div>
-                           <div class="text-right">
-                                <div class="text-xs text-gray-400">Qty: ${item.quantity}</div>
-                                <div class="text-sm font-semibold text-blue-300 mt-1">$${item.total_price.toFixed(2)}</div>
-                           </div>
-                        </div>
-                    </div>`;
-                });
-                sectionHtml += '</div>';
-                boqContent.innerHTML += sectionHtml;
-            });
-            
-            // Recommendations Section
-            if(boq.recommendations.length > 0) {
-                 let recommendationsHtml = `<div class="boq-section">
-                    <h3 class="text-lg font-semibold mb-3 text-blue-300">Recommendations</h3>
-                    <ul class="list-disc list-inside space-y-2 text-sm text-gray-300">`;
-                 boq.recommendations.forEach(rec => {
-                     recommendationsHtml += `<li>${rec}</li>`;
-                 });
-                 recommendationsHtml += `</ul></div>`;
-                 boqContent.innerHTML += recommendationsHtml;
-            }
-        }
-
-        function renderVisualizationDetails(vizData) {
-            const boqContent = document.getElementById('boqContent');
-            let vizHtml = `
-                <div class="boq-section">
-                    <h3 class="text-lg font-semibold mb-3 text-blue-300">Room Layout & Power</h3>
-                    <div class="space-y-3 text-sm">
-                        <div>
-                            <h4 class="font-semibold text-gray-200">Layout Suggestions:</h4>
-                            <ul class="list-disc list-inside pl-2 text-gray-400">
-                                ${vizData.layout_suggestions.map(s => `<li>${s}</li>`).join('')}
-                            </ul>
-                        </div>
-                         <div>
-                            <h4 class="font-semibold text-gray-200">Power Requirements:</h4>
-                            <p class="text-gray-400">Est. Watts: ${vizData.power_requirements.estimated_total_watts}W | Circuits: ${vizData.power_requirements.recommended_circuits} | UPS: ${vizData.power_requirements.ups_recommendation}</p>
-                        </div>
-                    </div>
-                </div>`;
-            // Prepend visualization details to the BOQ content
-            boqContent.insertAdjacentHTML('afterbegin', vizHtml);
-        }
-
-        // --- 3D Scene Management ---
-        function placeEquipmentFromBOQ(boq, vizData) {
-            const placementMap = vizData.equipment_placement;
-            
-            // Define placement logic
-            const positions = {
-                'Display': new THREE.Vector3(0, 1.5, -2.95),
-                'Camera': new THREE.Vector3(0, 2.3, -2.9),
-                'Speakers': [new THREE.Vector3(-2.5, 1.8, -2.9), new THREE.Vector3(2.5, 1.8, -2.9)],
-                'Microphones': new THREE.Vector3(0, 0.8, 0),
-                'Equipment Rack': new THREE.Vector3(3.5, 0.6, 2.0)
-            };
-            
-            let speakerCount = 0;
-            boq.sections.forEach(section => {
-                section.items.forEach(item => {
-                    let position;
-                    // Find a matching key in our defined positions
-                    const placementKey = Object.keys(positions).find(key => item.category.includes(key.slice(0, -1)));
-
-                    if (placementKey) {
-                        if (placementKey === 'Speakers') {
-                            position = positions[placementKey][speakerCount % 2];
-                            speakerCount++;
-                        } else {
-                            position = positions[placementKey];
-                        }
-                        createEquipment(item, position);
-                    }
-                });
-            });
-        }
-        
-        function initThreeJS() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0f0f23);
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.getElementById('renderContainer').appendChild(renderer.domElement);
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            
-            scene.add(new THREE.AmbientLight(0xcccccc, 1.5));
-            const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(5, 10, 7.5);
-            scene.add(light);
-            
-            createRoom(8, 6, 3);
-            camera.position.set(0, 4, 8);
-            animate();
-            
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        }
-
-        function createRoom(width, depth, height) {
-            const roomGroup = new THREE.Group();
-            roomGroup.name = 'room';
-            
-            const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 }));
-            floor.rotation.x = -Math.PI / 2;
-            roomGroup.add(floor);
-
-            const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x2d3748, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
-            const backWall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wallMaterial);
-            backWall.position.set(0, height / 2, -depth / 2);
-            roomGroup.add(backWall);
-
-            const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(depth, height), wallMaterial);
-            leftWall.position.set(-width / 2, height / 2, 0);
-            leftWall.rotation.y = Math.PI / 2;
-            roomGroup.add(leftWall);
-
-            roomGroup.add(createConferenceTable(3.5, 1.4));
-            scene.add(roomGroup);
-        }
-
-        function createConferenceTable(width, depth) {
-            const tableGroup = new THREE.Group();
-            const tabletop = new THREE.Mesh(new THREE.BoxGeometry(width, 0.08, depth), new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.1 }));
-            tabletop.position.y = 0.75;
-            tableGroup.add(tabletop);
-            return tableGroup;
-        }
-
-        function createEquipment(data, position) {
-            const sizeInfo = equipmentSizeDatabase[data.category] || equipmentSizeDatabase['default'];
-            const equipmentMesh = new THREE.Mesh(
-                new THREE.BoxGeometry(sizeInfo.width, sizeInfo.height, sizeInfo.depth),
-                new THREE.MeshStandardMaterial({ color: sizeInfo.color, roughness: 0.4 })
-            );
-            equipmentMesh.position.copy(position);
-            equipmentMesh.userData = data;
-            equipmentMesh.name = "equipment";
-            placedEquipment.push(equipmentMesh);
-            scene.add(equipmentMesh);
-        }
-
-        function clear3DScene() {
-            placedEquipment.forEach(obj => scene.remove(obj));
-            placedEquipment = [];
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
+        function handleWindowResize() {
+            AppState.camera.aspect = window.innerWidth / window.innerHeight;
+            AppState.camera.updateProjectionMatrix();
+            AppState.renderer.setSize(window.innerWidth, window.innerHeight);
         }
     </script>
 </body>
